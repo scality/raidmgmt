@@ -1,0 +1,505 @@
+linters:
+  disable-all: true
+  enable:
+  # metalinters
+  - revive
+  - govet
+  - staticcheck
+  # format & style
+  - asciicheck                # detect non-ASCII characters on identifiers
+  - dupword                   # detect duplicated words in comments
+  - gofumpt                   # enhanced formatter
+  - godot                     # ensure that commets will end with a period
+  #- godox                     # detect FIXME, TODO, etc. comments -> Disable for the moment for dev
+  - goimports                 # format and fix imports
+  - lll                       # long line length detection
+  - tagalign                  # align struct tags
+  - tagliatelle               # check struct tags naming
+  - whitespace                # leading and trailing whitespace detection
+  - wsl                       # empty lines guidelines
+  # correctness & bug prevention -> error handling
+  - errcheck                  # detect unchecked errors
+  - errname                   # enforce error vars to start with Err and error types to end with Error
+  - errorlint                 # look for error wrapping inconsistences
+  - err113                    # enforce usage of errors.Is() and errors.As()
+  - nilerr                    # prevent to mask errors
+  - wrapcheck                 # check errors wrapping
+  # correctness & bug prevention -> constants, variables, parameters and assignments
+  - asasalint                 # prevent to use `any` as variadic argument
+  - durationcheck             # enforce time.Duration consistent use
+  - forcetypeassert           # force type assertions when usinmg interface{} os `any` variables values
+  - gochecknoglobals          # look for global variables
+  - ineffassign               # detect ineffectual assignments
+  - nilnil                    # prevent functions to return value = nil, err = nil
+  - predeclared               # detect shadowing of predeclared identifiers
+  - unparam                   # detect unused function parameters
+  - unused                    # detect unused constants, variables, functions and types
+  - usestdlibvars             # detect constants that can be replaced with their stdlib counterparts
+  # correctness & bug prevention -> context.Context
+  - containedctx              # detect structures that store context.Context
+  - contextcheck              # detect context.Context misuse
+  # correctness & bug prevention -> misc
+  - bidichk                   # detect some unsafe unicode sequences
+  - dogsled                   # detect abuse of blank identifiers
+  - exhaustive                # check enum switches to be exhaustive
+  #- exhaustruct               # ensures all struct fields to be initialized -> may not really make sense in some situation
+  - ginkgolinter              # detect some common Ginkgo antipatterns / to use only with tests
+  - gocheckcompilerdirectives # detect some common compiler directives antipatterns
+  - gochecknoinits            # look for init functions
+  - gosec                     # check for common security issues
+  #- nolintlint               # report abuses of //nolint directives # Conflict with gofumpt
+  # Performance
+  #- aligncheck               # check for struct misalignment -> it's a operator so readability and maintainability are more important then small performance twiks
+  - makezero                  # detect preallocation mishandles
+  - prealloc                  # detect slice declarations that could potentially be preallocated
+  # complexity & maintainability
+  - cyclop                    # calculates and limits cyclomatic complexity of code
+  - gosimple                  # suggest simplifications in code
+  - dupl                      # finds and reports code duplications
+  - funlen                    # limit the number of lines and statements in a function
+  - gocognit                  # calculates and limits the cognitive complexity of code
+  - goconst                   # finds repeated strings that could be replaced by a constant
+  - mnd                       # detect magic numbers that should be named constants
+  - ireturn                   # ensure that methods will accept interfaces and return concrete types
+  - nestif                    # detect nested ifs and limits their depths
+  - unconvert                 # finds unnecessary type conversions
+
+linters-settings:
+  # ---------- REVIVE METALINTER ---------- #
+  revive:
+    max-open-files: 2048
+    ignore-generated-header: true
+    severity: warning
+    confidence: 0.2
+    warning-code: 101
+    error-code: 102
+    enable-all-rules: false
+    rules:
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#add-constant
+      - name: add-constant
+        severity: warning
+        disabled: true # replaced by gomnd
+        #arguments:
+        #  - maxLitCount: "2"
+        #    allowInts: "-1,0,1"
+        #    #allowStrs: '""'
+        #    #allowFloats: "0.0,0.,1.0,1.,2.0,2."
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#argument-limit
+      - name: argument-limit
+        severity: warning
+        disabled: false
+        arguments:
+          - 4 # consider to create a struct to pass more than 4 arguments to a function/method
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#atomic
+      - name: atomic
+        severity: warning
+        disabled: false
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#banned-characters
+      - name: banned-characters
+        disabled: true
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#bare-return
+      - name: bare-return
+        severity: error
+        disabled: false
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#blank-imports
+      - name: blank-imports
+        severity: warning
+        disabled: false
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#bool-literal-in-expr
+      - name: bool-literal-in-expr
+        severity: warning
+        disabled: false
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#call-to-gc
+      - name: call-to-gc
+        severity: error
+        disabled: false
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#cognitive-complexity
+      - name: cognitive-complexity
+        severity: error
+        disabled: true # replaced by gocognit
+        #arguments:
+        #  - 5
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#comment-spacings
+      - name: comment-spacings
+        severity: warning
+        disabled: false
+        arguments:
+          - nolint
+          - +kubebuilder
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#confusing-naming
+      - name: confusing-naming
+        severity: error
+        disabled: false
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#confusing-results
+      - name: confusing-results
+        severity: error
+        disabled: false
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#constant-logical-expr
+      - name: constant-logical-expr
+        severity: error
+        disabled: false
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#context-as-argument
+      - name: context-as-argument
+        severity: error
+        disabled: false
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#context-keys-type
+      - name: context-keys-type
+        severity: error
+        disabled: false
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#cyclomatic
+      - name: cyclomatic
+        severity: error
+        disabled: true # replaced by cyclop
+        #arguments:
+        #  - 10
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#datarace
+      - name: datarace
+        severity: error
+        disabled: false
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#deep-exit
+      - name: deep-exit
+        severity: error
+        disabled: false
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#defer
+      - name: defer
+        severity: warning
+        disabled: false
+        arguments: 
+          - ["call-chain", "loop", "method-call", "recover", "immediate-recover", "return"]
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#dot-imports
+      - name: dot-imports
+        severity: warning
+        disabled: false
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#duplicated-imports
+      - name: duplicated-imports
+        severity: error
+        disabled: false
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#early-return
+      - name: early-return
+        severity: warning
+        disabled: false
+        arguments:
+          - preserveScope
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#empty-block
+      - name: empty-block
+        severity: error
+        disabled: false
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#empty-lines
+      - name: empty-lines
+        severity: warning
+        disabled: false
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#error-naming
+      - name: error-naming
+        severity: error
+        disabled: false
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#error-return
+      - name: error-return
+        severity: error
+        disabled: false
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#error-strings
+      - name: error-strings
+        severity: error
+        disabled: false
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#errorf
+      - name: errorf
+        severity: error
+        disabled: false
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#exported
+      - name: exported
+        severity: warning
+        disabled: false
+        arguments:
+          - checkPrivateReceivers
+          - sayRepetitiveInsteadOfStutters
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#file-header
+      - name: file-header
+        severity: warning
+        disabled: true
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#flag-parameter
+      - name: flag-parameter
+        severity: error
+        disabled: false
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#function-result-limit
+      - name: function-result-limit
+        severity: warning
+        disabled: false
+        arguments:
+          - 5
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#function-length
+      - name: function-length
+        severity: warning
+        disabled: true # replace4d by funlen
+        #arguments:
+        #  - 25 # statements
+        #  - 50 # lines
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#get-return
+      - name: get-return
+        severity: error
+        disabled: false
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#identical-branches
+      - name: identical-branches
+        severity: error
+        disabled: false
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#if-return
+      - name: if-return
+        severity: error
+        disabled: false
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#increment-decrement
+      - name: increment-decrement
+        severity: error
+        disabled: false
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#indent-error-flow
+      - name: indent-error-flow
+        severity: error
+        disabled: false
+        arguments:
+          - preserveScope
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#imports-blacklist
+      - name: imports-blacklist
+        severity: warning
+        disabled: true
+        #arguments:
+          #- "crypto/md5"
+          #- "crypto/sha1"
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#import-shadowing
+      - name: import-shadowing
+        severity: error
+        disabled: false
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#line-length-limit
+      - name: line-length-limit
+        severity: warning
+        disabled: true # replaced by lll
+        #arguments:
+        #  - 100
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#max-public-structs
+      - name: max-public-structs
+        severity: error
+        disabled: true # it seems to not work properly
+        #arguments:
+        #  - 2
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#modifies-parameter
+      - name: modifies-parameter
+        severity: warning
+        disabled: false
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#modifies-value-receiver
+      - name: modifies-value-receiver
+        severity: warning
+        disabled: false
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#nested-structs
+      - name: nested-structs
+        severity: error
+        disabled: false
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#optimize-operands-order
+      - name: optimize-operands-order
+        severity: warning
+        disabled: false
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#package-comments
+      - name: package-comments
+        severity: error
+        disabled: false
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#range
+      - name: range
+        severity: error
+        disabled: false
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#range-val-in-closure
+      - name: range-val-in-closure
+        severity: error
+        disabled: false
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#range-val-address
+      - name: range-val-address
+        severity: error
+        disabled: false
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#receiver-naming
+      - name: receiver-naming
+        severity: error
+        disabled: false
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#redefines-builtin-id
+      - name: redefines-builtin-id
+        severity: error
+        disabled: false
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#string-of-int
+      - name: string-of-int
+        severity: error
+        disabled: false
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#string-format
+      - name: string-format
+        severity: warning
+        disabled: true
+        #arguments:
+          #- - 'core.WriteError[1].Message'
+          #  - '/^([^A-Z]|$)/'
+          #  - must not start with a capital letter
+          #- - 'fmt.Errorf[0]'
+          #  - '/(^|[^\.!?])$/'
+          #  - must not end in punctuation
+          #- - panic
+          #  - '/^[^\n]*$/'
+          #  - must not contain line breaks
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#struct-tag
+      - name: struct-tag
+        severity: error
+        disabled: false
+        arguments:
+          - "json,inline"
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#superfluous-else
+      - name: superfluous-else
+        severity: error
+        disabled: false
+        arguments:
+          - preserveScope
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#time-equal
+      - name: time-equal
+        severity: error
+        disabled: false
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#time-naming
+      - name: time-naming
+        severity: warning
+        disabled: false
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#var-naming
+      - name: var-naming
+        severity: error
+        disabled: false
+        #arguments:
+          #- ["ID"] # AllowList
+          #- ["VM"] # DenyList
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#var-declaration
+      - name: var-declaration
+        severity: error
+        disabled: false
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#unconditional-recursion
+      - name: unconditional-recursion
+        severity: error
+        disabled: false
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#unexported-naming
+      - name: unexported-naming
+        severity: warning
+        disabled: false
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#unexported-return
+      - name: unexported-return
+        severity: error
+        disabled: false
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#unhandled-error
+      - name: unhandled-error
+        severity: error
+        disabled: false
+        arguments:
+          - "fmt.Printf"
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#unnecessary-stmt
+      - name: unnecessary-stmt
+        severity: error
+        disabled: false
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#unreachable-code
+      - name: unreachable-code
+        severity: error
+        disabled: false
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#unused-parameter
+      - name: unused-parameter
+        severity: error
+        disabled: false
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#unused-receiver
+      - name: unused-receiver
+        severity: warning
+        disabled: false
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#use-any
+      - name: use-any
+        severity: error
+        disabled: false
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#useless-break
+      - name: useless-break
+        severity: error
+        disabled: false
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#waitgroup-by-value
+      - name: waitgroup-by-value
+        severity: error
+        disabled: false
+  # ---------- GOVET METALINTER ---------- #
+  govet:
+    enable-all: true
+    disable:
+      - fieldalignment # once it is a operator, readability and maintainability are more important then small performance twiks
+  # ---------- STATICCHECK METALINTER ---------- #
+  staticcheck:
+    checks: ["all"]
+  # ---------- SPECIFIC LINTERS ---------- #
+  cyclop:
+    max-complexity: 10
+    package-average: 5
+    skip-tests: false
+  funlen:
+    lines: 50
+    statements: 25
+  gocognit:
+    min-complexity: 10 # minimal complexity before fail
+  gofumpt:
+    extra-rules: true
+  goimports:
+    local-prefixes: github.com/scality/artesca
+  gomnd:
+    checks:
+      - argument
+      - case
+      - condition
+      - operation
+      - return
+      - assign
+    ignored-numbers:
+      - '-1'
+      - '0'
+      - '1'
+    #ignored-files:
+    #  - 'magic1_.+\.go$'
+    #ignored-functions:
+    #  - '^math\.'
+    #  - '^http\.StatusText$'
+  errcheck:
+    check-type-assertions: true
+    check-blank: true
+  goconst:
+    min-len: 1
+    min-occurrences: 3
+    numbers: true
+  lll:
+    line-length: 100
+  nolintlint:
+    require-specific: false
+    require-explanation: true
+
+issues:
+  fix: true
+  max-issues-per-linter: 0
+  max-same-issues: 0
+
+  exclude-rules:
+    - path: _test\.go
+      linters: &_exclude_test
+        - funlen
+        - gochecknoglobals
+        - revive
+        - gomnd
+        - goerr113
+        - gocognit
+        - lll
+        - nilnil
+        - forcetypeassert
+        - errcheck
+        - cyclop
+        - wrapcheck
+        - gosec
+        - goconst
+    - path: /tests/
+      linters: *_exclude_test
+    - path: ^tests/
+      linters: *_exclude_test
+
+    - text: 'declaration of "(err|ctx)" shadows declaration at'
+      linters:
+        - govet
+
+severity:
+  default-severity: warning
+
+run:
+  go: '1.23'
+  timeout: 10m
+  issues-exit-code: 100
+  tests: true
