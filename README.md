@@ -27,6 +27,7 @@ This library is designed with Hexagonal Architecture, which separates the core b
 
 The repo is structured as it follows:
 
+```
 ├── go.work
 ├── Makefile
 ├── pkg
@@ -59,6 +60,7 @@ The repo is structured as it follows:
 │           ├── go.mod
 │           └── ssacli.go
 └── README.md
+```
 
 **Core** (`pkg/core/`): This is where the core business logic resides, such as the orchestration of RAID management tasks through the `raidcontrollerservice.go`. This part of the code should be agnostic to the specific RAID controller being used.
 
