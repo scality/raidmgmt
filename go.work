@@ -1,0 +1,10 @@
+go 1.23
+
+use (
+	./pkg/core
+	./pkg/domain
+	./pkg/impl/megaraid
+	./pkg/impl/perc
+	./pkg/impl/rhel8
+	./pkg/impl/smartarray
+)
