@@ -136,7 +136,12 @@ func (a *Adapter) CreateLV(
 		return nil, fmt.Errorf("%w: %w", ErrCreateLV, err)
 	}
 
-	panic("not implemented")
+	newLv, err := a.createLV(request)
+	if err != nil {
+		return nil, fmt.Errorf("%w: %w", ErrCreateLV, err)
+	}
+
+	return newLv, nil
 }
 
 // AddPVToLV adds a physical drive to a logical volume.

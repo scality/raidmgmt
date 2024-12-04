@@ -23,6 +23,8 @@ type UnitTestSuite struct {
 
 	m             *megaraid.Adapter
 	cmdRunnerMock *mocks.Runner
+
+	wasCreateLVCalledOnce bool
 }
 
 func TestRunSuite(t *testing.T) {
@@ -88,6 +90,52 @@ func (s *UnitTestSuite) controllersMockCalls() {
 			}
 
 			return nil, fmt.Errorf("unexpected call to Run with args: %v", args)
+		})
+}
+
+func (s *UnitTestSuite) setupMockCallsCreateLV() {
+	s.cmdRunnerMock.On("Run", mock.AnythingOfType("[]string")).Return(
+		func(args []string) (*megaraid.CmdOutput, error) {
+			// controllers calls
+			if args[0] == "show" {
+				return mockReturn("controllers/all")
+			}
+
+			if args[0] == "/c0" {
+				if args[1] == "show" {
+					if !s.wasCreateLVCalledOnce {
+						return mockReturn("controllers/c0_s12_UGood")
+					} else {
+						return mockReturn("controllers/c0")
+					}
+				}
+
+				if args[1] == "add" {
+					s.wasCreateLVCalledOnce = true
+					return mockReturn("logicalvolumes/create/success")
+				}
+			}
+
+			args0Split := strings.Split(args[0], "/")
+
+			// physical drives calls
+			if args0Split[2] == "e251" {
+				filename := fmt.Sprintf("physicaldrives/show/e251%s", args0Split[3])
+
+				if !s.wasCreateLVCalledOnce {
+					// Slot 12 is unconfigured and good
+					if args0Split[3] == "s12" {
+						filename = fmt.Sprintf("physicaldrives/show/e251%s_UGood", args0Split[3])
+					}
+				}
+
+				return mockReturn(filename)
+			}
+
+			// logical volumes calls
+			filename := fmt.Sprintf("logicalvolumes/show/%s", args0Split[2])
+
+			return mockReturn(filename)
 		})
 }
 
@@ -288,4 +336,107 @@ func (s *UnitTestSuite) TestSetLVCacheOptionsSameOptions() {
 
 	s.Error(err)
 	s.ErrorAs(err, &megaraid.ErrNoCacheOptionsToUpdate)
+}
+
+// TestCreateLVSuccess tests the case where the logical volume is created successfully.
+func (s *UnitTestSuite) TestCreateLVSuccess() {
+	s.setupMockCallsCreateLV()
+
+	controllers, _ := s.m.Controllers()
+	ctrl := controllers[0]
+
+	ctrlMetadata := &raidcontroller.Metadata{
+		ID: ctrl.Metadata.ID,
+	}
+
+	expected := &logicalvolume.LogicalVolume{
+		Controller: ctrl,
+		ID:         "228",
+		DevicePath: "/dev/sda",
+		RAIDLevel:  logicalvolume.RAIDLevel0,
+		CacheOptions: &logicalvolume.CacheOptions{
+			ReadPolicy:  logicalvolume.ReadPolicyReadAhead,
+			WritePolicy: logicalvolume.WritePolicyWriteThrough,
+			IOPolicy:    logicalvolume.IOPolicyDirect,
+		},
+		Status: logicalvolume.LVStatusOptimal,
+		PhysicalDrives: []*physicaldrive.PhysicalDrive{
+			{
+				Controller: ctrl,
+				ID:         "1",
+				Vendor:     "SEAGATE",
+				Model:      "ST18000NM000D",
+				Serial:     "ZVT1ZB580000C2372XE4",
+				Slot: &physicaldrive.Slot{
+					Enclosure: 251,
+					Bay:       12,
+				},
+				Size: 17999005346693,
+				Type: physicaldrive.DiskTypeHDD,
+				JBOD: false,
+				// The status of the physical drive is now used
+				Status: physicaldrive.PDStatusUsed,
+			},
+		},
+	}
+
+	request := &logicalvolume.Request{
+		CtrlMetadata: ctrlMetadata,
+		RAIDLevel:    logicalvolume.RAIDLevel0,
+		PDrivesMetadata: []*physicaldrive.Metadata{
+			{
+				CtrlMetadata: ctrlMetadata,
+				Slot: &physicaldrive.Slot{
+					Enclosure: 251,
+					Bay:       12,
+				},
+			},
+		},
+		CacheOptions: &logicalvolume.CacheOptions{
+			ReadPolicy:  logicalvolume.ReadPolicyReadAhead,
+			WritePolicy: logicalvolume.WritePolicyWriteThrough,
+			IOPolicy:    logicalvolume.IOPolicyDirect,
+		},
+	}
+
+	newLv, err := s.m.CreateLV(request)
+
+	s.NoError(err)
+	s.Assert().Equal(expected, newLv)
+}
+
+// TestCreateLVFailAlreadyUsed tests the case where the physical drive is already used.
+func (s *UnitTestSuite) TestCreateLVFailAlreadyUsed() {
+	s.logicalVolumesMockCalls()
+
+	ctrlMeta := &raidcontroller.Metadata{
+		ID: "0",
+	}
+
+	lVolumes, _ := s.m.LogicalVolumes(ctrlMeta)
+
+	request := &logicalvolume.Request{
+		CtrlMetadata: ctrlMeta,
+		RAIDLevel:    logicalvolume.RAIDLevel0,
+		PDrivesMetadata: []*physicaldrive.Metadata{
+			{
+				CtrlMetadata: ctrlMeta,
+				Slot: &physicaldrive.Slot{
+					Enclosure: lVolumes[0].PhysicalDrives[0].Slot.Enclosure,
+					Bay:       lVolumes[0].PhysicalDrives[0].Slot.Bay,
+				},
+			},
+		},
+		CacheOptions: &logicalvolume.CacheOptions{
+			ReadPolicy:  logicalvolume.ReadPolicyReadAhead,
+			WritePolicy: logicalvolume.WritePolicyWriteThrough,
+			IOPolicy:    logicalvolume.IOPolicyDirect,
+		},
+	}
+
+	newLv, err := s.m.CreateLV(request)
+
+	s.Nil(newLv)
+	s.Error(err)
+	s.ErrorAs(err, &megaraid.ErrPhysicalDriveNotAvailable)
 }

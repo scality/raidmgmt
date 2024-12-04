@@ -27,10 +27,10 @@ type (
 
 	// Request represents the request to create a logical volume.
 	Request struct {
-		CtrlMetadata *raidcontroller.Metadata  // Controller of the array
-		RAIDLevel    RAIDLevel                 // RAID level of the array (e.g.: RAID 0, RAID 1, RAID 10, ...)
-		PDrivesMeta  []*physicaldrive.Metadata // Physical drives composing the array
-		CacheOptions *CacheOptions             // Cache options of the array
+		CtrlMetadata    *raidcontroller.Metadata  // Controller of the array
+		RAIDLevel       RAIDLevel                 // RAID level of the array (e.g.: RAID 0, RAID 1, RAID 10, ...)
+		PDrivesMetadata []*physicaldrive.Metadata // Physical drives composing the array
+		CacheOptions    *CacheOptions             // Cache options of the array
 	}
 
 	// CacheOptions represents the cache options of a logical volume.

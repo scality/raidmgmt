@@ -33,4 +33,21 @@ var (
 
 	ErrCacheOptionsNotProvided = errors.New("cache options not provided")
 	ErrNoCacheOptionsToUpdate  = errors.New("no cache options to update")
+
+	ErrRaid0RequiresAtLeast1Drive = errors.New("RAID 0 requires at least 1 physical drives")
+	ErrRaid1Requires2Drives       = errors.New("RAID 1 requires exactly 2 physical drives")
+	ErrRaid10RequiresAtLeast4     = errors.New("RAID 10 requires at least 4 physical drives")
+	ErrInvalidRAIDLevel           = errors.New("invalid RAID level")
+
+	ErrMatchPhysicalDrives = errors.New("match physical drives failed")
+
+	ErrInvalidEnclosureID = errors.New("invalid enclosure ID")
+	ErrInvalidSlotID      = errors.New("invalid slot ID")
+
+	ErrPhysicalDriveNotAvailable      = errors.New("physical drive not available")
+	ErrPhysicalDriveNotFound          = errors.New("physical drive not found")
+	ErrMultipleNewLogicalVolumes      = errors.New("more than one new logical volume ID found")
+	ErrMultipleEnclosuresNotSupported = errors.New("multiple enclosures not supported")
+
+	ErrNewLogicalVolumeNotFound = errors.New("new logical volume not found")
 )
