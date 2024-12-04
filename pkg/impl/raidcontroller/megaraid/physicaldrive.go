@@ -2,6 +2,7 @@ package megaraid
 
 import (
 	"fmt"
+	"reflect"
 	"sort"
 	"strconv"
 	"strings"
@@ -93,6 +94,25 @@ func (m *Adapter) physicaldrives(metadata *raidcontroller.Metadata) ([]*physical
 	return physicalDrives, nil
 }
 
+// physicalDrive returns a physical drive for a given physical drive metadata.
+func (m *Adapter) physicalDrive(
+	metadata *physicaldrive.Metadata) (
+	*physicaldrive.PhysicalDrive, error,
+) {
+	pds, err := m.physicaldrives(metadata.CtrlMetadata)
+	if err != nil {
+		return nil, fmt.Errorf("%w: %w", ErrPhysicalDrives, err)
+	}
+
+	for _, pd := range pds {
+		if physicaldrive.AreSlotsEqual(pd.Slot, metadata.Slot) {
+			return pd, nil
+		}
+	}
+
+	return nil, fmt.Errorf("%w: %s", ErrPhysicalDriveNotFound, selectorPD(metadata))
+}
+
 // EnclosureSlot returns the enclosure and slot of a physical drive.
 func (pd *PD) EnclosureSlot() (int, int) {
 	eidSlotSplit := strings.Split(pd.EIDSlot, ":")
@@ -171,4 +191,28 @@ func (m *Adapter) setJBOD(
 	}
 
 	return m.cmd.Run([]string{selector, action, "jbod"})
+}
+
+// checkAvailabilityPDMetadata checks if the physical drives are available.
+func checkAvailabilityPDMetadata(m *Adapter, pdsMetadata []*physicaldrive.Metadata) error {
+	var ids []string
+
+	for _, pdMetadata := range pdsMetadata {
+		pd, err := m.physicalDrive(pdMetadata)
+		if err != nil {
+			return err
+		}
+
+		notAvailable := pd.Status != PDStatusMap["UGood"]
+
+		if notAvailable {
+			ids = append(ids, fmt.Sprintf("%d:%d", pd.Slot.Enclosure, pd.Slot.Bay))
+		}
+	}
+
+	if len(ids) > 0 {
+		return fmt.Errorf("%w: %s", ErrPhysicalDriveNotAvailable, strings.Join(ids, ","))
+	}
+
+	return nil
 }

@@ -8,7 +8,7 @@ import (
 	"github.com/scality/raidmgmt/domain/entities/raidcontroller"
 )
 
-const patternController = "/c%s"
+const patternController string = "/c%s"
 
 // controllers returns a list of RAID controllers.
 func (a *Adapter) controllers() ([]*raidcontroller.RAIDController, error) {
@@ -63,4 +63,8 @@ func (a *Adapter) ControllerByID(ctrlID string) (*raidcontroller.RAIDController,
 		Name:   strings.Trim(basics.Model, " "),
 		Serial: strings.Trim(basics.SerialNumber, " "),
 	}, nil
+}
+
+func selectorCtrl(m *raidcontroller.Metadata) string {
+	return fmt.Sprintf(patternController, m.ID)
 }

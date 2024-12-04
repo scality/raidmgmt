@@ -61,11 +61,11 @@ func (r *Request) Validate() error {
 		return ErrUnknownRAIDLevel
 	}
 
-	if len(r.PDrivesMeta) == 0 {
+	if len(r.PDrivesMetadata) == 0 {
 		return ErrEmptyPhysicalDrives
 	}
 
-	for _, pdm := range r.PDrivesMeta {
+	for _, pdm := range r.PDrivesMetadata {
 		if err := pdm.Validate(); err != nil {
 			return fmt.Errorf("%s: %w", prefixRequestErr, err)
 		}
