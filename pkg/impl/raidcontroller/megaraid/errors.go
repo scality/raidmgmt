@@ -19,6 +19,10 @@ var (
 	ErrNoControllersFound = errors.New("no controllers found")
 	ErrControllerNotFound = errors.New("controller not found")
 
+	ErrInvalidSizeFormat = errors.New("invalid size format")
+	ErrInvalidSizeUnit   = errors.New("invalid size unit")
+	ErrInvalidSizeValue  = errors.New("invalid size value")
+
 	ErrCommandFailed = errors.New("command failed")
 	ErrUnmarshal     = errors.New("unmarshal failed")
 	ErrKeyNotFound   = errors.New("key not found")
