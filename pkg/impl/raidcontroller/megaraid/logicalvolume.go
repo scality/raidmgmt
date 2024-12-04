@@ -420,6 +420,55 @@ func (m *Adapter) setLVCacheOptions(
 	return err
 }
 
+// addPVToLV adds a physical drive to a logical volume.
+// The logical volume must have a valid RAID level destination.
+func (m *Adapter) addPVToLV(
+	lvMetadata *logicalvolume.Metadata,
+	pdMetadata *physicaldrive.Metadata,
+) error {
+	return m.migrate(lvMetadata, pdMetadata, "add")
+}
+
+// deletePVFromLV deletes a physical drive from a logical volume.
+// The logical volume must have a valid RAID level destination.
+func (m *Adapter) deletePVFromLV(
+	lvMetadata *logicalvolume.Metadata,
+	pdMetadata *physicaldrive.Metadata,
+) error {
+	return m.migrate(lvMetadata, pdMetadata, "remove")
+}
+
+// migrate migrates changes the raid level of a logical volume
+// by adding or removing a physical drive.
+func (m *Adapter) migrate(
+	lvMetadata *logicalvolume.Metadata,
+	pdMetadata *physicaldrive.Metadata,
+	action string,
+) error {
+	if action != "add" && action != "remove" {
+		return fmt.Errorf("%w: %s", ErrInvalidAction, action)
+	}
+
+	selector := selectorLV(lvMetadata)
+
+	lv, err := m.logicalVolume(lvMetadata)
+	if err != nil {
+		return err
+	}
+
+	raidtype := fmt.Sprintf("type=raid%d", lv.RAIDLevel)
+
+	action = fmt.Sprintf("option=%s", action)
+
+	drives := fmt.Sprintf("drives=%d:%d", pdMetadata.Slot.Enclosure, pdMetadata.Slot.Bay)
+	if pdMetadata.Slot.Enclosure < 0 {
+		drives = fmt.Sprintf("drives=%d", pdMetadata.Slot.Bay)
+	}
+
+	_, err = m.cmd.Run([]string{selector, "start", "migrate", raidtype, action, drives})
+	return err
+}
+
 func findNewLogicalVolume(
 	before, after []*logicalvolume.LogicalVolume) (
 	*logicalvolume.LogicalVolume, error,

@@ -157,7 +157,11 @@ func (a *Adapter) AddPVToLV(
 		return fmt.Errorf("%w: %w", ErrAddPVToLV, err)
 	}
 
-	panic("not implemented")
+	if err := a.addPVToLV(lvMetadata, pdMetadata); err != nil {
+		return fmt.Errorf("%w: %w", ErrAddPVToLV, err)
+	}
+
+	return nil
 }
 
 // DeleteLV deletes a logical volume.
@@ -186,7 +190,11 @@ func (a *Adapter) DeletePVFromLV(
 		return fmt.Errorf("%w: %w", ErrDeletePVFromLV, err)
 	}
 
-	panic("not implemented")
+	if err := a.deletePVFromLV(lvMetadata, pdMetadata); err != nil {
+		return fmt.Errorf("%w: %w", ErrDeletePVFromLV, err)
+	}
+
+	return nil
 }
 
 // StartBlink starts the blinking of the given physical drive.
