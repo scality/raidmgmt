@@ -100,6 +100,43 @@ type (
 		PhysicalSectorSize    string `json:"Physical Sector Size"`
 		ConnectorName         string `json:"Connector Name"`
 	}
+
+	// Virtual Drive.
+	VD struct {
+		DGVD                      string `json:"DG/VD"`  // Drive Group/Virtual Drive
+		Type                      string `json:"TYPE"`   // Type of RAID
+		State                     string `json:"State"`  // State
+		Access                    string `json:"Access"` // Access Rights
+		Consistent                string `json:"Consist"`
+		Cache                     string `json:"Cache"` // Cache Options
+		CacheCade                 string `json:"Cac"`
+		ScheduledCheckConsistency string `json:"sCC"`
+		Size                      string `json:"Size"` // Size (humanized)
+		Name                      string `json:"Name"`
+	}
+
+	VDProperties struct {
+		StripSize                string `json:"Strip Size"`
+		NumberOfBlocks           int64  `json:"Number of Blocks"`
+		VDHasEmulatedPD          string `json:"VD has Emulated PD"`
+		SpanDepth                int    `json:"Span Depth"`
+		NumberOfDrivesPerSpan    int    `json:"Number of Drives Per Span"`
+		WriteCacheInitialSetting string `json:"Write Cache(initial setting)"`
+		DiskCachePolicy          string `json:"Disk Cache Policy"`
+		Encryption               string `json:"Encryption"`
+		DataProtection           string `json:"Data Protection"`
+		ActiveOperations         string `json:"Active Operations"`
+		ExposedToOS              string `json:"Exposed to OS"`
+		OSDriveName              string `json:"OS Drive Name"`
+		CreationDate             string `json:"Creation Date"`
+		CreationTime             string `json:"Creation Time"`
+		EmulationType            string `json:"Emulation type"`
+		CachebypassSize          string `json:"Cachebypass size"`
+		CachebypassMode          string `json:"Cachebypass Mode"`
+		IsLDReadyForOSRequests   string `json:"Is LD Ready for OS Requests"`
+		SCSINAAID                string `json:"SCSI NAA Id"`
+		UnmapEnabled             string `json:"Unmap Enabled"`
+	}
 )
 
 func (c *CmdOutput) GetResponseDataByCtrlID(ctrlID int) (json.RawMessage, error) {

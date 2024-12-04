@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/scality/raidmgmt/domain/entities/logicalvolume"
 	"github.com/scality/raidmgmt/domain/entities/physicaldrive"
 	"github.com/scality/raidmgmt/domain/entities/raidcontroller"
 	"github.com/scality/raidmgmt/megaraid"
@@ -90,16 +91,6 @@ func (s *UnitTestSuite) controllersMockCalls() {
 		})
 }
 
-func (s *UnitTestSuite) TestControllers() {
-	s.controllersMockCalls()
-	controllers, err := s.m.Controllers()
-
-	s.NoError(err)
-	s.Len(controllers, 1)
-	s.Equal("MegaRAID 9560-8i 4GB", controllers[0].Name)
-	s.Equal("SKC5120859", controllers[0].Serial)
-}
-
 func (s *UnitTestSuite) setupMockCalls() {
 	s.cmdRunnerMock.On("Run", mock.AnythingOfType("[]string")).Return(
 		func(args []string) (*megaraid.CmdOutput, error) {
@@ -120,6 +111,16 @@ func (s *UnitTestSuite) setupMockCalls() {
 
 			return mockReturn(filename)
 		})
+}
+
+func (s *UnitTestSuite) TestControllers() {
+	s.controllersMockCalls()
+	controllers, err := s.m.Controllers()
+
+	s.NoError(err)
+	s.Len(controllers, 1)
+	s.Equal("MegaRAID 9560-8i 4GB", controllers[0].Name)
+	s.Equal("SKC5120859", controllers[0].Serial)
 }
 
 func (s *UnitTestSuite) TestPhysicalDrives() {
@@ -151,4 +152,38 @@ func (s *UnitTestSuite) TestPhysicalDrives() {
 	s.Equal(expectedSize, pd5.Size)
 	s.Equal(expectedStatus, pd5.Status)
 	s.Equal(expectedType, pd5.Type)
+}
+
+func (s *UnitTestSuite) TestLogicalVolumes() {
+	s.setupMockCalls()
+
+	metadata := &raidcontroller.Metadata{
+		ID: "0",
+	}
+
+	lVolumes, err := s.m.LogicalVolumes(metadata)
+	s.NoError(err)
+	s.Len(lVolumes, 12)
+
+	expectedRAIDLevel := logicalvolume.RAIDLevel0
+	expectedStatus := logicalvolume.LVStatusOptimal
+	expectedCacheOptions := &logicalvolume.CacheOptions{
+		ReadPolicy:  logicalvolume.ReadPolicyReadAhead,
+		WritePolicy: logicalvolume.WritePolicyWriteThrough,
+		IOPolicy:    logicalvolume.IOPolicyDirect,
+	}
+
+	lv0 := lVolumes[0]
+	s.Equal("228", lv0.ID)
+	s.Equal(expectedRAIDLevel, lv0.RAIDLevel)
+	s.Len(lv0.PhysicalDrives, 1)
+	s.Equal(expectedStatus, lv0.Status)
+	s.Equal(expectedCacheOptions, lv0.CacheOptions)
+
+	lv5 := lVolumes[5]
+	s.Equal("233", lv5.ID)
+	s.Equal(expectedRAIDLevel, lv5.RAIDLevel)
+	s.Len(lv5.PhysicalDrives, 1)
+	s.Equal(expectedStatus, lv5.Status)
+	s.Equal(expectedCacheOptions, lv5.CacheOptions)
 }
