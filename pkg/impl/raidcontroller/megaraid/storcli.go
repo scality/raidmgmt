@@ -166,7 +166,11 @@ func (a *Adapter) DeleteLV(metadata *logicalvolume.Metadata) error {
 		return fmt.Errorf("%w: %w", ErrDeleteLV, err)
 	}
 
-	panic("not implemented")
+	if err := a.deleteLV(metadata); err != nil {
+		return fmt.Errorf("%w: %w", ErrDeleteLV, err)
+	}
+
+	return nil
 }
 
 // DeletePVFromLV deletes a physical drive from a logical volume.

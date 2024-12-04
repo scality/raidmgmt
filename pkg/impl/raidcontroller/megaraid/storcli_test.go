@@ -440,3 +440,35 @@ func (s *UnitTestSuite) TestCreateLVFailAlreadyUsed() {
 	s.Error(err)
 	s.ErrorAs(err, &megaraid.ErrPhysicalDriveNotAvailable)
 }
+
+func (s *UnitTestSuite) TestDeleteLVSuccess() {
+	s.cmdRunnerMock.On("Run", []string{"/c0/v228", "delete"}).
+		Return(mockReturn("logicalvolumes/delete/success"))
+
+	metadata := &logicalvolume.Metadata{
+		CtrlMetadata: &raidcontroller.Metadata{
+			ID: "0",
+		},
+		ID: "228",
+	}
+
+	err := s.m.DeleteLV(metadata)
+
+	s.NoError(err)
+}
+
+func (s *UnitTestSuite) TestDeleteLVFail() {
+	s.cmdRunnerMock.On("Run", []string{"/c0/v299", "delete"}).
+		Return(mockReturn("logicalvolumes/delete/fail"))
+
+	metadata := &logicalvolume.Metadata{
+		CtrlMetadata: &raidcontroller.Metadata{
+			ID: "0",
+		},
+		ID: "299",
+	}
+
+	err := s.m.DeleteLV(metadata)
+
+	s.Error(err)
+}
