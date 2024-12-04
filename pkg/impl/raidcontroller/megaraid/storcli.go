@@ -3,6 +3,8 @@ package megaraid
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
+	"strings"
 
 	"github.com/scality/raidmgmt/domain/entities/logicalvolume"
 	"github.com/scality/raidmgmt/domain/entities/physicaldrive"
@@ -11,6 +13,19 @@ import (
 )
 
 var _ ports.RAIDController = &Adapter{}
+
+const (
+	GB = 1 << 30
+	TB = 1 << 40
+	PB = 1 << 50
+)
+
+// mapSize is a map of size units to their respective bytes.
+var mapSize = map[string]uint64{
+	"GB": GB,
+	"TB": TB,
+	"PB": PB,
+}
 
 type Adapter struct {
 	cmd Runner
@@ -41,7 +56,12 @@ func (a *Adapter) PhysicalDrives(
 		return nil, fmt.Errorf("%w: %w", ErrPhysicalDrives, err)
 	}
 
-	panic("not implemented")
+	physicalDrives, err := a.physicaldrives(metadata)
+	if err != nil {
+		return nil, fmt.Errorf("%w: %w", ErrPhysicalDrives, err)
+	}
+
+	return physicalDrives, nil
 }
 
 // LogicalVolumes returns all logical volumes for a given controller.
@@ -191,4 +211,31 @@ func unmarshalToPointer[T any](responseData json.RawMessage, key string) (*T, er
 	}
 
 	return &t, nil
+}
+
+// convertSizeBytes converts a size string to bytes.
+func convertSizeBytes(size string) (uint64, error) {
+	sizeSplit := strings.Split(size, " ")
+	if len(sizeSplit) != 2 {
+		return 0, fmt.Errorf("%w: %s", ErrInvalidSizeFormat, size)
+	}
+
+	// Replace comma with dot for compatibility with ParseFloat
+	normalized := strings.ReplaceAll(sizeSplit[0], ",", ".")
+
+	// Parse the value
+	value, err := strconv.ParseFloat(normalized, 64)
+	if err != nil {
+		return 0, fmt.Errorf("%w: %s", ErrInvalidSizeValue, sizeSplit[0])
+	}
+
+	sizeUnit := sizeSplit[1]
+
+	unit, ok := mapSize[sizeUnit]
+	if !ok {
+		return 0, fmt.Errorf("%w: %s", ErrInvalidSizeUnit, sizeUnit)
+	}
+
+	// Calculate the size in bytes
+	return uint64(value * float64(unit)), nil
 }

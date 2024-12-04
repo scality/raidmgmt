@@ -64,7 +64,53 @@ type (
 		ReworkDate                string `json:"Rework Date"`
 		RevisionNo                string `json:"Revision No"`
 	}
+
+	// Physical Drive.
+	PD struct {
+		EIDSlot             string `json:"EID:Slt"`
+		DeviceID            int    `json:"DID"`
+		State               string `json:"State"`
+		DeviceGroup         int    `json:"DG"`
+		Size                string `json:"Size"` // Size (humanized)
+		Interface           string `json:"Intf"`
+		MediaType           string `json:"Med"`
+		SelfEncryptingDrive string `json:"SED"`
+		ProtectionInfo      string `json:"PI"`
+		SectorSize          string `json:"SeSz"`
+		Model               string `json:"Model"`
+		Spun                string `json:"Sp"`
+		Type                string `json:"Type"`
+	}
+
+	DriveDeviceAttributes struct {
+		SerialNumber          string `json:"SN"` // Serial Number
+		ManufacturerID        string `json:"Manufacturer Id"`
+		ModelNumber           string `json:"Model Number"`
+		NANDVendor            string `json:"NAND Vendor"`
+		WWN                   string `json:"WWN"`
+		FirmwareRevision      string `json:"Firmware Revision"`
+		FirmwareReleaseNumber string `json:"Firmware Release Number"`
+		RawSize               string `json:"Raw size"`
+		CoercedSize           string `json:"Coerced size"`
+		NonCoercedSize        string `json:"Non Coerced size"`
+		DeviceSpeed           string `json:"Device Speed"`
+		LinkSpeed             string `json:"Link Speed"`
+		WriteCache            string `json:"Write Cache"`
+		LogicalSectorSize     string `json:"Logical Sector Size"`
+		PhysicalSectorSize    string `json:"Physical Sector Size"`
+		ConnectorName         string `json:"Connector Name"`
+	}
 )
+
+func (c *CmdOutput) GetResponseDataByCtrlID(ctrlID int) (json.RawMessage, error) {
+	for _, controller := range c.Controllers {
+		if controller.CommandStatus.Controller == ctrlID {
+			return controller.ResponseData, nil
+		}
+	}
+
+	return nil, ErrControllerNotFound
+}
 
 // searchForKey searches for a key in a JSON object, including nested objects.
 // If the key is found, the value is returned as json.RawMessage.

@@ -4,15 +4,18 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 
+	"github.com/scality/raidmgmt/domain/entities/physicaldrive"
+	"github.com/scality/raidmgmt/domain/entities/raidcontroller"
 	"github.com/scality/raidmgmt/megaraid"
 	"github.com/scality/raidmgmt/megaraid/mocks"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 )
 
-var path = "./files/"
+var path = "./testdata/"
 
 type UnitTestSuite struct {
 	suite.Suite
@@ -95,4 +98,57 @@ func (s *UnitTestSuite) TestControllers() {
 	s.Len(controllers, 1)
 	s.Equal("MegaRAID 9560-8i 4GB", controllers[0].Name)
 	s.Equal("SKC5120859", controllers[0].Serial)
+}
+
+func (s *UnitTestSuite) setupMockCalls() {
+	s.cmdRunnerMock.On("Run", mock.AnythingOfType("[]string")).Return(
+		func(args []string) (*megaraid.CmdOutput, error) {
+			if args[0] == "/c0" {
+				return mockReturn("controllers/c0")
+			}
+
+			args0Split := strings.Split(args[0], "/")
+
+			// physical drives calls
+			if args0Split[2] == "e251" {
+				filename := fmt.Sprintf("physicaldrives/show/e251%s", args0Split[3])
+				return mockReturn(filename)
+			}
+
+			// logical volumes calls
+			filename := fmt.Sprintf("logicalvolumes/show/%s", args0Split[2])
+
+			return mockReturn(filename)
+		})
+}
+
+func (s *UnitTestSuite) TestPhysicalDrives() {
+	s.setupMockCalls()
+
+	metadata := &raidcontroller.Metadata{
+		ID: "0",
+	}
+
+	pDrives, err := s.m.PhysicalDrives(metadata)
+
+	s.NoError(err)
+	s.Len(pDrives, 12)
+
+	expectedSize := uint64(17999005346693)
+	expectedStatus := physicaldrive.PDStatusUsed
+	expectedType := physicaldrive.DiskTypeHDD
+
+	pd0 := pDrives[0]
+	s.Equal("0", pd0.ID)
+	s.Equal("ZVT1LT8M0000G214048L", pd0.Serial)
+	s.Equal(expectedSize, pd0.Size)
+	s.Equal(expectedStatus, pd0.Status)
+	s.Equal(expectedType, pd0.Type)
+
+	pd5 := pDrives[5]
+	s.Equal("5", pd5.ID)
+	s.Equal("ZVT1VDZL0000C2438NHV", pd5.Serial)
+	s.Equal(expectedSize, pd5.Size)
+	s.Equal(expectedStatus, pd5.Status)
+	s.Equal(expectedType, pd5.Type)
 }
