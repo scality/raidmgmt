@@ -242,6 +242,14 @@ func (m *Adapter) logicalVolume(
 	return nil, fmt.Errorf("%w: %s", ErrLogicalVolumeNotFound, selectorLV(metadata))
 }
 
+// deleteLV deletes a logical volume.
+func (m *Adapter) deleteLV(metadata *logicalvolume.Metadata) error {
+	selector := selectorLV(metadata)
+	_, err := m.cmd.Run([]string{selector, "delete"})
+
+	return err
+}
+
 // createLV creates a logical volume.
 func (m *Adapter) createLV(
 	request *logicalvolume.Request) (
