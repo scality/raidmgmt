@@ -2,7 +2,6 @@ package megaraid
 
 import (
 	"fmt"
-	"reflect"
 	"sort"
 	"strconv"
 	"strings"
@@ -165,6 +164,32 @@ func selectorPD(m *physicaldrive.Metadata) string {
 	}
 
 	return selector
+}
+
+// startBlink starts the blinking of the given physical drive.
+func (m *Adapter) startBlink(metadata *physicaldrive.Metadata) error {
+	_, err := m.blink(metadata, "start")
+	return err
+}
+
+// stopBlink stops the blinking of the given physical drive.
+func (m *Adapter) stopBlink(metadata *physicaldrive.Metadata) error {
+	_, err := m.blink(metadata, "stop")
+	return err
+}
+
+// blink starts or stops the blinking of the given physical drive.
+func (m *Adapter) blink(
+	metadata *physicaldrive.Metadata, action string) (
+	*CmdOutput, error,
+) {
+	selector := selectorPD(metadata)
+
+	if action != "start" && action != "stop" {
+		return nil, fmt.Errorf("%w: %s", ErrInvalidAction, action)
+	}
+
+	return m.cmd.Run([]string{selector, action, "locate"})
 }
 
 // enableJBOD enables JBOD for the given physical drive.

@@ -195,7 +195,11 @@ func (a *Adapter) StartBlink(metadata *physicaldrive.Metadata) error {
 		return fmt.Errorf("%w: %w", ErrStartBlink, err)
 	}
 
-	panic("not implemented")
+	if err := a.startBlink(metadata); err != nil {
+		return fmt.Errorf("%w: %w", ErrStartBlink, err)
+	}
+
+	return nil
 }
 
 // StopBlink stops the blinking of the given physical drive.
@@ -204,7 +208,11 @@ func (a *Adapter) StopBlink(metadata *physicaldrive.Metadata) error {
 		return fmt.Errorf("%w: %w", ErrStopBlink, err)
 	}
 
-	panic("not implemented")
+	if err := a.stopBlink(metadata); err != nil {
+		return fmt.Errorf("%w: %w", ErrStopBlink, err)
+	}
+
+	return nil
 }
 
 // unmarshalToSlice unmarshals a JSON response data to a slice.
