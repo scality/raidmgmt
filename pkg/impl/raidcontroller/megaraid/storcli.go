@@ -120,7 +120,11 @@ func (a *Adapter) SetLVCacheOptions(
 		return fmt.Errorf("%w: %w", ErrSetLVCacheOptions, err)
 	}
 
-	panic("not implemented")
+	if err := a.setLVCacheOptions(metadata, cacheOpts); err != nil {
+		return fmt.Errorf("%w: %w", ErrSetLVCacheOptions, err)
+	}
+
+	return nil
 }
 
 // CreateLV creates a logical volume.

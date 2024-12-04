@@ -217,3 +217,67 @@ func matchPhysicalDrives(allPDrives []*physicaldrive.PhysicalDrive,
 
 	return matches, nil
 }
+
+// selectorLV returns the selector for a logical volume.
+func selectorLV(m *logicalvolume.Metadata) string {
+	return fmt.Sprintf(patternLV, m.CtrlMetadata.ID, m.ID)
+}
+
+// logicalVolume returns a logical volume for a given logical volume metadata.
+func (m *Adapter) logicalVolume(
+	metadata *logicalvolume.Metadata) (
+	*logicalvolume.LogicalVolume, error,
+) {
+	lvs, err := m.logicalvolumes(metadata.CtrlMetadata)
+	if err != nil {
+		return nil, fmt.Errorf("%w: %w", ErrLogicalVolumes, err)
+	}
+
+	for _, lv := range lvs {
+		if lv.ID == metadata.ID {
+			return lv, nil
+		}
+	}
+
+	return nil, fmt.Errorf("%w: %s", ErrLogicalVolumeNotFound, selectorLV(metadata))
+}
+
+// setLVCacheOptions sets the cache options for a logical volume.
+func (m *Adapter) setLVCacheOptions(
+	metadata *logicalvolume.Metadata,
+	cacheOpts *logicalvolume.CacheOptions,
+) error {
+	selector := selectorLV(metadata)
+
+	lv, err := m.logicalVolume(metadata)
+	if err != nil {
+		return err
+	}
+
+	// Dynamically build the options slice
+	var options []string
+
+	if cacheOpts.ReadPolicy != lv.CacheOptions.ReadPolicy {
+		options = append(options, "rdcache="+cacheOpts.ReadPolicy.String())
+	}
+
+	if cacheOpts.WritePolicy != lv.CacheOptions.WritePolicy {
+		options = append(options, "wrcache="+cacheOpts.WritePolicy.String())
+	}
+
+	if cacheOpts.IOPolicy != lv.CacheOptions.IOPolicy {
+		options = append(options, "iopolicy="+cacheOpts.IOPolicy.String())
+	}
+
+	// If no options need to be updated, return the appropriate error
+	if len(options) == 0 {
+		return ErrNoCacheOptionsToUpdate
+	}
+
+	// Pass only non-empty options to the command
+	args := []string{selector, "set"}
+	_, err = m.cmd.Run(append(args, options...))
+	// _, err = m.cmd.Run([]string{selector, "set", options...})
+
+	return err
+}

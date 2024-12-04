@@ -113,6 +113,19 @@ func (s *UnitTestSuite) setupMockCalls() {
 		})
 }
 
+func (s *UnitTestSuite) logicalVolumesMockCalls() {
+	s.setupMockCalls()
+
+	s.cmdRunnerMock.On("Run", mock.AnythingOfType("[]string")).Return(
+		func(args []string) (*megaraid.CmdOutput, error) {
+			args0Split := strings.Split(args[0], "/")
+
+			filename := fmt.Sprintf("logicalvolumes/show/%s", args0Split[2])
+
+			return mockReturn(filename)
+		})
+}
+
 func (s *UnitTestSuite) TestControllers() {
 	s.controllersMockCalls()
 	controllers, err := s.m.Controllers()
@@ -224,4 +237,55 @@ func (s *UnitTestSuite) TestDisableJBODFail() {
 	err := s.m.DisableJBOD(metadata)
 
 	s.Error(err)
+}
+
+func (s *UnitTestSuite) TestSetLVCacheOptionsSuccess() {
+	s.logicalVolumesMockCalls()
+
+	ctrlMetadata := &raidcontroller.Metadata{
+		ID: "0",
+	}
+
+	// IO policy is not in the command since it's the same
+	// Only different cache options are in the command
+	s.cmdRunnerMock.On("Run", []string{"/c0/v228", "set", "rdcache=nra", "wrcache=wb"}).
+		Return(mockReturn("logicalvolumes/cacheoptions/success"))
+
+	lvMetadata := &logicalvolume.Metadata{
+		CtrlMetadata: ctrlMetadata,
+		ID:           "228",
+	}
+
+	err := s.m.SetLVCacheOptions(lvMetadata, &logicalvolume.CacheOptions{
+		ReadPolicy:  logicalvolume.ReadPolicyNoReadAhead,
+		WritePolicy: logicalvolume.WritePolicyWriteBack,
+		IOPolicy:    logicalvolume.IOPolicyDirect,
+	})
+
+	s.NoError(err)
+}
+
+func (s *UnitTestSuite) TestSetLVCacheOptionsSameOptions() {
+	s.logicalVolumesMockCalls()
+
+	ctrlMetadata := &raidcontroller.Metadata{
+		ID: "0",
+	}
+
+	lVolumes, _ := s.m.LogicalVolumes(ctrlMetadata)
+
+	lvMetadata := &logicalvolume.Metadata{
+		CtrlMetadata: ctrlMetadata,
+		ID:           lVolumes[0].ID,
+	}
+
+	// Set the same cache options
+	err := s.m.SetLVCacheOptions(lvMetadata, &logicalvolume.CacheOptions{
+		ReadPolicy:  logicalvolume.ReadPolicyReadAhead,
+		WritePolicy: logicalvolume.WritePolicyWriteThrough,
+		IOPolicy:    logicalvolume.IOPolicyDirect,
+	})
+
+	s.Error(err)
+	s.ErrorAs(err, &megaraid.ErrNoCacheOptionsToUpdate)
 }
