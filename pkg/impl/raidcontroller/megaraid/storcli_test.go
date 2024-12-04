@@ -472,3 +472,41 @@ func (s *UnitTestSuite) TestDeleteLVFail() {
 
 	s.Error(err)
 }
+
+func (s *UnitTestSuite) TestStartBlink() {
+	s.cmdRunnerMock.On("Run", []string{"/c0/e251/s9", "start", "locate"}).
+		Return(mockReturn("physicaldrives/blink/start"))
+
+	metadata := &physicaldrive.Metadata{
+		CtrlMetadata: &raidcontroller.Metadata{
+			ID: "0",
+		},
+		Slot: &physicaldrive.Slot{
+			Enclosure: 251,
+			Bay:       9,
+		},
+	}
+
+	err := s.m.StartBlink(metadata)
+
+	s.NoError(err)
+}
+
+func (s *UnitTestSuite) TestStopBlink() {
+	s.cmdRunnerMock.On("Run", []string{"/c0/e251/s9", "stop", "locate"}).
+		Return(mockReturn("physicaldrives/blink/stop"))
+
+	metadata := &physicaldrive.Metadata{
+		CtrlMetadata: &raidcontroller.Metadata{
+			ID: "0",
+		},
+		Slot: &physicaldrive.Slot{
+			Enclosure: 251,
+			Bay:       9,
+		},
+	}
+
+	err := s.m.StopBlink(metadata)
+
+	s.NoError(err)
+}
