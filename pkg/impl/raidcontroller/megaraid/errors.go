@@ -28,4 +28,9 @@ var (
 	ErrInvalidSizeValue  = errors.New("invalid size value")
 
 	ErrInvalidAction = errors.New("invalid action")
+
+	ErrLogicalVolumeNotFound = errors.New("logical volume not found")
+
+	ErrCacheOptionsNotProvided = errors.New("cache options not provided")
+	ErrNoCacheOptionsToUpdate  = errors.New("no cache options to update")
 )
