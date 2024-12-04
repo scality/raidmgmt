@@ -99,3 +99,13 @@ func (m *Adapter) ShowDeviceAttributes(
 
 	return unmarshalToPointer[DriveDeviceAttributes](responseData, key)
 }
+
+// ShowAllVirtualDrives returns all logical drives for a given controller.
+func (m *Adapter) ShowAllVirtualDrives(controllerID string) ([]VD, error) {
+	responseData, err := m.ShowAllController(controllerID)
+	if err != nil {
+		return nil, err
+	}
+
+	return unmarshalToSlice[VD](responseData, "VD LIST")
+}

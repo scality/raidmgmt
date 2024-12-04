@@ -73,7 +73,12 @@ func (a *Adapter) LogicalVolumes(
 		return nil, fmt.Errorf("%w: %w", ErrLogicalVolumes, err)
 	}
 
-	panic("not implemented")
+	logicalVolumes, err := a.logicalvolumes(metadata)
+	if err != nil {
+		return nil, fmt.Errorf("%w: %w", ErrLogicalVolumes, err)
+	}
+
+	return logicalVolumes, nil
 }
 
 // EnableJBOD enables JBOD mode on a physical drive.
