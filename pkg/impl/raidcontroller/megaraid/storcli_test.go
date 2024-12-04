@@ -187,3 +187,41 @@ func (s *UnitTestSuite) TestLogicalVolumes() {
 	s.Equal(expectedStatus, lv5.Status)
 	s.Equal(expectedCacheOptions, lv5.CacheOptions)
 }
+
+func (s *UnitTestSuite) TestEnableJBODFail() {
+	metadata := &physicaldrive.Metadata{
+		CtrlMetadata: &raidcontroller.Metadata{
+			ID: "0",
+		},
+		Slot: &physicaldrive.Slot{
+			Enclosure: 251,
+			Bay:       6,
+		},
+	}
+
+	s.cmdRunnerMock.On("Run", []string{"/c0/e251/s6", "set", "jbod"}).
+		Return(mockReturn("physicaldrives/jbod/enable/fail"))
+
+	err := s.m.EnableJBOD(metadata)
+
+	s.Error(err)
+}
+
+func (s *UnitTestSuite) TestDisableJBODFail() {
+	s.cmdRunnerMock.On("Run", []string{"/c0/e251/s6", "delete", "jbod"}).
+		Return(mockReturn("physicaldrives/jbod/disable/fail"))
+
+	metadata := &physicaldrive.Metadata{
+		CtrlMetadata: &raidcontroller.Metadata{
+			ID: "0",
+		},
+		Slot: &physicaldrive.Slot{
+			Enclosure: 251,
+			Bay:       6,
+		},
+	}
+
+	err := s.m.DisableJBOD(metadata)
+
+	s.Error(err)
+}

@@ -87,7 +87,11 @@ func (a *Adapter) EnableJBOD(metadata *physicaldrive.Metadata) error {
 		return fmt.Errorf("%w: %w", ErrEnableJBOD, err)
 	}
 
-	panic("not implemented")
+	if err := a.enableJBOD(metadata); err != nil {
+		return fmt.Errorf("%w: %w", ErrEnableJBOD, err)
+	}
+
+	return nil
 }
 
 // DisableJBOD disables JBOD mode on a physical drive.
@@ -96,7 +100,11 @@ func (a *Adapter) DisableJBOD(metadata *physicaldrive.Metadata) error {
 		return fmt.Errorf("%w: %w", ErrDisableJBOD, err)
 	}
 
-	panic("not implemented")
+	if err := a.disableJBOD(metadata); err != nil {
+		return fmt.Errorf("%w: %w", ErrDisableJBOD, err)
+	}
+
+	return nil
 }
 
 // SetLVCacheOptions sets cache options on a logical volume.

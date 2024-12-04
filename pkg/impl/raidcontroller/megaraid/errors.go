@@ -16,6 +16,10 @@ var (
 	ErrStartBlink        = errors.New("start blinking failed")
 	ErrStopBlink         = errors.New("stop blinking failed")
 
+	ErrCommandFailed = errors.New("command failed")
+	ErrUnmarshal     = errors.New("unmarshal failed")
+	ErrKeyNotFound   = errors.New("key not found")
+
 	ErrNoControllersFound = errors.New("no controllers found")
 	ErrControllerNotFound = errors.New("controller not found")
 
@@ -23,7 +27,5 @@ var (
 	ErrInvalidSizeUnit   = errors.New("invalid size unit")
 	ErrInvalidSizeValue  = errors.New("invalid size value")
 
-	ErrCommandFailed = errors.New("command failed")
-	ErrUnmarshal     = errors.New("unmarshal failed")
-	ErrKeyNotFound   = errors.New("key not found")
+	ErrInvalidAction = errors.New("invalid action")
 )

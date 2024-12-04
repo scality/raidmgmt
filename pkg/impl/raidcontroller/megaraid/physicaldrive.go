@@ -1,6 +1,7 @@
 package megaraid
 
 import (
+	"fmt"
 	"sort"
 	"strconv"
 	"strings"
@@ -133,4 +134,41 @@ func (pd *PD) PDStatus() physicaldrive.PDStatus {
 	}
 
 	return physicaldrive.PDStatusUnknown
+}
+
+// selectorPD returns the selector for a physical drive metadata.
+func selectorPD(m *physicaldrive.Metadata) string {
+	selector := fmt.Sprintf(patternEnclosure, m.CtrlMetadata.ID, m.Slot.Enclosure, m.Slot.Bay)
+
+	if m.Slot.Enclosure < 0 {
+		selector = fmt.Sprintf(patternNoEnclosure, m.CtrlMetadata.ID, m.Slot.Bay)
+	}
+
+	return selector
+}
+
+// enableJBOD enables JBOD for the given physical drive.
+func (m *Adapter) enableJBOD(metadata *physicaldrive.Metadata) error {
+	_, err := m.setJBOD(metadata, "set")
+	return err
+}
+
+// disableJBOD disables JBOD for the given physical drive.
+func (m *Adapter) disableJBOD(metadata *physicaldrive.Metadata) error {
+	_, err := m.setJBOD(metadata, "delete")
+	return err
+}
+
+// setJBOD sets or deletes JBOD for the given physical drive.
+func (m *Adapter) setJBOD(
+	metadata *physicaldrive.Metadata, action string) (
+	*CmdOutput, error,
+) {
+	selector := selectorPD(metadata)
+
+	if action != "set" && action != "delete" {
+		return nil, fmt.Errorf("%w: %s", ErrInvalidAction, action)
+	}
+
+	return m.cmd.Run([]string{selector, action, "jbod"})
 }
