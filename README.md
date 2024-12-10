@@ -31,34 +31,41 @@ The repo is structured as it follows:
 ├── go.work
 ├── Makefile
 ├── pkg
-│   ├── core
-│   │   ├── go.mod
-│   │   └── raidcontrollerservice.go
-│   ├── domain
-│   │   ├── entities
-│   │   │   ├── logicalvolume
-│   │   │   │   └── logicalvolume.go
-│   │   │   ├── physicalvolume
-│   │   │   │   └── physicalvolume.go
-│   │   │   └── raidcontroller
-│   │   │       └── raidcontroller.go
-│   │   ├── go.mod
-│   │   └── ports
-│   │       └── raidcontrollerservice
-│   │           └── raidcontrollerservice.go
-│   └── impl
-│       ├── megaraid
-│       │   ├── go.mod
-│       │   └── storccli.go
-│       ├── perc
-│       │   ├── go.mod
-│       │   └── perccli.go
-│       ├── rhel8
-│       │   ├── go.mod
-│       │   └── mdadm.go
-│       └── smartarray
-│           ├── go.mod
-│           └── ssacli.go
+│   ├── core
+│   │   ├── go.mod
+│   │   ├── go.sum
+│   │   └── raidcontroller.go
+│   ├── domain
+│   │   ├── entities
+│   │   │   ├── logicalvolume
+│   │   │   │   ├── enums.go
+│   │   │   │   ├── errors.go
+│   │   │   │   ├── methods.go
+│   │   │   │   └── types.go
+│   │   │   ├── physicaldrive
+│   │   │   │   ├── enums.go
+│   │   │   │   ├── errors.go
+│   │   │   │   ├── methods.go
+│   │   │   │   └── types.go
+│   │   │   └── raidcontroller
+│   │   │       ├── errors.go
+│   │   │       ├── methods.go
+│   │   │       └── types.go
+│   │   ├── go.mod
+│   │   └── ports
+│   │       └── raidcontroller.go
+│   └── impl
+│       └── raidcontroller
+│           ├── megaraid
+│           │   ├── go.mod
+│           │   ├── go.sum
+│           │   ├── storcli.go
+│           ├── rhel8
+│           │   ├── go.mod
+│           │   └── mdadm.go
+│           └── smartarray
+│               ├── go.mod
+│               └── ssacli.go
 └── README.md
 ```
 
