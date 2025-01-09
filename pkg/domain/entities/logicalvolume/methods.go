@@ -6,9 +6,6 @@ import (
 
 // Validate checks if the CacheOptions instance is valid.
 func (co *CacheOptions) Validate() error {
-	if co == nil {
-		return ErrCacheOptionsNil
-	}
 
 	if co.ReadPolicy == ReadPolicyUnknown {
 		return ErrUnknownReadPolicy
@@ -49,10 +46,6 @@ func (r *Request) Validate() error {
 		return ErrRequestNil
 	}
 
-	if r.CtrlMetadata == nil {
-		return ErrControllerMetaNil
-	}
-
 	if err := r.CtrlMetadata.Validate(); err != nil {
 		return fmt.Errorf("%s: %w", prefixRequestErr, err)
 	}
@@ -65,14 +58,14 @@ func (r *Request) Validate() error {
 		return ErrEmptyPhysicalDrives
 	}
 
+	if err := r.checkRAIDRequirement(); err != nil {
+		return fmt.Errorf("%s: %w", prefixRequestErr, err)
+	}
+
 	for _, pdm := range r.PDrivesMetadata {
 		if err := pdm.Validate(); err != nil {
 			return fmt.Errorf("%s: %w", prefixRequestErr, err)
 		}
-	}
-
-	if r.CacheOptions == nil {
-		return ErrCacheOptionsNil
 	}
 
 	if err := r.CacheOptions.Validate(); err != nil {
@@ -80,4 +73,38 @@ func (r *Request) Validate() error {
 	}
 
 	return nil
+}
+
+// checkRAIDRequirement checks if the RAID level requirements are met.
+// Only regarding the number of physical drives.
+// The identical disk size requirement cannot be checked here.
+func (r *Request) checkRAIDRequirement() error {
+	if r.RAIDLevel == RAIDLevel1 {
+		if len(r.PDrivesMetadata) < RAID1DiskRequirement {
+			return ErrNotEnoughPhysicalDrives
+		}
+	}
+
+	if r.RAIDLevel == RAIDLevel10 {
+		if len(r.PDrivesMetadata) < RAID10DiskRequirement {
+			return ErrNotEnoughPhysicalDrives
+		}
+
+		if len(r.PDrivesMetadata)%2 != 0 {
+			return ErrOddNumberOfPhysicalDrives
+		}
+	}
+
+	return nil
+}
+
+func (lv *LogicalVolume) ToMetadata() *Metadata {
+	if lv == nil {
+		return nil
+	}
+
+	return &Metadata{
+		CtrlMetadata: lv.CtrlMetadata,
+		ID:           lv.ID,
+	}
 }

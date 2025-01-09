@@ -20,4 +20,7 @@ var (
 	ErrRequestNil          = errors.New(prefixRequestErr + "Request is nil")
 	ErrUnknownRAIDLevel    = errors.New(prefixRequestErr + "RAIDLevel is unknown")
 	ErrEmptyPhysicalDrives = errors.New(prefixRequestErr + "PhysicalDrives is empty")
+
+	ErrNotEnoughPhysicalDrives   = errors.New("not enough physical drives")
+	ErrOddNumberOfPhysicalDrives = errors.New("odd number of physical drives")
 )

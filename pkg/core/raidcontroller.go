@@ -9,15 +9,22 @@ import (
 
 type RAIDController struct {
 	// TODO Add the necessary fields
+	iface ports.RAIDController
 }
 
 var _ ports.RAIDController = &RAIDController{}
 
-func NewRAIDControllerService() *RAIDController {
+func NewRAIDController() *RAIDController {
 	panic("not implemented")
 }
 
 func (r *RAIDController) Controllers() ([]*raidcontroller.RAIDController, error) {
+	// log.info("in")
+	// return r.iface.Controllers()
+	panic("not implemented")
+}
+
+func (r *RAIDController) Controller(metadata *raidcontroller.Metadata) (*raidcontroller.RAIDController, error) {
 	panic("not implemented")
 }
 
@@ -25,7 +32,15 @@ func (r *RAIDController) PhysicalDrives(metadata *raidcontroller.Metadata) ([]*p
 	panic("not implemented")
 }
 
+func (r *RAIDController) PhysicalDrive(metadata *physicaldrive.Metadata) (*physicaldrive.PhysicalDrive, error) {
+	panic("not implemented")
+}
+
 func (r *RAIDController) LogicalVolumes(metadata *raidcontroller.Metadata) ([]*logicalvolume.LogicalVolume, error) {
+	panic("not implemented")
+}
+
+func (r *RAIDController) LogicalVolume(metadata *logicalvolume.Metadata) (*logicalvolume.LogicalVolume, error) {
 	panic("not implemented")
 }
 

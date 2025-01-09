@@ -5,29 +5,35 @@ import (
 	"github.com/scality/raidmgmt/domain/entities/raidcontroller"
 )
 
-type (
+const (
+	RAID0DiskRequirement  = 1
+	RAID1DiskRequirement  = 2
+	RAID10DiskRequirement = 4
+)
 
+type (
 	// LogicalVolume represents a logical volume.
 	LogicalVolume struct {
-		Controller     *raidcontroller.RAIDController // Controller of the array
-		ID             string                         // ID of the array
-		DevicePath     string                         // Device path of the array (e.g.: /dev/sda)
-		PermanentPath  string                         // Permanent path of the array (e.g.: /dev/disk/by-id/...)
-		RAIDLevel      RAIDLevel                      // RAID level of the array (e.g.: RAID 0, RAID 1, RAID 10, ...)
-		PhysicalDrives []*physicaldrive.PhysicalDrive // Physical drives composing the array
-		CacheOptions   *CacheOptions                  // Cache options of the array
-		Status         LVStatus                       // State of the array (e.g.: Online, Offline, Degraded)
+		CtrlMetadata    *raidcontroller.Metadata  // Controller of the logical volume
+		ID              string                    // ID of the array
+		DevicePath      string                    // Device path of the array (e.g.: /dev/sda)
+		PermanentPath   string                    // Permanent path of the array (e.g.: /dev/disk/by-id/...)
+		RAIDLevel       RAIDLevel                 // RAID level of the array (e.g.: RAID 0, RAID 1, RAID 10, ...)
+		PDrivesMetadata []*physicaldrive.Metadata // Physical drives composing the array
+		CacheOptions    *CacheOptions             // Cache options of the array
+		Status          LVStatus                  // State of the array (e.g.: Online, Offline, Degraded)
+		Reason          string                    // Reason for the logical volume state
 	}
 
 	// Metadata represents the metadata of a logical volume.
 	Metadata struct {
-		CtrlMetadata *raidcontroller.Metadata // Controller of the array
+		CtrlMetadata *raidcontroller.Metadata // Controller of the logical volume
 		ID           string                   // ID of the array
 	}
 
 	// Request represents the request to create a logical volume.
 	Request struct {
-		CtrlMetadata    *raidcontroller.Metadata  // Controller of the array
+		CtrlMetadata    *raidcontroller.Metadata  // Controller of the logical volume
 		RAIDLevel       RAIDLevel                 // RAID level of the array (e.g.: RAID 0, RAID 1, RAID 10, ...)
 		PDrivesMetadata []*physicaldrive.Metadata // Physical drives composing the array
 		CacheOptions    *CacheOptions             // Cache options of the array
