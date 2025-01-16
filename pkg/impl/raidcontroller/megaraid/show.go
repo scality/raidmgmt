@@ -2,110 +2,138 @@ package megaraid
 
 import (
 	"encoding/json"
-	"fmt"
-	"strconv"
+
+	"github.com/pkg/errors"
+	"github.com/scality/raidmgmt/domain/entities/logicalvolume"
+	"github.com/scality/raidmgmt/domain/entities/physicaldrive"
+	"github.com/scality/raidmgmt/domain/entities/raidcontroller"
+	"github.com/scality/raidmgmt/utils"
 )
 
-// TODO
-// const SHOWALL =
+// showAll returns all information for all controllers.
+func (a *Adapter) showAll() (*CmdOutput, error) {
+	output, err := a.runner.Run([]string{"show", "all"})
+	if err != nil {
+		return nil, errors.Wrap(err, ErrCommandFailed.Error())
+	}
 
-// ShowAll returns all information for all controllers.
-func (a *Adapter) ShowAll() (*CmdOutput, error) {
-	return a.cmd.Run([]string{"show", "all"})
+	return output, nil
 }
 
-// ShowAllController returns all information for a given controller.
-func (a *Adapter) ShowAllController(controllerID string) (json.RawMessage, error) {
-	output, err := a.cmd.Run([]string{fmt.Sprintf(patternController, controllerID), "show", "all"})
+// showAllController returns all information for a given controller.
+func (a *Adapter) showAllController(controllerID int) (json.RawMessage, error) {
+	selector := selectorCtrl(&raidcontroller.Metadata{ID: controllerID})
+
+	output, err := a.runner.Run([]string{selector, "show", "all"})
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, ErrCommandFailed.Error())
 	}
 
-	ctrlIDInt, err := strconv.Atoi(controllerID)
-	if err != nil {
-		return nil, err
-	}
-
-	for i := range output.Controllers {
-		if output.Controllers[i].CommandStatus.Controller == ctrlIDInt {
-			return output.Controllers[i].ResponseData, nil
-		}
-	}
-
-	return nil, fmt.Errorf("%w: %s", ErrControllerNotFound, controllerID)
+	return output.Controllers[0].ResponseData, nil
 }
 
-// ShowAllPhysicalDrives returns all physical drives for a given controller.
-func (m *Adapter) ShowAllPhysicalDrives(controllerID string) ([]PD, error) {
-	responseData, err := m.ShowAllController(controllerID)
+// showAllPhysicalDrives returns all physical drives for a given controller.
+func (a *Adapter) showAllPhysicalDrives(controllerID int) ([]PD, error) {
+	responseData, err := a.showAllController(controllerID)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "failed to controller show all %d", controllerID)
 	}
 
-	return unmarshalToSlice[PD](responseData, "PD LIST")
+	pds, err := utils.UnmarshalToSlice[PD](responseData, "PD LIST")
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get PD list")
+	}
+
+	return pds, nil
 }
 
-// ShowDeviceAttributes returns the device attributes for a given physical drive.
-func (m *Adapter) ShowDeviceAttributes(
-	controllerID string, enclosureID, slotID int) (
-	*DriveDeviceAttributes, error,
-) {
-	var (
-		output   *CmdOutput
-		err      error
-		key      string
-		selector string
-	)
-
-	isEnclosureIDInvalid := enclosureID < 0
-
-	if isEnclosureIDInvalid {
-		selector = fmt.Sprintf(patternNoEnclosure, controllerID, slotID)
-
-		output, err = m.cmd.Run([]string{selector, "show", "all"})
-		if err != nil {
-			return nil, err
-		}
-
-		key = "Drive " + selector + " Device attributes"
-
+// showAllPhysicalDrive returns all information for a given physical drive.
+func (a *Adapter) showAllPhysicalDrive(metadata *physicaldrive.Metadata) (json.RawMessage, error) {
+	if err := validateID(metadata.Slot); err != nil {
+		return nil, errors.Wrap(err, "failed to validate slot")
 	}
 
-	ctrlIDInt, err := strconv.Atoi(controllerID)
+	selector, err := selectorPD(metadata)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed to get selector")
 	}
 
-	areAllIDsValid := ctrlIDInt >= 0 && enclosureID >= 0 && slotID >= 0
-	if areAllIDsValid {
-		selector = fmt.Sprintf(patternEnclosure, controllerID, enclosureID, slotID)
-		output, err = m.cmd.Run([]string{selector, "show", "all"})
-
-		key = "Drive " + selector + " Device attributes"
-	}
-
-	// Check the error after the if block to avoid shadowing the err variable
-	// from the previous block
-	// This allows us to test the error depending on the branch taken
+	output, err := a.runner.Run([]string{selector, "show", "all"})
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, ErrCommandFailed.Error())
 	}
 
 	// Get the response data for the controller
-	responseData, err := output.GetResponseDataByCtrlID(ctrlIDInt)
-	if err != nil {
-		return nil, err
-	}
+	responseData := output.Controllers[0].ResponseData
 
-	return unmarshalToPointer[DriveDeviceAttributes](responseData, key)
+	return responseData, nil
 }
 
-// ShowAllVirtualDrives returns all logical drives for a given controller.
-func (m *Adapter) ShowAllVirtualDrives(controllerID string) ([]VD, error) {
-	responseData, err := m.ShowAllController(controllerID)
-	if err != nil {
-		return nil, err
+// showDeviceAttributes returns the device attributes for a given physical drive.
+func (a *Adapter) showDeviceAttributes(
+	controllerID int, enclosureID, slotID string) (
+	*DriveDeviceAttributes, error,
+) {
+	// Build the metadata for the physical drive
+	pdMetadata := &physicaldrive.Metadata{
+		CtrlMetadata: &raidcontroller.Metadata{
+			ID: controllerID,
+		},
+		Slot: &physicaldrive.Slot{
+			Bay:       slotID,
+			Enclosure: enclosureID,
+		},
 	}
 
-	return unmarshalToSlice[VD](responseData, "VD LIST")
+	selector, err := selectorPD(pdMetadata)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get selector")
+	}
+
+	output, err := a.runner.Run([]string{selector, "show", "all"})
+	if err != nil {
+		return nil, errors.Wrap(err, ErrCommandFailed.Error())
+	}
+
+	responseData := output.Controllers[0].ResponseData
+	key := "Drive " + selector + " Device attributes"
+
+	ddAttributes, err := utils.UnmarshalToPointer[DriveDeviceAttributes](responseData, key)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to get device attributes for %s", selector)
+	}
+
+	return ddAttributes, err
+}
+
+// showAllVirtualDrives returns all logical drives for a given controller.
+func (a *Adapter) showAllVirtualDrives(controllerID int) ([]VD, error) {
+	responseData, err := a.showAllController(controllerID)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to controller show all %d", controllerID)
+	}
+
+	vds, err := utils.UnmarshalToSlice[VD](responseData, "VD LIST")
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get VD list")
+	}
+
+	return vds, nil
+}
+
+// showAllVirtualDrive returns all logical drives for a given controller.
+func (a *Adapter) showAllVirtualDrive(metadata *logicalvolume.Metadata) (json.RawMessage, error) {
+	selector, err := selectorLV(metadata)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get selector")
+	}
+
+	output, err := a.runner.Run([]string{selector, "show", "all"})
+	if err != nil {
+		return nil, errors.Wrap(err, ErrCommandFailed.Error())
+	}
+
+	responseData := output.Controllers[0].ResponseData
+
+	return responseData, nil
 }
