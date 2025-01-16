@@ -14,7 +14,7 @@ linters:
   - goimports                 # format and fix imports
   - lll                       # long line length detection
   - tagalign                  # align struct tags
-  - tagliatelle               # check struct tags naming
+  # - tagliatelle               # check struct tags naming -> Disable for because the structs of the CLI commands are poorly tagged
   - whitespace                # leading and trailing whitespace detection
   - wsl                       # empty lines guidelines
   # correctness & bug prevention -> error handling
@@ -28,7 +28,7 @@ linters:
   - asasalint                 # prevent to use `any` as variadic argument
   - durationcheck             # enforce time.Duration consistent use
   - forcetypeassert           # force type assertions when usinmg interface{} os `any` variables values
-  - gochecknoglobals          # look for global variables
+  # - gochecknoglobals          # look for global variables -> Disable for the moment for dev, it is necessary to have global variables in some cases
   - ineffassign               # detect ineffectual assignments
   - nilnil                    # prevent functions to return value = nil, err = nil
   - predeclared               # detect shadowing of predeclared identifiers

@@ -36,8 +36,6 @@ var pdStatusMap = map[string]physicaldrive.PDStatus{
 	"Failed": physicaldrive.PDStatusFailed,
 }
 
-// FIXME would need some refactor to avoid code duplication
-// with the physicalDrive function
 // physicaldrives returns all physical drives for a given controller.
 func (a *Adapter) physicaldrives(metadata *raidcontroller.Metadata) (
 	[]*physicaldrive.PhysicalDrive, error,
@@ -51,53 +49,22 @@ func (a *Adapter) physicaldrives(metadata *raidcontroller.Metadata) (
 	// Prepare the slice of physical drives to return
 	physicalDrives := make([]*physicaldrive.PhysicalDrive, 0)
 
-	// Get the controller
-	ctrl, err := a.controller(metadata)
-	if err != nil {
-		return nil, errors.Wrapf(err, "failed to get controller %d", metadata.ID)
-	}
-
 	// Fill the slice of physical drives
 	for _, pd := range pds {
 		enclosure, slot := pd.EnclosureSlot()
 
-		size, err := utils.ConvertSizeBytes(pd.Size)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to convert size")
-		}
-
-		// Get the device attributes
-		// This is needed to get the vendor and serial number
-		ddAttributes, err := a.showDeviceAttributes(metadata.ID, enclosure, slot)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to get device attributes")
-		}
-
-		jbod := false
-
-		if ctrl.IsJBODEnabled {
-			jbod, err = pd.isJBOD(*a, metadata)
-			if err != nil {
-				return nil, errors.Wrap(err,
-					"failed to check if the physical drive is JBOD")
-			}
-		}
-
-		physicalDrive := &physicaldrive.PhysicalDrive{
-			CtrlMetadata: ctrl.Metadata,
-			ID:           strconv.Itoa(pd.DeviceID),
-			Model:        strings.TrimSpace(pd.Model),
+		pdMetadata := &physicaldrive.Metadata{
+			CtrlMetadata: metadata,
 			Slot: &physicaldrive.Slot{
-				// Port is not available in the output of storcli
 				Enclosure: enclosure,
 				Bay:       slot,
 			},
-			Type:   pd.DiskType(),
-			Status: pd.PDStatus(),
-			Size:   size,
-			Vendor: strings.TrimSpace(ddAttributes.ManufacturerID),
-			Serial: strings.TrimSpace(ddAttributes.SerialNumber),
-			JBOD:   jbod,
+		}
+
+		physicalDrive, err := a.physicalDrive(pdMetadata)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to get physical drive %s",
+				pdMetadata.Slot.String())
 		}
 
 		physicalDrives = append(physicalDrives, physicalDrive)
@@ -116,9 +83,32 @@ func (a *Adapter) physicaldrives(metadata *raidcontroller.Metadata) (
 
 // isJBOD checks if the physical drive is in JBOD mode.
 // If the physical drive is in JBOD mode, it is not part of any logical volume.
-func (pd *PD) isJBOD(a Adapter, metadata *raidcontroller.Metadata) (bool, error) {
-	isJBOD := true
+func (pd *PD) isJBOD(a *Adapter, metadata *raidcontroller.Metadata) (bool, error) {
+	// Get the controller
+	ctrl, err := a.controller(metadata)
+	if err != nil {
+		return false, errors.Wrapf(err, "failed to get controller %d", metadata.ID)
+	}
 
+	// If JBOD is not enabled, the physical drive is not in JBOD mode
+	if !ctrl.IsJBODEnabled {
+		return false, nil
+	}
+
+	// Check if the physical drive is part of any logical volume
+	found, err := pd.existsInLogicalVolume(a, metadata)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to check if physical drive exists in logical volume")
+	}
+
+	// If the physical drive is not part of any logical volume
+	// and JBOD at controller level is enabled,
+	// the physical drive is in JBOD mode
+	return !found, nil
+}
+
+// existsInLogicalVolume checks if the physical drive exists in a logical volume.
+func (pd *PD) existsInLogicalVolume(a *Adapter, metadata *raidcontroller.Metadata) (bool, error) {
 	lvs, err := a.logicalvolumes(metadata)
 	if err != nil {
 		return false, errors.Wrap(err, "failed to get logical volumes")
@@ -132,20 +122,17 @@ func (pd *PD) isJBOD(a Adapter, metadata *raidcontroller.Metadata) (bool, error)
 				return false, errors.Wrap(err, "failed to get physical drive")
 			}
 
-			// If the physical drive is part of a logical volume
-			// it is not in JBOD mode
+			// Found in a logical volume
 			if pdFull.ID == strconv.Itoa(pd.DeviceID) {
-				isJBOD = false
-				break
+				return true, nil
 			}
 		}
 	}
 
-	return isJBOD, nil
+	// Not found in any logical volume
+	return false, nil
 }
 
-// FIXME would need some refactor to avoid code duplication
-// with the physicaldrives function
 // physicalDrive returns a physical drive for a given physical drive metadata.
 func (a *Adapter) physicalDrive(
 	metadata *physicaldrive.Metadata) (
@@ -185,21 +172,9 @@ func (a *Adapter) physicalDrive(
 		return nil, errors.Wrap(err, "failed to convert size")
 	}
 
-	jbod := false
-
-	// Get the controller
-	ctrl, err := a.controller(metadata.CtrlMetadata)
+	jbod, err := pd.isJBOD(a, metadata.CtrlMetadata)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to get controller %d", metadata.CtrlMetadata.ID)
-	}
-
-	// Check if JBOD is enabled
-	if ctrl.IsJBODEnabled {
-		jbod, err = pd.isJBOD(*a, metadata.CtrlMetadata)
-		if err != nil {
-			return nil, errors.Wrap(err,
-				"failed to check if the physical drive is JBOD")
-		}
+		return nil, errors.Wrap(err, "failed to check JBOD")
 	}
 
 	physicalDrive := &physicaldrive.PhysicalDrive{

@@ -69,43 +69,6 @@ func (a *Adapter) showAllPhysicalDrive(metadata *physicaldrive.Metadata) (json.R
 	return responseData, nil
 }
 
-// showDeviceAttributes returns the device attributes for a given physical drive.
-func (a *Adapter) showDeviceAttributes(
-	controllerID int, enclosureID, slotID string) (
-	*DriveDeviceAttributes, error,
-) {
-	// Build the metadata for the physical drive
-	pdMetadata := &physicaldrive.Metadata{
-		CtrlMetadata: &raidcontroller.Metadata{
-			ID: controllerID,
-		},
-		Slot: &physicaldrive.Slot{
-			Bay:       slotID,
-			Enclosure: enclosureID,
-		},
-	}
-
-	selector, err := selectorPD(pdMetadata)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to get selector")
-	}
-
-	output, err := a.runner.Run([]string{selector, "show", "all"})
-	if err != nil {
-		return nil, errors.Wrap(err, ErrCommandFailed.Error())
-	}
-
-	responseData := output.Controllers[0].ResponseData
-	key := "Drive " + selector + " Device attributes"
-
-	ddAttributes, err := utils.UnmarshalToPointer[DriveDeviceAttributes](responseData, key)
-	if err != nil {
-		return nil, errors.Wrapf(err, "failed to get device attributes for %s", selector)
-	}
-
-	return ddAttributes, err
-}
-
 // showAllVirtualDrives returns all logical drives for a given controller.
 func (a *Adapter) showAllVirtualDrives(controllerID int) ([]VD, error) {
 	responseData, err := a.showAllController(controllerID)
