@@ -1,9 +1,11 @@
 package megaraid
 
 import (
-	"bytes"
 	"encoding/json"
-	"strings"
+	"fmt"
+	"path/filepath"
+
+	"github.com/pkg/errors"
 )
 
 type (
@@ -137,88 +139,145 @@ type (
 		SCSINAAID                string `json:"SCSI NAA Id"`
 		UnmapEnabled             string `json:"Unmap Enabled"`
 	}
+
+	SupportedAdapterOperations struct {
+		RebuildRate                               string `json:"Rebuild Rate"`
+		CCRate                                    string `json:"CC Rate"`
+		BGIRate                                   string `json:"BGI Rate "`
+		ReconstructRate                           string `json:"Reconstruct Rate"`
+		PatrolReadRate                            string `json:"Patrol Read Rate"`
+		AlarmControl                              string `json:"Alarm Control"`
+		ClusterSupport                            string `json:"Cluster Support"`
+		Bbu                                       string `json:"BBU"`
+		Spanning                                  string `json:"Spanning"`
+		DedicatedHotSpare                         string `json:"Dedicated Hot Spare"`
+		RevertibleHotSpares                       string `json:"Revertible Hot Spares"`
+		ForeignConfigImport                       string `json:"Foreign Config Import"`
+		SelfDiagnostic                            string `json:"Self Diagnostic"`
+		AllowMixedRedundancyOnArray               string `json:"Allow Mixed Redundancy on Array"`
+		GlobalHotSpares                           string `json:"Global Hot Spares"`
+		DenySCSIPassthrough                       string `json:"Deny SCSI Passthrough"`
+		DenySMPPassthrough                        string `json:"Deny SMP Passthrough"`
+		DenySTPPassthrough                        string `json:"Deny STP Passthrough"`
+		SupportMoreThan8Phys                      string `json:"Support more than 8 Phys"`
+		FWAndEventTimeInGMT                       string `json:"FW and Event Time in GMT"`
+		SupportEnhancedForeignImport              string `json:"Support Enhanced Foreign Import"`
+		SupportEnclosureEnumeration               string `json:"Support Enclosure Enumeration"`
+		SupportAllowedOperations                  string `json:"Support Allowed Operations"`
+		AbortCCOnError                            string `json:"Abort CC on Error"`
+		SupportMultipath                          string `json:"Support Multipath"`
+		SupportOddEvenDriveCountInRAID1E          string `json:"Support Odd & Even Drive count in RAID1E"`
+		SupportSecurity                           string `json:"Support Security"`
+		SupportConfigPageModel                    string `json:"Support Config Page Model"`
+		SupportTheOCEWithoutAddingDrives          string `json:"Support the OCE without adding drives"`
+		SupportEKM                                string `json:"Support EKM"`
+		SnapshotEnabled                           string `json:"Snapshot Enabled"`
+		SupportPFK                                string `json:"Support PFK"`
+		SupportPI                                 string `json:"Support PI"`
+		SupportLdBBMInfo                          string `json:"Support Ld BBM Info"`
+		SupportShieldState                        string `json:"Support Shield State"`
+		BlockSSDWriteDiskCacheChange              string `json:"Block SSD Write Disk Cache Change"`
+		SupportSuspendResumeBGOps                 string `json:"Support Suspend Resume BG ops"`
+		SupportEmergencySpares                    string `json:"Support Emergency Spares"`
+		SupportSetLinkSpeed                       string `json:"Support Set Link Speed"`
+		SupportBootTimePFKChange                  string `json:"Support Boot Time PFK Change"`
+		SupportJBOD                               string `json:"Support JBOD"`
+		DisableOnlinePFKChange                    string `json:"Disable Online PFK Change"`
+		SupportPerfTuning                         string `json:"Support Perf Tuning"`
+		SupportSSDPatrolRead                      string `json:"Support SSD PatrolRead"`
+		RealTimeScheduler                         string `json:"Real Time Scheduler"`
+		SupportResetNow                           string `json:"Support Reset Now"`
+		SupportEmulatedDrives                     string `json:"Support Emulated Drives"`
+		HeadlessMode                              string `json:"Headless Mode"`
+		DedicatedHotSparesLimited                 string `json:"Dedicated HotSpares Limited"`
+		PointInTimeProgress                       string `json:"Point In Time Progress"`
+		ExtendedLD                                string `json:"Extended LD"`
+		SupportUnevenSpan                         string `json:"Support Uneven span "`
+		SupportConfigAutoBalance                  string `json:"Support Config Auto Balance"`
+		SupportMaintenanceMode                    string `json:"Support Maintenance Mode"`
+		SupportDiagnosticResults                  string `json:"Support Diagnostic results"`
+		SupportExtEnclosure                       string `json:"Support Ext Enclosure"`
+		SupportSesmonitoring                      string `json:"Support Sesmonitoring"`
+		SupportSecurityonJBOD                     string `json:"Support SecurityonJBOD"`
+		SupportForceFlash                         string `json:"Support ForceFlash"`
+		SupportDisableImmediateIO                 string `json:"Support DisableImmediateIO"`
+		SupportLargeIOSupport                     string `json:"Support LargeIOSupport"`
+		SupportDrvActivityLEDSetting              string `json:"Support DrvActivityLEDSetting"`
+		SupportFlushWriteVerify                   string `json:"Support FlushWriteVerify"`
+		SupportCPLDUpdate                         string `json:"Support CPLDUpdate"`
+		SupportForceTo512E                        string `json:"Support ForceTo512e"`
+		SupportDiscardCacheDuringLDDelete         string `json:"Support discardCacheDuringLDDelete"`
+		SupportJBODWriteCache                     string `json:"Support JBOD Write cache"`
+		SupportLargeQDSupport                     string `json:"Support Large QD Support"`
+		SupportCtrlInfoExtended                   string `json:"Support Ctrl Info Extended"`
+		SupportIButtonLess                        string `json:"Support IButton less"`
+		SupportAESEncryptionAlgorithm             string `json:"Support AES Encryption Algorithm"`
+		SupportEncryptedMFC                       string `json:"Support Encrypted MFC"`
+		SupportSnapdump                           string `json:"Support Snapdump"`
+		SupportForcePersonalityChange             string `json:"Support Force Personality Change"`
+		SupportDualFwImage                        string `json:"Support Dual Fw Image"`
+		SupportPSOCUpdate                         string `json:"Support PSOC Update"`
+		SupportSecureBoot                         string `json:"Support Secure Boot"`
+		SupportDebugQueue                         string `json:"Support Debug Queue"`
+		SupportLeastLatencyMode                   string `json:"Support Least Latency Mode"`
+		SupportOnDemandSnapdump                   string `json:"Support OnDemand Snapdump"`
+		SupportClearSnapdump                      string `json:"Support Clear Snapdump"`
+		SupportFWTriggeredSnapdump                string `json:"Support FW Triggered Snapdump"`
+		SupportPHYCurrentSpeed                    string `json:"Support PHY current speed"`
+		SupportLaneCurrentSpeed                   string `json:"Support Lane current speed"`
+		SupportNVMeWidth                          string `json:"Support NVMe Width"`
+		SupportLaneDeviceType                     string `json:"Support Lane DeviceType"`
+		SupportExtendedDrivePerformanceMonitoring string `json:"Support Extended Drive performance Monitoring"` // nolint:lll
+		SupportNVMeRepair                         string `json:"Support NVMe Repair"`
+		SupportPlatformSecurity                   string `json:"Support Platform Security"`
+		SupportNoneModeParams                     string `json:"Support None Mode Params"`
+		SupportExtendedControllerProperty         string `json:"Support Extended Controller Property"`
+		SupportSmartPollIntervalForDirectAttached string `json:"Support Smart Poll Interval for DirectAttached"` // nolint:lll
+		SupportWriteJournalPinning                string `json:"Support Write Journal Pinning"`
+		SupportSMPPassthruWithPortNumber          string `json:"Support SMP Passthru with Port Number"`
+		SupportNVMeInitErrorDeviceConnectorIndex  string `json:"Support NVMe Init Error Device ConnectorIndex"` // nolint:lll
+	}
+
+	Capabilities struct {
+		SupportedDrives                string `json:"Supported Drives"`
+		RAIDLevelSupported             string `json:"RAID Level Supported"`
+		EnableJBOD                     string `json:"Enable JBOD"`
+		MixInEnclosure                 string `json:"Mix in Enclosure"`
+		MixOfSASSATAOfHDDTypeInVD      string `json:"Mix of SAS/SATA of HDD type in VD"`
+		MixOfSASSATAOfSSDTypeInVD      string `json:"Mix of SAS/SATA of SSD type in VD"`
+		MixOfSSDHDDInVD                string `json:"Mix of SSD/HDD in VD"`
+		SASDisable                     string `json:"SAS Disable"`
+		MaxArmsPerVD                   int    `json:"Max Arms Per VD"`
+		MaxSpansPerVD                  int    `json:"Max Spans Per VD"`
+		MaxArrays                      int    `json:"Max Arrays"`
+		MaxVDPerArray                  int    `json:"Max VD per array"`
+		MaxNumberOfVDs                 int    `json:"Max Number of VDs"`
+		MaxParallelCommands            int    `json:"Max Parallel Commands"`
+		MaxSGECount                    int    `json:"Max SGE Count"`
+		MaxDataTransferSize            string `json:"Max Data Transfer Size"`
+		MaxStripsPerIO                 int    `json:"Max Strips PerIO"`
+		MaxConfigurableCacheCadeSizeGB int    `json:"Max Configurable CacheCade Size(GB)"`
+		MaxTransportableDGs            int    `json:"Max Transportable DGs"`
+		EnableSnapdump                 string `json:"Enable Snapdump"`
+		EnableSCSIUnmap                string `json:"Enable SCSI Unmap"`
+		FDEDriveMixSupport             string `json:"FDE Drive Mix Support"`
+		MinStripSize                   string `json:"Min Strip Size"`
+		MaxStripSize                   string `json:"Max Strip Size"`
+	}
 )
 
-func (c *CmdOutput) GetResponseDataByCtrlID(ctrlID int) (json.RawMessage, error) {
-	for _, controller := range c.Controllers {
-		if controller.CommandStatus.Controller == ctrlID {
-			return controller.ResponseData, nil
-		}
-	}
+// CustomEvalSymlinks is a variable that holds a function that evaluates symlinks.
+// It is used to mock the filepath.EvalSymlinks function in tests.
+var CustomEvalSymlinks = filepath.EvalSymlinks
 
-	return nil, ErrControllerNotFound
-}
+// permanentPath returns the permanent path of a virtual drive.
+func (vdp *VDProperties) permanentPath() (string, error) {
+	sysPath := fmt.Sprintf("/dev/disk/by-id/wwn-0x%s", vdp.SCSINAAID)
 
-// searchForKey searches for a key in a JSON object, including nested objects.
-// If the key is found, the value is returned as json.RawMessage.
-// The function recurses if the value is an object.
-// If the key is not found, the function returns false.
-func searchForKey(data json.RawMessage, targetKey string) (json.RawMessage, bool) {
-	decoder := json.NewDecoder(bytes.NewReader(data))
-
-	// Ensure we start processing as an object
-	token, err := decoder.Token()
-	if err != nil || token != json.Delim('{') {
-		return nil, false
-	}
-
-	for decoder.More() {
-		// Read the key
-		key, ok := getKey(decoder)
-		if !ok {
-			return nil, false
-		}
-
-		// If the key matches, return the corresponding value
-		if key == targetKey {
-			return getValue(decoder)
-		}
-
-		// Check if the value is an object to recurse
-		var rawValue json.RawMessage
-		if err := decoder.Decode(&rawValue); err != nil {
-			return nil, false
-		}
-
-		// Check if it's a nested object and recurse
-		if isJSONObject(rawValue) {
-			// Recursively search for the key in the nested object
-			if result, found := searchForKey(rawValue, targetKey); found {
-				return result, true
-			}
-		}
-	}
-
-	return nil, false
-}
-
-// getValue reads the value from a JSON decoder.
-func getValue(decoder *json.Decoder) (json.RawMessage, bool) {
-	var value json.RawMessage
-	if err := decoder.Decode(&value); err != nil {
-		return nil, false
-	}
-
-	return value, true
-}
-
-// getKey reads the key from a JSON decoder.
-func getKey(decoder *json.Decoder) (string, bool) {
-	keyToken, err := decoder.Token()
+	permanentPath, err := CustomEvalSymlinks(sysPath)
 	if err != nil {
-		return "", false
+		return "", errors.Wrap(err, "failed to evaluate symlink")
 	}
 
-	key, ok := keyToken.(string)
-	if !ok {
-		return "", false
-	}
-
-	return key, true
-}
-
-// isJSONObject checks if a JSON RawMessage is an object.
-func isJSONObject(data json.RawMessage) bool {
-	trimmed := strings.TrimSpace(string(data))
-	return len(trimmed) > 0 && trimmed[0] == '{'
+	return permanentPath, nil
 }
