@@ -16,7 +16,7 @@ const (
 )
 
 const (
-	ReadPolicyUnknown     ReadPolicy = "unknwon"
+	ReadPolicyUnknown     ReadPolicy = "unknown"
 	ReadPolicyReadAhead   ReadPolicy = "ra"
 	ReadPolicyNoReadAhead ReadPolicy = "nora"
 

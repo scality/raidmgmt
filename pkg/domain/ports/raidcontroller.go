@@ -47,11 +47,11 @@ type LogicalVolumesManager interface {
 	// DeleteLV deletes a logical volume
 	DeleteLV(metadata *logicalvolume.Metadata) error
 
-	// AddPVToLV adds a physical drive to a logical volume
-	AddPVToLV(lvMetadata *logicalvolume.Metadata, pvMetadata *physicaldrive.Metadata) error
+	// AddPDToLV adds a physical drive to a logical volume
+	AddPDToLV(lvMetadata *logicalvolume.Metadata, pdMetadata *physicaldrive.Metadata) error
 
-	// DeletePVFromLV deletes a physical drive from a logical volume
-	DeletePVFromLV(lvMetadata *logicalvolume.Metadata, pvMetadata *physicaldrive.Metadata) error
+	// DeletePDFromLV deletes a physical drive from a logical volume
+	DeletePDFromLV(lvMetadata *logicalvolume.Metadata, pdMetadata *physicaldrive.Metadata) error
 }
 
 type JBODSetter interface {

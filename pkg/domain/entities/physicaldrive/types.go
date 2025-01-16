@@ -1,7 +1,9 @@
 package physicaldrive
 
 import (
-	"fmt"
+	"strings"
+
+	"github.com/pkg/errors"
 
 	"github.com/scality/raidmgmt/domain/entities/raidcontroller"
 )
@@ -10,44 +12,61 @@ type (
 	// PhysicalDrive represents a physical drive.
 	PhysicalDrive struct {
 		CtrlMetadata *raidcontroller.Metadata // Controller of the disk
-		ID           string                   // ID of the disk
-		Vendor       string                   // Vendor of the disk
-		Model        string                   // Model of the disk
-		Serial       string                   // Serial number of the disk
-		Slot         *Slot                    // Slot of the disk
-		Size         uint64                   // Size of the disk in bytes
-		Type         DiskType                 // Type of the disk (e.g.: HDD, SSD)
+		ID           string                   // ID
+		Vendor       string                   // Vendor
+		Model        string                   // Model
+		Serial       string                   // Serial number
+		Slot         *Slot                    // Slot
+		Size         uint64                   // Size in bytes
+		Type         DiskType                 // Type (e.g.: HDD, SSD)
 		JBOD         bool                     // Is the disk in JBOD mode
-		Status       PDStatus                 // State of the disk (e.g.: Online, Offline, Failed)
-		Reason       string                   // Reason for the disk state
+		Status       PDStatus                 // State (e.g.: Online, Offline, Failed)
+		Reason       *string                  // Reason for the disk state
 	}
 
 	// Slot identifies the slot of a disk.
 	Slot struct {
-		Port      string // Port number of the disk (if available)
-		Enclosure string // Enclosure number of the disk (if available)
-		Bay       string // Bay number of the disk (if available)
+		Port      string // Port number (if available)
+		Enclosure string // Enclosure number (if available)
+		Bay       string // Bay number (if available)
 	}
 
 	// Metadata represents the metadata of a physical drive.
 	Metadata struct {
 		CtrlMetadata *raidcontroller.Metadata // Controller metadata of the disk
-		Slot         *Slot                    // Slot of the disk
+		Slot         *Slot                    // Slot
 	}
 )
 
+// String returns the string representation of the Slot instance.
 func (s *Slot) String() string {
 	if s == nil {
-		return ""
+		return "<nil>"
 	}
 
-	if s.Enclosure == "" {
-		return s.Bay
+	var parts []string
+
+	if s.Enclosure != "" {
+		parts = append(parts, s.Enclosure)
 	}
 
-	return fmt.Sprintf("%s:%s", s.Enclosure, s.Bay)
+	if s.Bay != "" {
+		parts = append(parts, s.Bay)
+	}
+
+	if s.Port != "" {
+		parts = append(parts, s.Port)
+	}
+
+	str := strings.Join(parts, ":")
+	if str == "" {
+		return "<empty>"
+	}
+
+	return str
 }
 
+// Available checks if the PhysicalDrive Status is PDStatusUnassignedGood.
 func (pd *PhysicalDrive) Available() bool {
 	return pd.Status == PDStatusUnassignedGood
 }
@@ -80,11 +99,22 @@ func (s *Slot) IsEqualTo(other *Slot) bool {
 // Validate checks if the Metadata instance is valid.
 func (m *Metadata) Validate() error {
 	if m == nil {
-		return ErrNil
+		return errors.New("Metadata is nil")
 	}
 
 	if err := m.CtrlMetadata.Validate(); err != nil {
-		return fmt.Errorf("%s: %w", prefixErr, err)
+		return errors.Wrap(err, "ControllerMetadata is invalid")
+	}
+
+	// Detailed validation of the slot is done in each adapter
+	// as the validation rules may vary between different adapters
+	// Some fields may be optional or mandatory depending on the adapter
+	if m.Slot == nil {
+		return errors.New("Slot is nil")
+	}
+
+	if m.Slot.String() == "<empty>" {
+		return errors.New("Slot is empty")
 	}
 
 	return nil

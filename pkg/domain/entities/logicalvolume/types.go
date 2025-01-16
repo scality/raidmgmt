@@ -15,28 +15,28 @@ type (
 	// LogicalVolume represents a logical volume.
 	LogicalVolume struct {
 		CtrlMetadata    *raidcontroller.Metadata  // Controller of the logical volume
-		ID              string                    // ID of the array
+		ID              string                    // ID
 		DevicePath      string                    // Device path of the array (e.g.: /dev/sda)
 		PermanentPath   string                    // Permanent path of the array (e.g.: /dev/disk/by-id/...)
 		RAIDLevel       RAIDLevel                 // RAID level of the array (e.g.: RAID 0, RAID 1, RAID 10, ...)
-		PDrivesMetadata []*physicaldrive.Metadata // Physical drives composing the array
-		CacheOptions    *CacheOptions             // Cache options of the array
-		Status          LVStatus                  // State of the array (e.g.: Online, Offline, Degraded)
-		Reason          string                    // Reason for the logical volume state
+		PDrivesMetadata []*physicaldrive.Metadata // Physical drives composing the logical volume
+		CacheOptions    *CacheOptions             // Cache options
+		Status          LVStatus                  // State (e.g.: Online, Offline, Degraded)
+		Reason          *string                   // Reason for the logical volume state
 	}
 
 	// Metadata represents the metadata of a logical volume.
 	Metadata struct {
 		CtrlMetadata *raidcontroller.Metadata // Controller of the logical volume
-		ID           string                   // ID of the array
+		ID           string                   // ID
 	}
 
 	// Request represents the request to create a logical volume.
 	Request struct {
 		CtrlMetadata    *raidcontroller.Metadata  // Controller of the logical volume
 		RAIDLevel       RAIDLevel                 // RAID level of the array (e.g.: RAID 0, RAID 1, RAID 10, ...)
-		PDrivesMetadata []*physicaldrive.Metadata // Physical drives composing the array
-		CacheOptions    *CacheOptions             // Cache options of the array
+		PDrivesMetadata []*physicaldrive.Metadata // Physical drives composing the logical volume
+		CacheOptions    *CacheOptions             // Cache options
 	}
 
 	// CacheOptions represents the cache options of a logical volume.

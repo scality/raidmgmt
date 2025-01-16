@@ -6,22 +6,28 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/pkg/errors"
 	"github.com/scality/raidmgmt/domain/entities/physicaldrive"
 	"github.com/scality/raidmgmt/domain/entities/raidcontroller"
+	"github.com/scality/raidmgmt/utils"
 )
 
 const (
-	patternEnclosure   string = "/c%s/e%d/s%d"
-	patternNoEnclosure string = "/c%s/s%d"
+	// patternEnclosure is the pattern for the physical drive selector with enclosure.
+	patternEnclosure string = "/c%d/e%s/s%s"
+	// patternNoEnclosure is the pattern for the physical drive selector without enclosure.
+	patternNoEnclosure string = "/c%d/s%s"
 )
 
+// diskTypeMap maps the disk type string to the physical drive disk type.
 var diskTypeMap = map[string]physicaldrive.DiskType{
 	"HDD":  physicaldrive.DiskTypeHDD,
 	"SSD":  physicaldrive.DiskTypeSSD,
 	"NVME": physicaldrive.DiskTypeNVMe,
 }
 
-var PDStatusMap = map[string]physicaldrive.PDStatus{
+// pdStatusMap maps the physical drive status string to the physical drive status.
+var pdStatusMap = map[string]physicaldrive.PDStatus{
 	"Onln": physicaldrive.PDStatusUsed,
 	// TODO : check the real values
 	"UGood":  physicaldrive.PDStatusUnassignedGood,
@@ -30,62 +36,77 @@ var PDStatusMap = map[string]physicaldrive.PDStatus{
 	"Failed": physicaldrive.PDStatusFailed,
 }
 
+// FIXME would need some refactor to avoid code duplication
+// with the physicalDrive function
 // physicaldrives returns all physical drives for a given controller.
-func (m *Adapter) physicaldrives(metadata *raidcontroller.Metadata) ([]*physicaldrive.PhysicalDrive, error) {
+func (a *Adapter) physicaldrives(metadata *raidcontroller.Metadata) (
+	[]*physicaldrive.PhysicalDrive, error,
+) {
 	// Get the physical drives for the controller
-	pds, err := m.ShowAllPhysicalDrives(metadata.ID)
+	pds, err := a.showAllPhysicalDrives(metadata.ID)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed to get all physical drives")
 	}
 
 	// Prepare the slice of physical drives to return
 	physicalDrives := make([]*physicaldrive.PhysicalDrive, 0)
 
 	// Get the controller
-	ctrl, err := m.ControllerByID(metadata.ID)
+	ctrl, err := a.controller(metadata)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "failed to get controller %d", metadata.ID)
 	}
 
 	// Fill the slice of physical drives
 	for _, pd := range pds {
 		enclosure, slot := pd.EnclosureSlot()
 
-		size, err := convertSizeBytes(pd.Size)
+		size, err := utils.ConvertSizeBytes(pd.Size)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "failed to convert size")
 		}
 
-		ddAttributes, err := m.ShowDeviceAttributes(metadata.ID, enclosure, slot)
+		// Get the device attributes
+		// This is needed to get the vendor and serial number
+		ddAttributes, err := a.showDeviceAttributes(metadata.ID, enclosure, slot)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "failed to get device attributes")
+		}
+
+		jbod := false
+
+		if ctrl.IsJBODEnabled {
+			jbod, err = pd.isJBOD(*a, metadata)
+			if err != nil {
+				return nil, errors.Wrap(err,
+					"failed to check if the physical drive is JBOD")
+			}
 		}
 
 		physicalDrive := &physicaldrive.PhysicalDrive{
-			Controller: ctrl,
-			ID:         strconv.Itoa(pd.DeviceID),
-			Model:      strings.Trim(pd.Model, " "),
+			CtrlMetadata: ctrl.Metadata,
+			ID:           strconv.Itoa(pd.DeviceID),
+			Model:        strings.TrimSpace(pd.Model),
 			Slot: &physicaldrive.Slot{
+				// Port is not available in the output of storcli
 				Enclosure: enclosure,
-				// TODO Port is not available in the output of storcli
-				Bay: slot,
+				Bay:       slot,
 			},
 			Type:   pd.DiskType(),
 			Status: pd.PDStatus(),
 			Size:   size,
-			Vendor: strings.Trim(ddAttributes.ManufacturerID, " "),
-			Serial: strings.Trim(ddAttributes.SerialNumber, " "),
-			// TODO JBOD is not available in the output of storcli
-			// Get JBOD depeding on the controller capabilities
-			JBOD: false,
+			Vendor: strings.TrimSpace(ddAttributes.ManufacturerID),
+			Serial: strings.TrimSpace(ddAttributes.SerialNumber),
+			JBOD:   jbod,
 		}
 
 		physicalDrives = append(physicalDrives, physicalDrive)
 	}
 
 	sort.Slice(physicalDrives, func(i, j int) bool {
-		a, _ := strconv.Atoi(physicalDrives[i].ID)
-		b, _ := strconv.Atoi(physicalDrives[j].ID)
+		// Pass the error check because the slice is already validated
+		a, _ := strconv.Atoi(physicalDrives[i].ID) // nolint:errcheck
+		b, _ := strconv.Atoi(physicalDrives[j].ID) // nolint:errcheck
 
 		return a < b
 	})
@@ -93,46 +114,124 @@ func (m *Adapter) physicaldrives(metadata *raidcontroller.Metadata) ([]*physical
 	return physicalDrives, nil
 }
 
+// isJBOD checks if the physical drive is in JBOD mode.
+// If the physical drive is in JBOD mode, it is not part of any logical volume.
+func (pd *PD) isJBOD(a Adapter, metadata *raidcontroller.Metadata) (bool, error) {
+	isJBOD := true
+
+	lvs, err := a.logicalvolumes(metadata)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to get logical volumes")
+	}
+
+	for _, lv := range lvs {
+		for _, pdMeta := range lv.PDrivesMetadata {
+			// Get the full physical drive
+			pdFull, err := a.physicalDrive(pdMeta)
+			if err != nil {
+				return false, errors.Wrap(err, "failed to get physical drive")
+			}
+
+			// If the physical drive is part of a logical volume
+			// it is not in JBOD mode
+			if pdFull.ID == strconv.Itoa(pd.DeviceID) {
+				isJBOD = false
+				break
+			}
+		}
+	}
+
+	return isJBOD, nil
+}
+
+// FIXME would need some refactor to avoid code duplication
+// with the physicaldrives function
 // physicalDrive returns a physical drive for a given physical drive metadata.
-func (m *Adapter) physicalDrive(
+func (a *Adapter) physicalDrive(
 	metadata *physicaldrive.Metadata) (
 	*physicaldrive.PhysicalDrive, error,
 ) {
-	pds, err := m.physicaldrives(metadata.CtrlMetadata)
+	selector, err := selectorPD(metadata)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %w", ErrPhysicalDrives, err)
+		return nil, errors.Wrap(err, "failed to get selector")
 	}
 
-	for _, pd := range pds {
-		if physicaldrive.AreSlotsEqual(pd.Slot, metadata.Slot) {
-			return pd, nil
+	// Get the physical drive
+	responseData, err := a.showAllPhysicalDrive(metadata)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get all physical drives")
+	}
+
+	key := "Drive " + selector
+
+	pdList, err := utils.UnmarshalToSlice[PD](responseData, key)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to unmarshal physical drive")
+	}
+
+	pd := pdList[0]
+
+	key = "Drive " + selector + " Device attributes"
+
+	// Get the device attributes
+	// This is needed to get the vendor and serial number
+	ddAttributes, err := utils.UnmarshalToPointer[DriveDeviceAttributes](responseData, key)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to unmarshal device attributes")
+	}
+
+	size, err := utils.ConvertSizeBytes(pd.Size)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to convert size")
+	}
+
+	jbod := false
+
+	// Get the controller
+	ctrl, err := a.controller(metadata.CtrlMetadata)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to get controller %d", metadata.CtrlMetadata.ID)
+	}
+
+	// Check if JBOD is enabled
+	if ctrl.IsJBODEnabled {
+		jbod, err = pd.isJBOD(*a, metadata.CtrlMetadata)
+		if err != nil {
+			return nil, errors.Wrap(err,
+				"failed to check if the physical drive is JBOD")
 		}
 	}
 
-	return nil, fmt.Errorf("%w: %s", ErrPhysicalDriveNotFound, selectorPD(metadata))
+	physicalDrive := &physicaldrive.PhysicalDrive{
+		CtrlMetadata: metadata.CtrlMetadata,
+		ID:           strconv.Itoa(pd.DeviceID),
+		Vendor:       strings.TrimSpace(ddAttributes.ManufacturerID),
+		Model:        strings.TrimSpace(pd.Model),
+		Serial:       strings.TrimSpace(ddAttributes.SerialNumber),
+		Slot:         metadata.Slot,
+		Size:         size,
+		Type:         pd.DiskType(),
+		Status:       pd.PDStatus(),
+		JBOD:         jbod,
+		// Reason:       nil,
+	}
+
+	return physicalDrive, nil
 }
 
 // EnclosureSlot returns the enclosure and slot of a physical drive.
-func (pd *PD) EnclosureSlot() (int, int) {
+func (pd *PD) EnclosureSlot() (enclosure, slot string) {
 	eidSlotSplit := strings.Split(pd.EIDSlot, ":")
+	splitParts := 2
 
 	// If the enclosureSlot is not in the format "enclosure:slot"
 	// then the slot is the value of EIDSlot
-	if len(eidSlotSplit) != 2 {
-		slot, err := strconv.Atoi(pd.EIDSlot)
-		if err != nil {
-			slot = -1
-		}
-
-		return -1, slot
+	if len(eidSlotSplit) != splitParts {
+		return "", pd.EIDSlot
 	}
 
-	enclosure, err := strconv.Atoi(eidSlotSplit[0])
-	if err != nil {
-		enclosure = -1
-	}
-
-	slot, _ := strconv.Atoi(eidSlotSplit[1])
+	enclosure = eidSlotSplit[0]
+	slot = eidSlotSplit[1]
 
 	return enclosure, slot
 }
@@ -148,95 +247,85 @@ func (pd *PD) DiskType() physicaldrive.DiskType {
 
 // convertPVStatus converts a string to a PVStatus.
 func (pd *PD) PDStatus() physicaldrive.PDStatus {
-	if status, ok := PDStatusMap[pd.State]; ok {
+	if status, ok := pdStatusMap[pd.State]; ok {
 		return status
 	}
 
 	return physicaldrive.PDStatusUnknown
 }
 
-// selectorPD returns the selector for a physical drive metadata.
-func selectorPD(m *physicaldrive.Metadata) string {
-	selector := fmt.Sprintf(patternEnclosure, m.CtrlMetadata.ID, m.Slot.Enclosure, m.Slot.Bay)
-
-	if m.Slot.Enclosure < 0 {
-		selector = fmt.Sprintf(patternNoEnclosure, m.CtrlMetadata.ID, m.Slot.Bay)
+// validateID validates the slot IDs of a physical drive.
+func validateID(s *physicaldrive.Slot) error {
+	bayID, err := strconv.Atoi(s.Bay)
+	if err != nil {
+		return errors.Wrapf(err, "failed to convert bay ID to int: %s", s.Bay)
 	}
 
-	return selector
+	if bayID < 0 {
+		return errors.Wrapf(err, "invalid bay ID: %s", s.Bay)
+	}
+
+	if s.Enclosure != "" {
+		enclosureID, err := strconv.Atoi(s.Enclosure)
+		if err != nil {
+			return errors.Wrapf(err, "failed to convert enclosure ID to int: %s", s.Enclosure)
+		}
+
+		if enclosureID < 0 {
+			return errors.Wrapf(err, "invalid enclosure ID: %s", s.Enclosure)
+		}
+	}
+
+	return nil
 }
 
-// startBlink starts the blinking of the given physical drive.
-func (m *Adapter) startBlink(metadata *physicaldrive.Metadata) error {
-	_, err := m.blink(metadata, "start")
-	return err
-}
+// selectorPD returns the selector for a physical drive metadata.
+func selectorPD(m *physicaldrive.Metadata) (string, error) {
+	err := validateID(m.Slot)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to validate slot IDs")
+	}
 
-// stopBlink stops the blinking of the given physical drive.
-func (m *Adapter) stopBlink(metadata *physicaldrive.Metadata) error {
-	_, err := m.blink(metadata, "stop")
-	return err
+	selector := fmt.Sprintf(patternNoEnclosure, m.CtrlMetadata.ID, m.Slot.Bay)
+
+	if m.Slot.Enclosure != "" {
+		selector = fmt.Sprintf(patternEnclosure, m.CtrlMetadata.ID, m.Slot.Enclosure, m.Slot.Bay)
+	}
+
+	return selector, nil
 }
 
 // blink starts or stops the blinking of the given physical drive.
-func (m *Adapter) blink(
-	metadata *physicaldrive.Metadata, action string) (
-	*CmdOutput, error,
-) {
-	selector := selectorPD(metadata)
-
-	if action != "start" && action != "stop" {
-		return nil, fmt.Errorf("%w: %s", ErrInvalidAction, action)
+// action is either "start" or "stop".
+func (a *Adapter) blink(
+	metadata *physicaldrive.Metadata, action string,
+) error {
+	selector, err := selectorPD(metadata)
+	if err != nil {
+		return errors.Wrap(err, "failed to get selector")
 	}
 
-	return m.cmd.Run([]string{selector, action, "locate"})
-}
+	_, err = a.runner.Run([]string{selector, action, "locate"})
+	if err != nil {
+		return errors.Wrap(err, ErrCommandFailed.Error())
+	}
 
-// enableJBOD enables JBOD for the given physical drive.
-func (m *Adapter) enableJBOD(metadata *physicaldrive.Metadata) error {
-	_, err := m.setJBOD(metadata, "set")
-	return err
-}
-
-// disableJBOD disables JBOD for the given physical drive.
-func (m *Adapter) disableJBOD(metadata *physicaldrive.Metadata) error {
-	_, err := m.setJBOD(metadata, "delete")
-	return err
+	return nil
 }
 
 // setJBOD sets or deletes JBOD for the given physical drive.
-func (m *Adapter) setJBOD(
-	metadata *physicaldrive.Metadata, action string) (
-	*CmdOutput, error,
-) {
-	selector := selectorPD(metadata)
-
-	if action != "set" && action != "delete" {
-		return nil, fmt.Errorf("%w: %s", ErrInvalidAction, action)
+// action is either "set" or "delete".
+func (a *Adapter) setJBOD(
+	metadata *physicaldrive.Metadata, action string,
+) error {
+	selector, err := selectorPD(metadata)
+	if err != nil {
+		return errors.Wrap(err, "failed to get selector")
 	}
 
-	return m.cmd.Run([]string{selector, action, "jbod"})
-}
-
-// checkAvailabilityPDMetadata checks if the physical drives are available.
-func checkAvailabilityPDMetadata(m *Adapter, pdsMetadata []*physicaldrive.Metadata) error {
-	var ids []string
-
-	for _, pdMetadata := range pdsMetadata {
-		pd, err := m.physicalDrive(pdMetadata)
-		if err != nil {
-			return err
-		}
-
-		notAvailable := pd.Status != PDStatusMap["UGood"]
-
-		if notAvailable {
-			ids = append(ids, fmt.Sprintf("%d:%d", pd.Slot.Enclosure, pd.Slot.Bay))
-		}
-	}
-
-	if len(ids) > 0 {
-		return fmt.Errorf("%w: %s", ErrPhysicalDriveNotAvailable, strings.Join(ids, ","))
+	_, err = a.runner.Run([]string{selector, action, "jbod"})
+	if err != nil {
+		return errors.Wrap(err, ErrCommandFailed.Error())
 	}
 
 	return nil

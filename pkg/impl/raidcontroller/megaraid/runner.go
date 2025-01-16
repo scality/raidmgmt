@@ -2,21 +2,23 @@ package megaraid
 
 import (
 	"encoding/json"
-	"fmt"
+	"os"
 	"os/exec"
+
+	"github.com/pkg/errors"
 )
 
 var (
 	// STORCLI is the path to the storcli command.
-	STORCLI = "/opt/hpe/storcli/storcli64"
+	STORCLI = "/opt/MegaRAID/storcli/storcli64"
 
 	// PERCCLI is the path to the perccli command.
 	PERCCLI = "/opt/MegaRAID/perccli/perccli64"
 )
 
 // Runner is an interface that defines the Run method.
-//
-//go:generate mockery --name=Runner --output=mocks --outpkg=mocks
+// It is used to run commands for the MegaRAID controller.
+// Both storcli and perccli commands can be used.
 type Runner interface {
 	Run(args []string) (*CmdOutput, error)
 }
@@ -33,40 +35,67 @@ type MegaRAIDRunner struct {
 // If the path is "storcli" or "perccli", the default path will be used.
 //
 // If the path is a custom path, it will be used.
-func NewMegaRAIDRunner(path string) *MegaRAIDRunner {
-	if path == "storcli" {
+func NewMegaRAIDRunner(arg string) (*MegaRAIDRunner, error) {
+	path := arg
+
+	if arg == "storcli" {
 		path = STORCLI
 	}
 
-	if path == "perccli" {
+	if arg == "perccli" {
 		path = PERCCLI
+	}
+
+	// Check if the path exists
+	if err := validatePath(arg); err != nil {
+		return nil, errors.Wrap(err, "failed to validate path")
 	}
 
 	return &MegaRAIDRunner{
 		cli: path,
+	}, nil
+}
+
+func validatePath(path string) error {
+	info, err := os.Stat(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return errors.Wrapf(err, "path does not exist: %s", path)
+		}
+
+		return errors.Wrap(err, "error getting path info")
 	}
+
+	if info.IsDir() {
+		return errors.Wrapf(err, "path is a directory: %s", path)
+	}
+
+	return nil
 }
 
 // Run runs a command with the given arguments.
 func (mrr *MegaRAIDRunner) Run(args []string) (*CmdOutput, error) {
 	// Add JSON output format
-	args = append(args, "J")
+	argsJSON := append(args, "J")
 
-	cmd := exec.Command(mrr.cli, args...)
+	// Run the command
+	// Disable gosec G204 linter as the command is not user input
+	cmd := exec.Command(mrr.cli, argsJSON...) // nolint:gosec
 
 	output, err := cmd.Output()
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed to run command")
 	}
 
+	// Parse the output
 	parsed, err := parse(output)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed to parse command output")
 	}
 
 	// Check if there are any controllers
 	if len(parsed.Controllers) == 0 {
-		return nil, ErrNoControllersFound
+		return nil, errors.New("no controllers found")
 	}
 
 	// Check if the command was successful
@@ -74,7 +103,10 @@ func (mrr *MegaRAIDRunner) Run(args []string) (*CmdOutput, error) {
 		commandStatus := controller.CommandStatus
 
 		if commandStatus.Status != "Success" {
-			return nil, ParseError(commandStatus)
+			// Parse the error
+			err := parseError(commandStatus)
+
+			return nil, errors.Wrap(err, "error running command")
 		}
 	}
 
@@ -87,25 +119,25 @@ func parse(data []byte) (*CmdOutput, error) {
 
 	err := json.Unmarshal(data, &out)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed to unmarshal JSON")
 	}
 
 	return &out, nil
 }
 
-// ParseError parses the error from the command status.
-func ParseError(commandStatus CommandStatus) error {
+// parseError parses the error from the command status.
+func parseError(commandStatus CommandStatus) error {
 	if len(commandStatus.DetailedStatus) > 0 {
 		for _, ds := range commandStatus.DetailedStatus {
 			if ds.Status != "Success" {
 				if ds.Description != nil {
-					return fmt.Errorf("%w: %s: %s", ErrCommandFailed, ds.ErrMsg, *ds.Description)
+					return errors.Errorf("%s: %s", ds.ErrMsg, *ds.Description)
 				}
 
-				return fmt.Errorf("%w %s", ErrCommandFailed, ds.ErrMsg)
+				return errors.New(ds.ErrMsg)
 			}
 		}
 	}
 
-	return fmt.Errorf("%w: %s", ErrCommandFailed, commandStatus.Description)
+	return errors.New(commandStatus.Description)
 }
