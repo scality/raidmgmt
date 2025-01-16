@@ -2,7 +2,6 @@ package logicalvolumegetter
 
 import (
 	"commandrunner"
-	"physicaldriveresolver"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -16,7 +15,6 @@ import (
 type (
 	MDADM struct {
 		commandrunner.CommandRunner
-		physicaldriveresolver.PhysicalDriveResolver
 	}
 
 	LogicalVolumesGetter interface {
@@ -43,11 +41,9 @@ var _ LogicalVolumesGetter = &MDADM{}
 
 func NewMDADM(
 	runner commandrunner.CommandRunner,
-	resolver physicaldriveresolver.PhysicalDriveResolver,
 ) *MDADM {
 	return &MDADM{
-		CommandRunner:         runner,
-		PhysicalDriveResolver: resolver,
+		CommandRunner: runner,
 	}
 }
 
@@ -96,12 +92,7 @@ func (m *MDADM) LogicalVolumes(
 func (m *MDADM) LogicalVolume(
 	metadata *logicalvolume.Metadata,
 ) (*logicalvolume.LogicalVolume, error) {
-	physicalDrive, err := m.ResolvePhysicalDriveDeviceNameFromID(metadata.ID)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to resolve physical drive device name")
-	}
-
-	logicalVolume, err := m.logicalVolume(physicalDrive, metadata)
+	logicalVolume, err := m.logicalVolume(metadata)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get logical volume")
 	}
@@ -111,16 +102,21 @@ func (m *MDADM) LogicalVolume(
 
 //nolint:revive // This is the wrapped LogicalVolume method, name is fine in this context.
 func (m *MDADM) logicalVolume(
-	devicePath string,
 	metadata *logicalvolume.Metadata,
 ) (*logicalvolume.LogicalVolume, error) {
+	deviceName := metadata.ID // Here I assume that id is something like md0
+
+	if !strings.HasPrefix(deviceName, "/dev/") {
+		deviceName = "/dev/" + deviceName
+	}
+
 	output, err := m.Run([]string{
 		"--detail",
-		devicePath,
+		deviceName,
 		"--export", // Export to get a key=value format output
 	})
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to get details of logical volume %s", devicePath)
+		return nil, errors.Wrapf(err, "failed to get details of logical volume %s", deviceName)
 	}
 
 	details, err := rhel8.ParseMDADMExportOutput(output)

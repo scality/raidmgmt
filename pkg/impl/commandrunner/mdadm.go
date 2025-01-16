@@ -13,8 +13,9 @@ type MDADM struct {
 }
 
 var (
-	_                CommandRunner = &MDADM{}
-	MDADMExecCommand               = exec.Command
+	_ CommandRunner = &MDADM{}
+	//nolint:gochecknoglobals // Needed for mocking in tests
+	MDADMExecCommand = exec.Command
 )
 
 func NewMDADM() *MDADM {

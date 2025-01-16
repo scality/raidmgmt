@@ -15,8 +15,9 @@ const (
 )
 
 var (
-	_                  CommandRunner = &UDevADM{}
-	UDevADMExecCommand               = exec.Command
+	_ CommandRunner = &UDevADM{}
+	//nolint:gochecknoglobals // Needed for mocking in tests
+	UDevADMExecCommand = exec.Command
 )
 
 func NewUDevADM() *UDevADM {

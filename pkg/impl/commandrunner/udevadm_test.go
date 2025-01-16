@@ -1,10 +1,9 @@
 package commandrunner_test
 
 import (
+	"commandrunner"
 	"fmt"
 	"testing"
-
-	"commandrunner"
 
 	"github.com/stretchr/testify/assert"
 )
