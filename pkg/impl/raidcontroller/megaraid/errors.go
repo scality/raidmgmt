@@ -51,3 +51,10 @@ var (
 
 	ErrNewLogicalVolumeNotFound = errors.New("new logical volume not found")
 )
+
+const (
+	ErrUnrecognizedCacheOptions = "unrecognized cache options: %s"
+	ErrUnavailableDrives        = "unavailable drives: %s"
+	ErrInvalidEnclosureID       = "invalid enclosure ID: %s"
+	ErrInvalidBayID             = "invalid bay ID: %s"
+)
