@@ -107,8 +107,8 @@ func (m *MDADM) CreateLV(request *logicalvolume.Request) (*logicalvolume.Logical
 
 	existingVolumeIDs := make([]int, 0, len(existingLogicalVolumes))
 
-	for _, lv := range existingLogicalVolumes {
-		id, err := strconv.Atoi(lv.ID)
+	for _, logicalVolume := range existingLogicalVolumes {
+		id, err := strconv.Atoi(logicalVolume.ID)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to parse logical volume ID")
 		}
