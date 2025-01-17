@@ -35,6 +35,7 @@ type (
 	Metadata struct {
 		CtrlMetadata *raidcontroller.Metadata // Controller metadata of the disk
 		Slot         *Slot                    // Slot
+		DevicePath   string                   // Device path
 	}
 )
 

@@ -8,5 +8,6 @@ use (
 	./pkg/impl/raidcontroller/megaraid
 	./pkg/impl/raidcontroller/rhel8
 	./pkg/impl/raidcontroller/rhel8/logicalvolumegetter
+	./pkg/impl/raidcontroller/rhel8/logicalvolumemanager
 	./pkg/impl/raidcontroller/smartarray
 )

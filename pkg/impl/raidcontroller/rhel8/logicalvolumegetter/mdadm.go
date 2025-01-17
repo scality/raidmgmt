@@ -37,7 +37,14 @@ type (
 	}
 )
 
-var _ LogicalVolumesGetter = &MDADM{}
+var (
+	_            LogicalVolumesGetter = &MDADM{}
+	raidLevelMap                      = map[string]logicalvolume.RAIDLevel{ //nolint:gochecknoglobals
+		"RAID0":  logicalvolume.RAIDLevel0,
+		"RAID1":  logicalvolume.RAIDLevel1,
+		"RAID10": logicalvolume.RAIDLevel10,
+	}
+)
 
 func NewMDADM(
 	runner commandrunner.CommandRunner,
@@ -77,7 +84,11 @@ func (m *MDADM) LogicalVolumes(
 
 		raidLevel := strings.ToUpper(detail.RaidLevel)
 
-		logicalVolume.RAIDLevel = logicalvolume.RAIDLevelMap[raidLevel]
+		logicalVolume.RAIDLevel = map[string]logicalvolume.RAIDLevel{
+			"RAID0":  logicalvolume.RAIDLevel0,
+			"RAID1":  logicalvolume.RAIDLevel1,
+			"RAID10": logicalvolume.RAIDLevel10,
+		}[raidLevel]
 
 		if metadata != nil {
 			logicalVolume.CtrlMetadata = metadata
@@ -124,17 +135,24 @@ func (m *MDADM) logicalVolume(
 		return nil, errors.Wrap(err, "failed to parse mdadm export output")
 	}
 
-	raidLevel, ok := logicalvolume.RAIDLevelMap[details[0].RaidLevel]
+	raidLevel, ok := raidLevelMap[details[0].RaidLevel]
 	if !ok {
 		return nil, errors.Errorf("unknown RAID level: %s", details[0].RaidLevel)
 	}
 
 	// FIXME I think we can get more fields from the output
 	logicalVolume := &logicalvolume.LogicalVolume{
-		ID:           details[0].UUID,
-		CtrlMetadata: metadata.CtrlMetadata,
-		DevicePath:   details[0].DeviceName,
-		RAIDLevel:    raidLevel,
+		ID:              details[0].Name,
+		CtrlMetadata:    metadata.CtrlMetadata,
+		DevicePath:      details[0].DeviceName,
+		RAIDLevel:       raidLevel,
+		PDrivesMetadata: make([]*physicaldrive.Metadata, 0, details[0].DevicesCount),
+	}
+
+	for _, device := range details[0].Devices {
+		logicalVolume.PDrivesMetadata = append(logicalVolume.PDrivesMetadata, &physicaldrive.Metadata{
+			DevicePath: device.Path,
+		})
 	}
 
 	return logicalVolume, nil
