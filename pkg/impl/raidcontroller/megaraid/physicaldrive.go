@@ -19,23 +19,6 @@ const (
 	patternNoEnclosure string = "/c%d/s%s"
 )
 
-// diskTypeMap maps the disk type string to the physical drive disk type.
-var diskTypeMap = map[string]physicaldrive.DiskType{
-	"HDD":  physicaldrive.DiskTypeHDD,
-	"SSD":  physicaldrive.DiskTypeSSD,
-	"NVME": physicaldrive.DiskTypeNVMe,
-}
-
-// pdStatusMap maps the physical drive status string to the physical drive status.
-var pdStatusMap = map[string]physicaldrive.PDStatus{
-	"Onln": physicaldrive.PDStatusUsed,
-	// TODO : check the real values
-	"UGood":  physicaldrive.PDStatusUnassignedGood,
-	"UBad":   physicaldrive.PDStatusUnassignedBad,
-	"Offln":  physicaldrive.PDStatusOffline,
-	"Failed": physicaldrive.PDStatusFailed,
-}
-
 // physicaldrives returns all physical drives for a given controller.
 func (a *Adapter) physicaldrives(metadata *raidcontroller.Metadata) (
 	[]*physicaldrive.PhysicalDrive, error,
@@ -72,8 +55,10 @@ func (a *Adapter) physicaldrives(metadata *raidcontroller.Metadata) (
 
 	sort.Slice(physicalDrives, func(i, j int) bool {
 		// Pass the error check because the slice is already validated
-		a, _ := strconv.Atoi(physicalDrives[i].ID) // nolint:errcheck
-		b, _ := strconv.Atoi(physicalDrives[j].ID) // nolint:errcheck
+		//nolint:errcheck // no err is possible since it's already validated
+		a, _ := strconv.Atoi(physicalDrives[i].ID)
+		//nolint:errcheck // no err is possible since it's already validated
+		b, _ := strconv.Atoi(physicalDrives[j].ID)
 
 		return a < b
 	})
@@ -213,6 +198,13 @@ func (pd *PD) EnclosureSlot() (enclosure, slot string) {
 
 // DiskType returns the disk type of a physical drive.
 func (pd *PD) DiskType() physicaldrive.DiskType {
+	// diskTypeMap maps the disk type string to the physical drive disk type.
+	diskTypeMap := map[string]physicaldrive.DiskType{
+		"HDD":  physicaldrive.DiskTypeHDD,
+		"SSD":  physicaldrive.DiskTypeSSD,
+		"NVME": physicaldrive.DiskTypeNVMe,
+	}
+
 	if dt, ok := diskTypeMap[strings.ToUpper(pd.MediaType)]; ok {
 		return dt
 	}
@@ -222,6 +214,16 @@ func (pd *PD) DiskType() physicaldrive.DiskType {
 
 // convertPVStatus converts a string to a PVStatus.
 func (pd *PD) PDStatus() physicaldrive.PDStatus {
+	// pdStatusMap maps the physical drive status string to the physical drive status.
+	pdStatusMap := map[string]physicaldrive.PDStatus{
+		"Onln": physicaldrive.PDStatusUsed,
+		// TODO : check the real values
+		"UGood":  physicaldrive.PDStatusUnassignedGood,
+		"UBad":   physicaldrive.PDStatusUnassignedBad,
+		"Offln":  physicaldrive.PDStatusOffline,
+		"Failed": physicaldrive.PDStatusFailed,
+	}
+
 	if status, ok := pdStatusMap[pd.State]; ok {
 		return status
 	}

@@ -16,25 +16,11 @@ import (
 // patternLV is the pattern for the logical volume selector.
 const patternLV string = "/c%d/v%s"
 
-// raidLevelMap maps the RAID level string to the RAID level type.
-var raidLevelMap = map[string]logicalvolume.RAIDLevel{
-	"RAID0":  logicalvolume.RAIDLevel0,
-	"RAID1":  logicalvolume.RAIDLevel1,
-	"RAID10": logicalvolume.RAIDLevel10,
-}
-
-// lvStatusMap maps the logical volume status string to the logical volume status type.
-var lvStatusMap = map[string]logicalvolume.LVStatus{
-	"Optl": logicalvolume.LVStatusOptimal,
-	// TODO : check the real values
-	"Dgrd": logicalvolume.LVStatusDegraded,
-	"OfLn": logicalvolume.LVStatusOffline,
-	"Pdgd": logicalvolume.LVStatusPartiallyDegraded,
-	"Fail": logicalvolume.LVStatusFailed,
-}
-
 // logicalvolumes returns all logical volumes for a given controller.
-func (a *Adapter) logicalvolumes(metadata *raidcontroller.Metadata) ([]*logicalvolume.LogicalVolume, error) {
+func (a *Adapter) logicalvolumes(metadata *raidcontroller.Metadata) (
+	[]*logicalvolume.LogicalVolume,
+	error,
+) {
 	vds, err := a.showAllVirtualDrives(metadata.ID)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get all virtual drives")
@@ -60,8 +46,10 @@ func (a *Adapter) logicalvolumes(metadata *raidcontroller.Metadata) ([]*logicalv
 
 	sort.Slice(logicalVolumes, func(i, j int) bool {
 		// Pass the error check because the slice is already validated
-		a, _ := strconv.Atoi(logicalVolumes[i].ID) // nolint:errcheck
-		b, _ := strconv.Atoi(logicalVolumes[j].ID) // nolint:errcheck
+		//nolint:errcheck // no err is possible since it's already validated
+		a, _ := strconv.Atoi(logicalVolumes[i].ID)
+		//nolint:errcheck // same as above
+		b, _ := strconv.Atoi(logicalVolumes[j].ID)
 
 		return a < b
 	})
@@ -79,6 +67,13 @@ func (vd *VD) VirtualDriveID() string {
 
 // RAIDLevel returns the RAID level of a logical volume.
 func (vd *VD) RAIDLevel() logicalvolume.RAIDLevel {
+	// raidLevelMap maps the RAID level string to the RAID level type.
+	raidLevelMap := map[string]logicalvolume.RAIDLevel{
+		"RAID0":  logicalvolume.RAIDLevel0,
+		"RAID1":  logicalvolume.RAIDLevel1,
+		"RAID10": logicalvolume.RAIDLevel10,
+	}
+
 	if raidLevel, ok := raidLevelMap[vd.Type]; ok {
 		return raidLevel
 	}
@@ -151,6 +146,16 @@ func (vd *VD) CacheOptions() (*logicalvolume.CacheOptions, error) {
 
 // LVStatus returns the logical volume status.
 func (vd *VD) LVStatus() logicalvolume.LVStatus {
+	// lvStatusMap maps the logical volume status string to the logical volume status type.
+	lvStatusMap := map[string]logicalvolume.LVStatus{
+		"Optl": logicalvolume.LVStatusOptimal,
+		// TODO : check the real values
+		"Dgrd": logicalvolume.LVStatusDegraded,
+		"OfLn": logicalvolume.LVStatusOffline,
+		"Pdgd": logicalvolume.LVStatusPartiallyDegraded,
+		"Fail": logicalvolume.LVStatusFailed,
+	}
+
 	if status, ok := lvStatusMap[vd.State]; ok {
 		return status
 	}
@@ -180,19 +185,16 @@ func (a *Adapter) logicalVolume(
 
 	// pass the error checking since it's already done
 	// in the ShowAllVirtualDrive
-	key, _ := selectorLV(metadata) // nolint:errcheck
+	//nolint:errcheck // no err is possible since it's already validated
+	key, _ := selectorLV(metadata)
 
 	vds, err := utils.UnmarshalToSlice[VD](responseData, key)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to unmarshal virtual drive")
 	}
 
-	if len(vds) == 0 {
-		return nil, errors.New("no virtual drive found")
-	}
-
-	if len(vds) > 1 {
-		return nil, errors.New("multiple virtual drives found")
+	if err := validateVDs(vds); err != nil {
+		return nil, errors.Wrap(err, "failed to validate virtual drives")
 	}
 
 	vd := vds[0]
@@ -228,6 +230,7 @@ func (a *Adapter) logicalVolume(
 
 	key = fmt.Sprintf("VD%s Properties", metadata.ID)
 
+	// Get the VD properties for the permanent path
 	vdProperties, err := utils.UnmarshalToPointer[VDProperties](responseData, key)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to unmarshal VD properties")
@@ -252,6 +255,18 @@ func (a *Adapter) logicalVolume(
 	}
 
 	return logicalVolume, nil
+}
+
+func validateVDs(vds []VD) error {
+	if len(vds) == 0 {
+		return errors.New("no virtual drive found")
+	}
+
+	if len(vds) > 1 {
+		return errors.New("multiple virtual drives found")
+	}
+
+	return nil
 }
 
 // deleteLV deletes a logical volume.
@@ -378,7 +393,7 @@ func (a *Adapter) identifyUnavailableDrives(request *logicalvolume.Request) erro
 // The function is not too complex, and the complexity is due to the
 // multiple checks and conversions.
 //
-//nolint:gocognit
+//nolint:gocognit // The function is actually not too complex
 func slotsEnclosure(pdsMetadata []*physicaldrive.Metadata) (int, []string, error) {
 	// Map to check if there are multiple enclosures
 	enclosures := make(map[int]struct{})

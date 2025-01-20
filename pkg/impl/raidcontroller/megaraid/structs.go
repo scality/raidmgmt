@@ -227,15 +227,15 @@ type (
 		SupportLaneCurrentSpeed                   string `json:"Support Lane current speed"`
 		SupportNVMeWidth                          string `json:"Support NVMe Width"`
 		SupportLaneDeviceType                     string `json:"Support Lane DeviceType"`
-		SupportExtendedDrivePerformanceMonitoring string `json:"Support Extended Drive performance Monitoring"` // nolint:lll
+		SupportExtendedDrivePerformanceMonitoring string `json:"Support Extended Drive performance Monitoring"` //nolint:lll // The JSON tag is long
 		SupportNVMeRepair                         string `json:"Support NVMe Repair"`
 		SupportPlatformSecurity                   string `json:"Support Platform Security"`
 		SupportNoneModeParams                     string `json:"Support None Mode Params"`
 		SupportExtendedControllerProperty         string `json:"Support Extended Controller Property"`
-		SupportSmartPollIntervalForDirectAttached string `json:"Support Smart Poll Interval for DirectAttached"` // nolint:lll
+		SupportSmartPollIntervalForDirectAttached string `json:"Support Smart Poll Interval for DirectAttached"` //nolint:lll // The JSON tag is long
 		SupportWriteJournalPinning                string `json:"Support Write Journal Pinning"`
 		SupportSMPPassthruWithPortNumber          string `json:"Support SMP Passthru with Port Number"`
-		SupportNVMeInitErrorDeviceConnectorIndex  string `json:"Support NVMe Init Error Device ConnectorIndex"` // nolint:lll
+		SupportNVMeInitErrorDeviceConnectorIndex  string `json:"Support NVMe Init Error Device ConnectorIndex"` //nolint:lll // The JSON tag is long
 	}
 
 	Capabilities struct {
@@ -268,6 +268,7 @@ type (
 
 // CustomEvalSymlinks is a variable that holds a function that evaluates symlinks.
 // It is used to mock the filepath.EvalSymlinks function in tests.
+// nolint: gochecknoglobals // This is a variable that is used to mock a function in tests.
 var CustomEvalSymlinks = filepath.EvalSymlinks
 
 // permanentPath returns the permanent path of a virtual drive.

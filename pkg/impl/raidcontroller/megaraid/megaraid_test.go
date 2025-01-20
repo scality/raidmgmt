@@ -106,6 +106,7 @@ func mockError(out *megaraid.CmdOutput) error {
 // mockReturn returns the output and the error.
 func mockReturn(filename string) (*megaraid.CmdOutput, error) {
 	out := mockOutput(filename)
+
 	return out, mockError(out)
 }
 
@@ -128,6 +129,7 @@ func (s *UnitTestSuite) createLVMockCalls(args []string) (*megaraid.CmdOutput, e
 
 		if args[1] == "add" {
 			s.wasCreateLVCalledOnce = true
+
 			return mockReturn("logicalvolumes/create/success")
 		}
 	}

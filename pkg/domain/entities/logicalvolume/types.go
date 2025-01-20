@@ -17,8 +17,7 @@ type (
 		CtrlMetadata *raidcontroller.Metadata // Controller of the logical volume
 		ID           string                   // ID
 		DevicePath   string                   // Device path of the array (e.g.: /dev/sda)
-		//nolint:lll
-		// The comment is long but it is necessary to explain the field
+		//nolint:lll // The comment is long but it is necessary to explain the field
 		PermanentPath   string                    // Permanent path of the array (e.g.: /dev/disk/by-id/...)
 		RAIDLevel       RAIDLevel                 // RAID level of the array
 		PDrivesMetadata []*physicaldrive.Metadata // Physical drives composing the logical volume
