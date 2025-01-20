@@ -1,4 +1,4 @@
-module physicaldriveresolver
+module github.com/scality/raidmgmt/physicaldriveresolver
 
 go 1.23
 

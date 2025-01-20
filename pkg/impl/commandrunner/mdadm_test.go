@@ -1,11 +1,12 @@
 package commandrunner_test
 
 import (
-	"commandrunner"
 	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	"github.com/scality/raidmgmt/commandrunner"
 )
 
 func TestMockMDADMRun(t *testing.T) {

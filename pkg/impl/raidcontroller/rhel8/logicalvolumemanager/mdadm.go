@@ -1,43 +1,27 @@
 package logicalvolumemanager
 
 import (
-	"commandrunner"
 	"fmt"
-	"logicalvolumegetter"
 	"strconv"
 
 	"github.com/pkg/errors"
 
+	"github.com/scality/raidmgmt/commandrunner"
 	"github.com/scality/raidmgmt/domain/entities/logicalvolume"
 	"github.com/scality/raidmgmt/domain/entities/physicaldrive"
+	"github.com/scality/raidmgmt/domain/ports"
 )
 
-type (
-	LogicalVolumesManager interface {
-		// CreateLV creates a logical volume from a request
-		CreateLV(request *logicalvolume.Request) (*logicalvolume.LogicalVolume, error)
+type MDADM struct {
+	commandrunner.CommandRunner
+	ports.LogicalVolumesGetter
+}
 
-		// DeleteLV deletes a logical volume
-		DeleteLV(metadata *logicalvolume.Metadata) error
-
-		// AddPVToLV adds a physical drive to a logical volume
-		AddPVToLV(lvMetadata *logicalvolume.Metadata, pvMetadata *physicaldrive.Metadata) error
-
-		// DeletePVFromLV deletes a physical drive from a logical volume
-		DeletePVFromLV(lvMetadata *logicalvolume.Metadata, pvMetadata *physicaldrive.Metadata) error
-	}
-
-	MDADM struct {
-		commandrunner.CommandRunner
-		logicalvolumegetter.LogicalVolumesGetter
-	}
-)
-
-var _ LogicalVolumesManager = &MDADM{}
+var _ ports.LogicalVolumesManager = &MDADM{}
 
 func NewMDADM(
 	runner commandrunner.CommandRunner,
-	getter logicalvolumegetter.LogicalVolumesGetter,
+	getter ports.LogicalVolumesGetter,
 ) *MDADM {
 	return &MDADM{
 		CommandRunner:        runner,
@@ -196,7 +180,10 @@ func (m *MDADM) deleteLV(volume *logicalvolume.LogicalVolume) error {
 	return nil
 }
 
-func (m *MDADM) AddPVToLV(lvMetadata *logicalvolume.Metadata, pvMetadata *physicaldrive.Metadata) error {
+func (m *MDADM) AddPDToLV(
+	lvMetadata *logicalvolume.Metadata,
+	pvMetadata *physicaldrive.Metadata,
+) error {
 	logicalVolume, err := m.LogicalVolume(lvMetadata)
 	if err != nil {
 		return errors.Wrap(err, "failed to get logical volume")
@@ -222,7 +209,10 @@ func (m *MDADM) AddPVToLV(lvMetadata *logicalvolume.Metadata, pvMetadata *physic
 	return nil
 }
 
-func (m *MDADM) DeletePVFromLV(lvMetadata *logicalvolume.Metadata, pvMetadata *physicaldrive.Metadata) error {
+func (m *MDADM) DeletePDFromLV(
+	lvMetadata *logicalvolume.Metadata,
+	pvMetadata *physicaldrive.Metadata,
+) error {
 	logicalVolume, err := m.LogicalVolume(lvMetadata)
 	if err != nil {
 		return errors.Wrap(err, "failed to get logical volume")

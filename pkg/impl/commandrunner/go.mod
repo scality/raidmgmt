@@ -1,4 +1,4 @@
-module commandrunner
+module github.com/scality/raidmgmt/commandrunner
 
 go 1.23
 

@@ -25,7 +25,7 @@ func NewMDADM() *MDADM {
 }
 
 func (m *MDADM) Run(args []string) ([]byte, error) {
-	cmd := MDADMExecCommand(m.cliPath, args...) //nolint:gosec // FIXME Temporary nolint
+	cmd := MDADMExecCommand(m.cliPath, args...)
 
 	output, err := cmd.Output()
 	if err != nil {

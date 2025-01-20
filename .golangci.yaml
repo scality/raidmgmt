@@ -1,68 +1,72 @@
 linters:
   disable-all: true
   enable:
-  # metalinters
-  - revive
-  - govet
-  - staticcheck
-  # format & style
-  - asciicheck                # detect non-ASCII characters on identifiers
-  - dupword                   # detect duplicated words in comments
-  - gofumpt                   # enhanced formatter
-  - godot                     # ensure that commets will end with a period
-  #- godox                     # detect FIXME, TODO, etc. comments -> Disable for the moment for dev
-  - goimports                 # format and fix imports
-  - lll                       # long line length detection
-  - tagalign                  # align struct tags
-  # - tagliatelle               # check struct tags naming -> Disable for because the structs of the CLI commands are poorly tagged
-  - whitespace                # leading and trailing whitespace detection
-  - wsl                       # empty lines guidelines
-  # correctness & bug prevention -> error handling
-  - errcheck                  # detect unchecked errors
-  - errname                   # enforce error vars to start with Err and error types to end with Error
-  - errorlint                 # look for error wrapping inconsistences
-  - err113                    # enforce usage of errors.Is() and errors.As()
-  - nilerr                    # prevent to mask errors
-  - wrapcheck                 # check errors wrapping
-  # correctness & bug prevention -> constants, variables, parameters and assignments
-  - asasalint                 # prevent to use `any` as variadic argument
-  - durationcheck             # enforce time.Duration consistent use
-  - forcetypeassert           # force type assertions when usinmg interface{} os `any` variables values
-  - gochecknoglobals          # look for global variables
-  - ineffassign               # detect ineffectual assignments
-  - nilnil                    # prevent functions to return value = nil, err = nil
-  - predeclared               # detect shadowing of predeclared identifiers
-  - unparam                   # detect unused function parameters
-  - unused                    # detect unused constants, variables, functions and types
-  - usestdlibvars             # detect constants that can be replaced with their stdlib counterparts
-  # correctness & bug prevention -> context.Context
-  - containedctx              # detect structures that store context.Context
-  - contextcheck              # detect context.Context misuse
-  # correctness & bug prevention -> misc
-  - bidichk                   # detect some unsafe unicode sequences
-  - dogsled                   # detect abuse of blank identifiers
-  - exhaustive                # check enum switches to be exhaustive
-  #- exhaustruct               # ensures all struct fields to be initialized -> may not really make sense in some situation
-  - ginkgolinter              # detect some common Ginkgo antipatterns / to use only with tests
-  - gocheckcompilerdirectives # detect some common compiler directives antipatterns
-  - gochecknoinits            # look for init functions
-  - gosec                     # check for common security issues
-  #- nolintlint               # report abuses of //nolint directives # Conflict with gofumpt
-  # Performance
-  #- aligncheck               # check for struct misalignment -> it's a operator so readability and maintainability are more important then small performance twiks
-  - makezero                  # detect preallocation mishandles
-  - prealloc                  # detect slice declarations that could potentially be preallocated
-  # complexity & maintainability
-  - cyclop                    # calculates and limits cyclomatic complexity of code
-  - gosimple                  # suggest simplifications in code
-  - dupl                      # finds and reports code duplications
-  - funlen                    # limit the number of lines and statements in a function
-  - gocognit                  # calculates and limits the cognitive complexity of code
-  - goconst                   # finds repeated strings that could be replaced by a constant
-  - mnd                       # detect magic numbers that should be named constants
-  - ireturn                   # ensure that methods will accept interfaces and return concrete types
-  - nestif                    # detect nested ifs and limits their depths
-  - unconvert                 # finds unnecessary type conversions
+    # metalinters
+    - revive
+    - govet
+    - staticcheck
+    # format & style
+    - asciicheck                # detect non-ASCII characters on identifiers
+    # - dupword                   # detect duplicated words in comments
+    - gofumpt                   # enhanced formatter
+    - godot                     # ensure that commets will end with a period
+    #- godox                     # detect FIXME, TODO, etc. comments -> Disable for the moment for dev
+    - goimports                 # format and fix imports
+    - lll                       # long line length detection
+    - nlreturn                  # checks for a new line before return and branch statements
+    - tagalign                  # align struct tags
+    # - tagliatelle               # check struct tags naming -> Disable for because the structs of the CLI commands are poorly tagged
+    - whitespace                # leading and trailing whitespace detection
+    - wsl                       # empty lines guidelines
+    # correctness & bug prevention -> error handling
+    - errcheck                  # detect unchecked errors
+    - errname                   # enforce error vars to start with Err and error types to end with Error
+    - errorlint                 # look for error wrapping inconsistences
+    - err113                    # enforce usage of errors.Is() and errors.As()
+    - nilerr                    # prevent to mask errors
+    - wrapcheck                 # check errors wrapping
+    # correctness & bug prevention -> constants, variables, parameters and assignments
+    - asasalint                 # prevent to use `any` as variadic argument
+    - bodyclose                 # checks whether res.Body is correctly closed
+    - decorder                  # checks declaration order and count of types, constants, variables and functions
+    - durationcheck             # enforce time.Duration consistent use
+    - forcetypeassert           # force type assertions when using interface{} os `any` variables values
+    - gochecknoglobals          # look for global variables
+    - ineffassign               # detect ineffectual assignments
+    - nilnil                    # prevent functions to return value = nil, err = nil
+    - predeclared               # detect shadowing of predeclared identifiers
+    - unparam                   # detect unused function parameters
+    - unused                    # detect unused constants, variables, functions and types
+    - usestdlibvars             # detect constants that can be replaced with their stdlib counterparts
+    # correctness & bug prevention -> context.Context
+    - containedctx              # detect structures that store context.Context
+    - contextcheck              # detect context.Context misuse
+    # correctness & bug prevention -> misc
+    - bidichk                   # detect some unsafe unicode sequences
+    - dogsled                   # detect abuse of blank identifiers
+    - exhaustive                # check enum switches to be exhaustive
+    #- exhaustruct               # ensures all struct fields to be initialized -> may not really make sense in some situation
+    - ginkgolinter              # detect some common Ginkgo antipatterns / to use only with tests
+    - gocheckcompilerdirectives # detect some common compiler directives antipatterns
+    - gochecknoinits            # look for init functions
+    - gosec                     # check for common security issues
+    - nolintlint               # report abuses of //nolint directives
+    # Performance
+    #- aligncheck               # check for struct misalignment -> readability and maintainability are more important than small performance tweaks
+    - makezero                  # detect preallocation mishandles
+    - prealloc                  # detect slice declarations that could potentially be preallocated
+    # complexity & maintainability
+    - cyclop                    # calculates and limits cyclomatic complexity of code
+    - gosimple                  # suggest simplifications in code
+    - dupl                      # finds and reports code duplications
+    - funlen                    # limit the number of lines and statements in a function
+    - gocognit                  # calculates and limits the cognitive complexity of code
+    - goconst                   # finds repeated strings that could be replaced by a constant
+    - mnd                       # detect magic numbers that should be named constants
+    - ireturn                   # ensure that methods will accept interfaces and return concrete types
+    - nestif                    # detect nested ifs and limits their depths
+    - unconvert                 # finds unnecessary type conversions
+
 
 linters-settings:
   # ---------- REVIVE METALINTER ---------- #
@@ -127,9 +131,10 @@ linters-settings:
           - nolint
           - +kubebuilder
       # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#confusing-naming
+      # Disabled due to a decision on the project to use nested methods with the same names
       - name: confusing-naming
         severity: error
-        disabled: false
+        disabled: true
       # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#confusing-results
       - name: confusing-results
         severity: error
@@ -164,7 +169,7 @@ linters-settings:
       - name: defer
         severity: warning
         disabled: false
-        arguments: 
+        arguments:
           - ["call-chain", "loop", "method-call", "recover", "immediate-recover", "return"]
       # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#dot-imports
       - name: dot-imports
@@ -258,9 +263,9 @@ linters-settings:
       - name: imports-blacklist
         severity: warning
         disabled: true
-        #arguments:
+          #arguments:
           #- "crypto/md5"
-          #- "crypto/sha1"
+        #- "crypto/sha1"
       # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#import-shadowing
       - name: import-shadowing
         severity: error
@@ -325,7 +330,7 @@ linters-settings:
       - name: string-format
         severity: warning
         disabled: true
-        #arguments:
+          #arguments:
           #- - 'core.WriteError[1].Message'
           #  - '/^([^A-Z]|$)/'
           #  - must not start with a capital letter
@@ -334,7 +339,7 @@ linters-settings:
           #  - must not end in punctuation
           #- - panic
           #  - '/^[^\n]*$/'
-          #  - must not contain line breaks
+        #  - must not contain line breaks
       # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#struct-tag
       - name: struct-tag
         severity: error
@@ -359,9 +364,9 @@ linters-settings:
       - name: var-naming
         severity: error
         disabled: false
-        #arguments:
+          #arguments:
           #- ["ID"] # AllowList
-          #- ["VM"] # DenyList
+        #- ["VM"] # DenyList
       # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#var-declaration
       - name: var-declaration
         severity: error
@@ -416,7 +421,7 @@ linters-settings:
   govet:
     enable-all: true
     disable:
-      - fieldalignment # once it is a operator, readability and maintainability are more important then small performance twiks
+      - fieldalignment # readibility and maintainability are more important than small performance tweaks
   # ---------- STATICCHECK METALINTER ---------- #
   staticcheck:
     checks: ["all"]
@@ -426,8 +431,8 @@ linters-settings:
     package-average: 5
     skip-tests: false
   funlen:
-    lines: 50
-    statements: 25
+    lines: 75
+    statements: 50
   gocognit:
     min-complexity: 10 # minimal complexity before fail
   gofumpt:
@@ -490,6 +495,7 @@ issues:
       linters: *_exclude_test
     - path: ^tests/
       linters: *_exclude_test
+      # TODO add paths for generated files
 
     - text: 'declaration of "(err|ctx)" shadows declaration at'
       linters:
@@ -499,7 +505,7 @@ severity:
   default-severity: warning
 
 run:
-  go: '1.23'
+  go: '1.23.5'
   timeout: 10m
   issues-exit-code: 100
   tests: true

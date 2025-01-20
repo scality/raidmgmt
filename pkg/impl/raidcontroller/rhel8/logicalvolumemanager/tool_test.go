@@ -1,8 +1,9 @@
 package logicalvolumemanager_test
 
 import (
-	"logicalvolumemanager"
 	"testing"
+
+	"github.com/scality/raidmgmt/rhel8/logicalvolumemanager"
 )
 
 func TestSmallestPositive(t *testing.T) {

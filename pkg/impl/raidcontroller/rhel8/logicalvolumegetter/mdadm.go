@@ -1,28 +1,21 @@
 package logicalvolumegetter
 
 import (
-	"commandrunner"
 	"strings"
 
 	"github.com/pkg/errors"
 
+	"github.com/scality/raidmgmt/commandrunner"
 	"github.com/scality/raidmgmt/domain/entities/logicalvolume"
 	"github.com/scality/raidmgmt/domain/entities/physicaldrive"
 	"github.com/scality/raidmgmt/domain/entities/raidcontroller"
+	"github.com/scality/raidmgmt/domain/ports"
 	"github.com/scality/raidmgmt/rhel8"
 )
 
 type (
 	MDADM struct {
 		commandrunner.CommandRunner
-	}
-
-	LogicalVolumesGetter interface {
-		// LogicalVolumes returns a list of logical volumes for a given RAID controller
-		LogicalVolumes(metadata *raidcontroller.Metadata) ([]*logicalvolume.LogicalVolume, error)
-
-		// LogicalVolume returns a logical volume for a given metadata
-		LogicalVolume(metadata *logicalvolume.Metadata) (*logicalvolume.LogicalVolume, error)
 	}
 
 	ExportDetails struct {
@@ -38,8 +31,8 @@ type (
 )
 
 var (
-	_            LogicalVolumesGetter = &MDADM{}
-	raidLevelMap                      = map[string]logicalvolume.RAIDLevel{ //nolint:gochecknoglobals
+	_            ports.LogicalVolumesGetter = &MDADM{}
+	raidLevelMap                            = map[string]logicalvolume.RAIDLevel{ //nolint:gochecknoglobals,lll // Can't do anything about it
 		"RAID0":  logicalvolume.RAIDLevel0,
 		"RAID1":  logicalvolume.RAIDLevel1,
 		"RAID10": logicalvolume.RAIDLevel10,
@@ -111,7 +104,6 @@ func (m *MDADM) LogicalVolume(
 	return logicalVolume, nil
 }
 
-//nolint:revive // This is the wrapped LogicalVolume method, name is fine in this context.
 func (m *MDADM) logicalVolume(
 	metadata *logicalvolume.Metadata,
 ) (*logicalvolume.LogicalVolume, error) {

@@ -1,4 +1,4 @@
-module logicalvolumegetter
+module github.com/scality/raidmgmt/rhel8/logicalvolumegetter
 
 go 1.23
 

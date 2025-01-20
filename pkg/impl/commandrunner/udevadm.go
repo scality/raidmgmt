@@ -27,7 +27,7 @@ func NewUDevADM() *UDevADM {
 }
 
 func (u *UDevADM) Run(args []string) ([]byte, error) {
-	cmd := UDevADMExecCommand(u.cliPath, args...) //nolint:gosec // FIXME Temporary nolint
+	cmd := UDevADMExecCommand(u.cliPath, args...)
 
 	output, err := cmd.Output()
 	if err != nil {

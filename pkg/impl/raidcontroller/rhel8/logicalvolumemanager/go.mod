@@ -1,4 +1,4 @@
-module logicalvolumemanager
+module github.com/scality/raidmgmt/rhel8/logicalvolumemanager
 
 go 1.23
 

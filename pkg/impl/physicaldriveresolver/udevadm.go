@@ -1,11 +1,12 @@
 package physicaldriveresolver
 
 import (
-	"commandrunner"
 	"fmt"
 	"strings"
 
 	"github.com/pkg/errors"
+
+	"github.com/scality/raidmgmt/commandrunner"
 )
 
 type UDevADM struct {
