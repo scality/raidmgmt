@@ -31,8 +31,9 @@ type (
 )
 
 var (
-	_            ports.LogicalVolumesGetter = &MDADM{}
-	raidLevelMap                            = map[string]logicalvolume.RAIDLevel{ //nolint:gochecknoglobals,lll // Can't do anything about it
+	_ ports.LogicalVolumesGetter = &MDADM{}
+	// FIXME IMHO, this map doesn't belong here.
+	raidLevelMap = map[string]logicalvolume.RAIDLevel{ //nolint:gochecknoglobals,lll // Will be fixed eventually
 		"RAID0":  logicalvolume.RAIDLevel0,
 		"RAID1":  logicalvolume.RAIDLevel1,
 		"RAID10": logicalvolume.RAIDLevel10,
@@ -47,20 +48,21 @@ func NewMDADM(
 	}
 }
 
+// LogicalVolumes returns all the logical volumes on the system.
 func (m *MDADM) LogicalVolumes(
 	metadata *raidcontroller.Metadata,
 ) ([]*logicalvolume.LogicalVolume, error) {
-	detailCmdArguments := []string{
+	// List existing logical volumes
+	output, err := m.Run([]string{
 		"--detail",
 		"--scan",
-		"--export",
-	}
-
-	output, err := m.Run(detailCmdArguments)
+		"--export", // Export to get a key=value format output
+	})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to scan logical volumes")
 	}
 
+	// Parse the key=value output
 	details, err := rhel8.ParseMDADMExportOutput(output)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse mdadm export output")
@@ -69,6 +71,7 @@ func (m *MDADM) LogicalVolumes(
 	logicalVolumes := make([]*logicalvolume.LogicalVolume, 0, len(details))
 
 	for _, detail := range details {
+		// Fill the information about the logical volume
 		logicalVolume := &logicalvolume.LogicalVolume{
 			ID:              detail.UUID,
 			DevicePath:      detail.DeviceName,
@@ -77,11 +80,7 @@ func (m *MDADM) LogicalVolumes(
 
 		raidLevel := strings.ToUpper(detail.RaidLevel)
 
-		logicalVolume.RAIDLevel = map[string]logicalvolume.RAIDLevel{
-			"RAID0":  logicalvolume.RAIDLevel0,
-			"RAID1":  logicalvolume.RAIDLevel1,
-			"RAID10": logicalvolume.RAIDLevel10,
-		}[raidLevel]
+		logicalVolume.RAIDLevel = raidLevelMap[raidLevel]
 
 		if metadata != nil {
 			logicalVolume.CtrlMetadata = metadata
@@ -93,6 +92,7 @@ func (m *MDADM) LogicalVolumes(
 	return logicalVolumes, nil
 }
 
+// LogicalVolume returns a logical volume by its metadata.
 func (m *MDADM) LogicalVolume(
 	metadata *logicalvolume.Metadata,
 ) (*logicalvolume.LogicalVolume, error) {
@@ -111,12 +111,15 @@ func (m *MDADM) LogicalVolume(
 func (m *MDADM) logicalVolume(
 	metadata *logicalvolume.Metadata,
 ) (*logicalvolume.LogicalVolume, error) {
-	deviceName := metadata.ID // Here I assume that id is something like md0
+	// It is assumed that the ID is an integer or the suffix of the device name
+	deviceName := metadata.ID
 
-	if !strings.HasPrefix(deviceName, "/dev/") {
+	// FIXME Not sure how to handle cases where the device is created in /dev/md/x format
+	if !strings.HasPrefix(deviceName, "/dev/md") {
 		deviceName = "/dev/" + deviceName
 	}
 
+	// Get the details of the logical volume
 	output, err := m.Run([]string{
 		"--detail",
 		deviceName,
@@ -126,6 +129,7 @@ func (m *MDADM) logicalVolume(
 		return nil, errors.Wrapf(err, "failed to get details of logical volume %s", deviceName)
 	}
 
+	// Parse the key=value output
 	details, err := rhel8.ParseMDADMExportOutput(output)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse mdadm export output")

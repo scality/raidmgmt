@@ -29,46 +29,7 @@ func NewMDADM(
 	}
 }
 
-func (m *MDADM) createLV(
-	logicalVolumeName string,
-	raidLevel int,
-	physicalDriveNames []string,
-) (*logicalvolume.LogicalVolume, error) {
-	// Prepare the mdadm create command
-	createCmdArgs := []string{
-		"--create", logicalVolumeName,
-		"--level", fmt.Sprintf("%d", raidLevel),
-		// FIXME Think about this:
-		// --force basically remove the need to type y to confirm the creation of the array
-		// It is useful to automate the process but could be dangerous if used wrong.
-		// Is the purpose of this lib to be safe or just work ?
-		// This problem can be solved by injecting something along the lines of "yes | the command" in the Run function
-		// It means that we either have to complexify the Run function or add a new one that does that, thus ignoring the interface
-		"--raid-devices", fmt.Sprintf("%d", len(physicalDriveNames)),
-		"--force",
-	}
-
-	// Add the physical drive names
-	createCmdArgs = append(createCmdArgs, physicalDriveNames...)
-
-	// Ignore the ouput
-	// If there's an error, it doesn't matter, otherwise we already had it as parameter
-	_, err := m.Run(createCmdArgs)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to create logical volume")
-	}
-
-	// Get the logical volume metadata
-	logicalVolume, err := m.LogicalVolume(&logicalvolume.Metadata{
-		ID: logicalVolumeName,
-	})
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to get logical volume details")
-	}
-
-	return logicalVolume, nil
-}
-
+// CreateLV creates a logical volume.
 func (m *MDADM) CreateLV(request *logicalvolume.Request) (*logicalvolume.LogicalVolume, error) {
 	// Validate input
 	err := request.Validate()
@@ -78,12 +39,13 @@ func (m *MDADM) CreateLV(request *logicalvolume.Request) (*logicalvolume.Logical
 
 	// Check if there are enough devices to create a RAID array
 	physicalDriveCount := len(request.PDrivesMetadata)
-	if physicalDriveCount < 2 {
+	if physicalDriveCount < 2 { //nolint:mnd // Two devices are required to create a RAID array
 		return nil, errors.Errorf(
 			"at least two devices are required to create a RAID array, %d provided", physicalDriveCount,
 		)
 	}
 
+	// List existing logical volumes
 	existingLogicalVolumes, err := m.LogicalVolumesGetter.LogicalVolumes(request.CtrlMetadata)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get existing logical volumes")
@@ -91,6 +53,7 @@ func (m *MDADM) CreateLV(request *logicalvolume.Request) (*logicalvolume.Logical
 
 	existingVolumeIDs := make([]int, 0, len(existingLogicalVolumes))
 
+	// Get the IDs of the existing logical volumes
 	for _, logicalVolume := range existingLogicalVolumes {
 		id, err := strconv.Atoi(logicalVolume.ID)
 		if err != nil {
@@ -100,26 +63,9 @@ func (m *MDADM) CreateLV(request *logicalvolume.Request) (*logicalvolume.Logical
 		existingVolumeIDs = append(existingVolumeIDs, id)
 	}
 
-	smallestPositive := func(array []int) int {
-		store := make(map[int]bool)
-
-		for _, num := range array {
-			store[num] = true
-		}
-
-		selected := 0
-
-		for {
-			_, ok := store[selected]
-			if !ok {
-				break
-			}
-
-			selected++
-		}
-
-		return selected
-	}(existingVolumeIDs)
+	// Try to get the lowest ID available from existing logical volumes
+	// If there are no logical volumes, the smallest positive number is 0
+	smallestPositive := SmallestPositive(existingVolumeIDs)
 
 	logicalVolumeName := fmt.Sprintf("/dev/md%d", smallestPositive)
 
@@ -129,6 +75,7 @@ func (m *MDADM) CreateLV(request *logicalvolume.Request) (*logicalvolume.Logical
 		physicalDrivesNames = append(physicalDrivesNames, drive.DevicePath)
 	}
 
+	// Create the logical volume
 	logicalVolume, err := m.createLV(logicalVolumeName, int(request.RAIDLevel), physicalDrivesNames)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create logical volume")
@@ -137,16 +84,19 @@ func (m *MDADM) CreateLV(request *logicalvolume.Request) (*logicalvolume.Logical
 	return logicalVolume, nil
 }
 
+// DeleteLV stops then deletes a logical volume.
 func (m *MDADM) DeleteLV(metadata *logicalvolume.Metadata) error {
 	if metadata == nil {
 		return errors.New("metadata is nil")
 	}
 
+	// Get the logical volume about to be deleted
 	logicalVolume, err := m.LogicalVolume(metadata)
 	if err != nil {
 		return errors.Wrap(err, "failed to get logical volume")
 	}
 
+	// Delete the logical volume
 	err = m.deleteLV(logicalVolume)
 	if err != nil {
 		return errors.Wrap(err, "failed to delete logical volume")
@@ -155,35 +105,7 @@ func (m *MDADM) DeleteLV(metadata *logicalvolume.Metadata) error {
 	return nil
 }
 
-func (m *MDADM) deleteLV(volume *logicalvolume.LogicalVolume) error {
-	// Stop the array
-	_, err := m.Run([]string{
-		"--stop", volume.DevicePath,
-	})
-	if err != nil {
-		return errors.Wrapf(err, "failed to stop logical volume: %s", volume.DevicePath)
-	}
-
-	// Try to remove the array
-	// From my tests, it often fails because mdadm still find the superblock of the device.
-	_, err = m.Run([]string{
-		"--remove", volume.DevicePath,
-	})
-	if err == nil {
-		return nil
-	}
-
-	// If it fails, try to zero the superblock the devices of the array
-	_, err = m.Run([]string{
-		"--zero-superblock", volume.DevicePath,
-	})
-	if err != nil {
-		return errors.Wrapf(err, "failed to zero superblock of logical volume: %s", volume.DevicePath)
-	}
-
-	return nil
-}
-
+// AddPDToLV adds a physical drive to a logical volume.
 func (m *MDADM) AddPDToLV(
 	lvMetadata *logicalvolume.Metadata,
 	pvMetadata *physicaldrive.Metadata,
@@ -194,12 +116,14 @@ func (m *MDADM) AddPDToLV(
 		return errors.New("physical drive metadata is nil")
 	}
 
+	// Get the logical volume
 	logicalVolume, err := m.LogicalVolume(lvMetadata)
 	if err != nil {
 		return errors.Wrap(err, "failed to get logical volume")
 	}
 
 	// Adding the new physical drive to the logical volume will make it a spare.
+	// To make it a functioning part of the array, it needs to be marked as active.
 	_, err = m.Run([]string{
 		"--add", logicalVolume.DevicePath, pvMetadata.DevicePath,
 	})
@@ -219,6 +143,7 @@ func (m *MDADM) AddPDToLV(
 	return nil
 }
 
+// DeletePDFromLV removes a physical drive from a logical volume.
 func (m *MDADM) DeletePDFromLV(
 	lvMetadata *logicalvolume.Metadata,
 	pvMetadata *physicaldrive.Metadata,
@@ -229,12 +154,13 @@ func (m *MDADM) DeletePDFromLV(
 		return errors.New("physical drive metadata is nil")
 	}
 
+	// Get the logical volume
 	logicalVolume, err := m.LogicalVolume(lvMetadata)
 	if err != nil {
 		return errors.Wrap(err, "failed to get logical volume")
 	}
 
-	// An active device can't be removed from an array, so it needs to be marked as failed first.
+	// An active device cannot be removed from an array, so it needs to be marked as failed first.
 	_, err = m.Run([]string{
 		logicalVolume.DevicePath,
 		"--fail", pvMetadata.DevicePath,
@@ -258,6 +184,78 @@ func (m *MDADM) DeletePDFromLV(
 	})
 	if err != nil {
 		return errors.Wrap(err, "failed to shrink logical volume")
+	}
+
+	return nil
+}
+
+func (m *MDADM) createLV(
+	logicalVolumeName string,
+	raidLevel int,
+	physicalDriveNames []string,
+) (*logicalvolume.LogicalVolume, error) {
+	// Prepare the mdadm create command
+	createCmdArgs := []string{
+		"--create", logicalVolumeName,
+		"--level", fmt.Sprintf("%d", raidLevel),
+		// FIXME Think about this:
+		// --force basically remove the need to type y to confirm the creation of the array
+		// It is useful to automate the process but could be dangerous if used wrong.
+		// Is the purpose of this lib to be safe or just work ?
+		// This problem can be solved by injecting something along the lines of "
+		// yes | the command" in the Run function
+		// It means that we either have to complexify the Run function
+		// or add a new one that does that, thus ignoring the interface
+		"--raid-devices", fmt.Sprintf("%d", len(physicalDriveNames)),
+		"--force",
+	}
+
+	// Add the physical drive names
+	createCmdArgs = append(createCmdArgs, physicalDriveNames...)
+
+	// Ignore the output
+	// If there's an error, it doesn't matter, otherwise we already had it as parameter
+	_, err := m.Run(createCmdArgs)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create logical volume")
+	}
+
+	// Get the newly created logical volume metadata
+	logicalVolume, err := m.LogicalVolume(&logicalvolume.Metadata{
+		ID: logicalVolumeName,
+	})
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get logical volume details")
+	}
+
+	return logicalVolume, nil
+}
+
+func (m *MDADM) deleteLV(volume *logicalvolume.LogicalVolume) error {
+	// Stop the array
+	_, err := m.Run([]string{
+		"--stop", volume.DevicePath,
+	})
+	if err != nil {
+		return errors.Wrapf(err, "failed to stop logical volume: %s", volume.DevicePath)
+	}
+
+	// Try to remove the array
+	// From my tests, it often fails because mdadm still find the superblock of the device.
+	_, err = m.Run([]string{
+		"--remove", volume.DevicePath,
+	})
+	if err == nil { // In case of success, just return
+		return nil
+	}
+	// FIXME Needs to be tested with an errors.As to confirm that the error is the one we expect
+
+	// If it fails, try to zero the superblock of the array
+	_, err = m.Run([]string{
+		"--zero-superblock", volume.DevicePath,
+	})
+	if err != nil {
+		return errors.Wrapf(err, "failed to zero superblock of logical volume: %s", volume.DevicePath)
 	}
 
 	return nil

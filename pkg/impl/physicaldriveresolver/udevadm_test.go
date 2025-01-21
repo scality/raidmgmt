@@ -17,11 +17,13 @@ type (
 
 func (m *MockCommandRunner) Run(args []string) ([]byte, error) {
 	arguments := m.Called(args)
+
 	return arguments.Get(0).([]byte), arguments.Error(1)
 }
 
 func (m *MockCommandRunner) RunWithCombinedOutput(args []string) ([]byte, error) {
 	arguments := m.Called(args)
+
 	return arguments.Get(0).([]byte), arguments.Error(1)
 }
 

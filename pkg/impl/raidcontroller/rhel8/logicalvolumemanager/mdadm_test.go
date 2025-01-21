@@ -22,6 +22,17 @@ type (
 	MockLogicalVolumesGetter struct {
 		mock.Mock
 	}
+
+	mocking struct {
+		mocker
+		command      string
+		parameters   any
+		returnValues []any
+	}
+
+	mocker interface {
+		On(methodName string, arguments ...any) *mock.Call
+	}
 )
 
 func (m *MockCommandRunner) Run(args []string) ([]byte, error) {
@@ -40,17 +51,6 @@ func (m *MockLogicalVolumesGetter) LogicalVolume(metadata *logicalvolume.Metadat
 	arguments := m.Called(metadata)
 
 	return arguments.Get(0).(*logicalvolume.LogicalVolume), arguments.Error(1)
-}
-
-type mocking struct {
-	mocker
-	command      string
-	parameters   any
-	returnValues []any
-}
-
-type mocker interface {
-	On(methodName string, arguments ...interface{}) *mock.Call
 }
 
 func TestMDADM_CreateLV(t *testing.T) {
