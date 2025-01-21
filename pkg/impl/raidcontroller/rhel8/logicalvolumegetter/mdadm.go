@@ -96,6 +96,10 @@ func (m *MDADM) LogicalVolumes(
 func (m *MDADM) LogicalVolume(
 	metadata *logicalvolume.Metadata,
 ) (*logicalvolume.LogicalVolume, error) {
+	if metadata == nil {
+		return nil, errors.New("metadata is nil")
+	}
+
 	logicalVolume, err := m.logicalVolume(metadata)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get logical volume")

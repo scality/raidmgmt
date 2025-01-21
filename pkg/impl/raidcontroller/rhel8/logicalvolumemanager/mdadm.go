@@ -84,7 +84,7 @@ func (m *MDADM) CreateLV(request *logicalvolume.Request) (*logicalvolume.Logical
 		)
 	}
 
-	existingLogicalVolumes, err := m.LogicalVolumesGetter.LogicalVolumes(nil)
+	existingLogicalVolumes, err := m.LogicalVolumesGetter.LogicalVolumes(request.CtrlMetadata)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get existing logical volumes")
 	}
@@ -138,6 +138,10 @@ func (m *MDADM) CreateLV(request *logicalvolume.Request) (*logicalvolume.Logical
 }
 
 func (m *MDADM) DeleteLV(metadata *logicalvolume.Metadata) error {
+	if metadata == nil {
+		return errors.New("metadata is nil")
+	}
+
 	logicalVolume, err := m.LogicalVolume(metadata)
 	if err != nil {
 		return errors.Wrap(err, "failed to get logical volume")
@@ -184,6 +188,12 @@ func (m *MDADM) AddPDToLV(
 	lvMetadata *logicalvolume.Metadata,
 	pvMetadata *physicaldrive.Metadata,
 ) error {
+	if lvMetadata == nil {
+		return errors.New("logical volume metadata is nil")
+	} else if pvMetadata == nil {
+		return errors.New("physical drive metadata is nil")
+	}
+
 	logicalVolume, err := m.LogicalVolume(lvMetadata)
 	if err != nil {
 		return errors.Wrap(err, "failed to get logical volume")
@@ -213,6 +223,12 @@ func (m *MDADM) DeletePDFromLV(
 	lvMetadata *logicalvolume.Metadata,
 	pvMetadata *physicaldrive.Metadata,
 ) error {
+	if lvMetadata == nil {
+		return errors.New("logical volume metadata is nil")
+	} else if pvMetadata == nil {
+		return errors.New("physical drive metadata is nil")
+	}
+
 	logicalVolume, err := m.LogicalVolume(lvMetadata)
 	if err != nil {
 		return errors.Wrap(err, "failed to get logical volume")
