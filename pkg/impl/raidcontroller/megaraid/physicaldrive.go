@@ -169,7 +169,6 @@ func (pd *PD) PDStatus() physicaldrive.PDStatus {
 		// TODO : check the real values
 		"UGood":  physicaldrive.PDStatusUnassignedGood,
 		"UBad":   physicaldrive.PDStatusUnassignedBad,
-		"Offln":  physicaldrive.PDStatusOffline,
 		"Failed": physicaldrive.PDStatusFailed,
 	}
 

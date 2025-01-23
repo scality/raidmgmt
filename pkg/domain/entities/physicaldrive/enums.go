@@ -17,6 +17,5 @@ const (
 	PDStatusUsed
 	PDStatusUnassignedGood
 	PDStatusUnassignedBad
-	PDStatusOffline
 	PDStatusFailed
 )
