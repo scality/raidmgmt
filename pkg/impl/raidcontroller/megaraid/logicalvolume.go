@@ -22,7 +22,9 @@ func (a *Adapter) logicalvolumes(metadata *raidcontroller.Metadata) (
 	[]*logicalvolume.LogicalVolume,
 	error,
 ) {
-	vds, err := a.showAllVirtualDrives(metadata.ID)
+	selector := selectorCtrl(metadata)
+
+	vds, err := a.showAllVirtualDrives(selector)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get all virtual drives")
 	}
@@ -179,17 +181,17 @@ func (a *Adapter) logicalVolume(
 	metadata *logicalvolume.Metadata) (
 	*logicalvolume.LogicalVolume, error,
 ) {
-	responseData, err := a.showAllVirtualDrive(metadata)
+	selector, err := selectorLV(metadata)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get selector")
+	}
+
+	responseData, err := a.showAllVirtualDrive(selector)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get virtual drive info")
 	}
 
-	// pass the error checking since it's already done
-	// in the ShowAllVirtualDrive
-	//nolint:errcheck // no err is possible since it's already validated
-	key, _ := selectorLV(metadata)
-
-	vds, err := utils.UnmarshalToSlice[VD](responseData, key)
+	vds, err := utils.UnmarshalToSlice[VD](responseData, selector)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to unmarshal virtual drive")
 	}
@@ -205,9 +207,9 @@ func (a *Adapter) logicalVolume(
 		return nil, errors.Wrap(err, "failed to get cache options")
 	}
 
-	key = fmt.Sprintf("PDs for VD %s", metadata.ID)
+	selector = fmt.Sprintf("PDs for VD %s", metadata.ID)
 
-	pDrives, err := utils.UnmarshalToSlice[PD](responseData, key)
+	pDrives, err := utils.UnmarshalToSlice[PD](responseData, selector)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to unmarshal PDs")
 	}
@@ -229,10 +231,10 @@ func (a *Adapter) logicalVolume(
 		pdsMetadata[i] = pdMetadata
 	}
 
-	key = fmt.Sprintf("VD%s Properties", metadata.ID)
+	selector = fmt.Sprintf("VD%s Properties", metadata.ID)
 
 	// Get the VD properties for the permanent path
-	vdProperties, err := utils.UnmarshalToPointer[VDProperties](responseData, key)
+	vdProperties, err := utils.UnmarshalToPointer[VDProperties](responseData, selector)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to unmarshal VD properties")
 	}

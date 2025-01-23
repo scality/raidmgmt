@@ -59,7 +59,9 @@ func (a *Adapter) controller(metadata *raidcontroller.Metadata) (
 	*raidcontroller.RAIDController,
 	error,
 ) {
-	responseData, err := a.showAllController(metadata.ID)
+	selector := selectorCtrl(metadata)
+
+	responseData, err := a.showAllController(selector)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to get controller %d", metadata.ID)
 	}

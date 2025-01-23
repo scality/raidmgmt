@@ -23,8 +23,10 @@ const (
 func (a *Adapter) physicaldrives(metadata *raidcontroller.Metadata) (
 	[]*physicaldrive.PhysicalDrive, error,
 ) {
+	selector := selectorCtrl(metadata)
+
 	// Get the physical drives for the controller
-	pds, err := a.showAllPhysicalDrives(metadata.ID)
+	pds, err := a.showAllPhysicalDrives(selector)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get all physical drives")
 	}
@@ -77,7 +79,7 @@ func (a *Adapter) physicalDrive(
 	}
 
 	// Get the physical drive
-	responseData, err := a.showAllPhysicalDrive(metadata)
+	responseData, err := a.showAllPhysicalDrive(selector)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get all physical drives")
 	}
