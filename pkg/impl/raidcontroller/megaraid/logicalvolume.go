@@ -531,9 +531,9 @@ func (a *Adapter) setLVCacheOptions(
 		options = append(options, "iopolicy="+string(cacheOpts.IOPolicy))
 	}
 
-	// If no options need to be updated, return an error
+	// If no options need to be updated, return nil
 	if len(options) == 0 {
-		return errors.New("no cache options to update")
+		return nil
 	}
 
 	// Get the selector
