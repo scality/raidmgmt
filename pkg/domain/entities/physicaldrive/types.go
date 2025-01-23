@@ -16,17 +16,19 @@ const (
 type (
 	// PhysicalDrive represents a physical drive.
 	PhysicalDrive struct {
-		CtrlMetadata *raidcontroller.Metadata // Controller of the disk
-		ID           string                   // ID
-		Vendor       string                   // Vendor
-		Model        string                   // Model
-		Serial       string                   // Serial number
-		Slot         *Slot                    // Slot
-		Size         uint64                   // Size in bytes
-		Type         DiskType                 // Type (e.g.: HDD, SSD)
-		JBOD         bool                     // Is the disk in JBOD mode
-		Status       PDStatus                 // State (e.g.: Online, Offline, Failed)
-		Reason       *string                  // Reason for the disk state
+		*Metadata // Metadata of the disk
+
+		ID            string   // ID
+		Vendor        string   // Vendor
+		Model         string   // Model
+		Serial        string   // Serial number
+		Size          uint64   // Size in bytes
+		Type          DiskType // Type (e.g.: HDD, SSD)
+		JBOD          bool     // Is the disk in JBOD mode
+		Status        PDStatus // State (e.g.: Online, Offline, Failed)
+		Reason        string   // Reason for the disk state
+		PermanentPath string   // Permanent path of the array (e.g.: /dev/disk/by-id/...)
+		DevicePath    string   // Device path of the array (e.g.: /dev/sda)
 	}
 
 	// Slot identifies the slot of a disk.
@@ -72,20 +74,8 @@ func (s *Slot) String() string {
 }
 
 // Available checks if the PhysicalDrive Status is PDStatusUnassignedGood.
-func (pd *PhysicalDrive) Available() bool {
+func (pd *PhysicalDrive) IsAvailable() bool {
 	return pd.Status == PDStatusUnassignedGood
-}
-
-// ToMetadata returns the Metadata instance of the PhysicalDrive.
-func (pd *PhysicalDrive) ToMetadata() *Metadata {
-	if pd == nil {
-		return nil
-	}
-
-	return &Metadata{
-		CtrlMetadata: pd.CtrlMetadata,
-		Slot:         pd.Slot,
-	}
 }
 
 // IsEqualTo checks if the Slot instance is equal to another Slot instance.
