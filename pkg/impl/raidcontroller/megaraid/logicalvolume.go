@@ -302,9 +302,8 @@ func (a *Adapter) createLV(request *logicalvolume.Request) (
 	}
 
 	// Check if the disks have the same size
-	// When the RAID level is 0 and there is only one disk
-	// the size check is not necessary
-	if request.RAIDLevel != logicalvolume.RAIDLevel0 || len(pds) != 1 {
+	// When the RAID level is 0,the size check is not necessary
+	if request.RAIDLevel != logicalvolume.RAIDLevel0 {
 		if err := checkSizing(pds); err != nil {
 			return nil, errors.Wrap(err, "size check failed")
 		}
