@@ -75,15 +75,19 @@ func (r *Request) Validate() error {
 
 // checkRAIDRequirement checks if the RAID level requirements are met.
 // Only regarding the number of physical drives.
-// The identical disk size requirement cannot be checked here.
+// The identical disk size requirement cannot be checked here
+// because we only have the metadata and not the actual size.
 func (r *Request) checkRAIDRequirement() error {
-	if r.RAIDLevel == RAIDLevel1 {
+	switch r.RAIDLevel {
+	case RAIDLevel0:
+		if len(r.PDrivesMetadata) < RAID0DiskRequirement {
+			return errors.New("not enough physical drives for RAID 0")
+		}
+	case RAIDLevel1:
 		if len(r.PDrivesMetadata) < RAID1DiskRequirement {
 			return errors.New("not enough physical drives for RAID 1")
 		}
-	}
-
-	if r.RAIDLevel == RAIDLevel10 {
+	case RAIDLevel10:
 		if len(r.PDrivesMetadata) < RAID10DiskRequirement {
 			return errors.New("not enough physical drives for RAID 10")
 		}
@@ -91,6 +95,8 @@ func (r *Request) checkRAIDRequirement() error {
 		if len(r.PDrivesMetadata)%2 != 0 {
 			return errors.New("odd number of physical drives for RAID 10")
 		}
+	case RAIDLevelUnknown:
+		return errors.New("unknown RAID level")
 	}
 
 	return nil
