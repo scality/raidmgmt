@@ -18,6 +18,7 @@ type (
 
 		//nolint:lll // The comment is long but it is necessary to explain the field
 		PermanentPath   string                    // Permanent path of the array (e.g.: /dev/disk/by-id/...)
+		DevicePath      string                    // Device path of the array (e.g.: /dev/sda)
 		RAIDLevel       RAIDLevel                 // RAID level of the array
 		PDrivesMetadata []*physicaldrive.Metadata // Physical drives composing the logical volume
 		CacheOptions    *CacheOptions             // Cache options
