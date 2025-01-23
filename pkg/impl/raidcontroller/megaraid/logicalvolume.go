@@ -308,20 +308,15 @@ func (a *Adapter) createLV(request *logicalvolume.Request) (
 	}
 
 	// Check if the physical drives are available
-	// FIXME I prefer to keep the feature of having the user
-	// to get all the errors at once
 	err = a.identifyUnavailableDrives(request)
 	if err != nil {
 		return nil, errors.Wrap(err, "physical drive availability check failed")
 	}
 
-	// Prepare the string of drives
-	enclosure, slots, err := slotsEnclosure(request.PDrivesMetadata)
+	drives, err := formatDrivesString(request.PDrivesMetadata)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get slots and enclosure")
+		return nil, errors.Wrap(err, "failed to format drives string")
 	}
-
-	drives := fmt.Sprintf("drives=%d:%s", enclosure, strings.Join(slots, ","))
 
 	// Prepare the cache options
 	read := string("rdpolicy=" + request.CacheOptions.ReadPolicy)
@@ -342,6 +337,23 @@ func (a *Adapter) createLV(request *logicalvolume.Request) (
 	}
 
 	return newLV, nil
+}
+
+func formatDrivesString(pdMetas []*physicaldrive.Metadata) (string, error) {
+	enclosure, slots, err := enclosureSlots(pdMetas)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to get enclosure and slots")
+	}
+
+	slotsJoined := strings.Join(slots, ",")
+	drives := fmt.Sprintf("drives=%d:%s", enclosure, slotsJoined)
+
+	// If the enclosure is not set, reformat the drives string
+	if enclosure < 0 {
+		drives = fmt.Sprintf("drives=%s", slotsJoined)
+	}
+
+	return drives, nil
 }
 
 func (a *Adapter) fillPhysicalDrives(pdMetadatas []*physicaldrive.Metadata) (
@@ -388,38 +400,43 @@ func (a *Adapter) identifyUnavailableDrives(request *logicalvolume.Request) erro
 	return nil
 }
 
-// slotsEnclosure returns the enclosure number and the slots of the physical drives.
+// enclosureSlots returns the enclosure number and the slots of the physical drives.
 //
 // The function is not too complex, and the complexity is due to the
 // multiple checks and conversions.
 //
 //nolint:gocognit // The function is actually not too complex
-func slotsEnclosure(pdsMetadata []*physicaldrive.Metadata) (int, []string, error) {
+func enclosureSlots(pdsMetadatas []*physicaldrive.Metadata) (
+	enclosure int,
+	slots []string,
+	err error,
+) {
 	// Map to check if there are multiple enclosures
 	enclosures := make(map[int]struct{})
+	defaultEnclosure := -1
 
 	// Slice to store the slots
-	slots := make([]string, len(pdsMetadata))
+	slots = make([]string, len(pdsMetadatas))
 
-	for i, pd := range pdsMetadata {
+	for i, pd := range pdsMetadatas {
 		enclosure, bay := pd.Slot.Enclosure, pd.Slot.Bay
 
 		enclosureInt, err := strconv.Atoi(enclosure)
 		if err != nil {
-			return -1, nil, errors.Wrap(err, "failed to convert enclosure to int")
+			return defaultEnclosure, nil, errors.Wrap(err, "failed to convert enclosure to int")
 		}
 
 		if enclosureInt < 0 {
-			return -1, nil, errors.Errorf(ErrInvalidEnclosureID, enclosure)
+			return defaultEnclosure, nil, errors.Errorf(ErrInvalidEnclosureID, enclosure)
 		}
 
 		bayInt, err := strconv.Atoi(bay)
 		if err != nil {
-			return -1, nil, errors.Wrap(err, "failed to convert bay to int")
+			return defaultEnclosure, nil, errors.Wrap(err, "failed to convert bay to int")
 		}
 
 		if bayInt < 0 {
-			return -1, nil, errors.Errorf(ErrInvalidBayID, bay)
+			return defaultEnclosure, nil, errors.Errorf(ErrInvalidBayID, bay)
 		}
 
 		// Add the enclosure to the map
@@ -432,11 +449,11 @@ func slotsEnclosure(pdsMetadata []*physicaldrive.Metadata) (int, []string, error
 
 	// Check if there are multiple enclosures
 	if len(enclosures) > 1 {
-		return -1, nil, errors.New("multiple enclosures not supported")
+		return defaultEnclosure, nil, errors.New("multiple enclosures not supported")
 	}
 
 	// Get the enclosure number
-	enclosure := 0
+	enclosure = defaultEnclosure
 	for key := range enclosures {
 		enclosure = key
 	}
@@ -532,9 +549,9 @@ func (a *Adapter) setLVCacheOptions(
 
 // migrate deletes or adds a physical drive to a logical volume.
 func (a *Adapter) migrate(
-	lvMetadata *logicalvolume.Metadata,
-	pdMetadata *physicaldrive.Metadata,
 	action string,
+	lvMetadata *logicalvolume.Metadata,
+	pdMetadatas ...*physicaldrive.Metadata,
 ) error {
 	// Get the logical volume
 	lv, err := a.logicalVolume(lvMetadata)
@@ -544,18 +561,11 @@ func (a *Adapter) migrate(
 
 	actionArg := fmt.Sprintf("option=%s", action)
 
-	raidtype := fmt.Sprintf("type=raid%s", lv.RAIDLevel)
+	raidLevel := fmt.Sprintf("type=raid%s", lv.RAIDLevel)
 
-	drives := fmt.Sprintf("drives=%s:%s", pdMetadata.Slot.Enclosure, pdMetadata.Slot.Bay)
-
-	enclosureInt, err := strconv.Atoi(pdMetadata.Slot.Enclosure)
+	drives, err := formatDrivesString(pdMetadatas)
 	if err != nil {
-		return errors.Wrapf(err, "failed to convert enclosure to int: %s", pdMetadata.Slot.Enclosure)
-	}
-
-	// If the enclosure is not set, reformat the drives string
-	if enclosureInt < 0 {
-		drives = fmt.Sprintf("drives=%s", pdMetadata.Slot.Bay)
+		return errors.Wrap(err, "failed to format drives string")
 	}
 
 	selector, err := selectorLV(lvMetadata)
@@ -563,7 +573,7 @@ func (a *Adapter) migrate(
 		return errors.Wrap(err, "failed to get selector")
 	}
 
-	args := []string{selector, "start", "migrate", raidtype, actionArg, drives}
+	args := []string{selector, "start", "migrate", raidLevel, actionArg, drives}
 
 	_, err = a.runner.Run(args)
 	if err != nil {

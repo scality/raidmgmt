@@ -130,7 +130,7 @@ func (a *Adapter) CreateLV(
 // AddPDToLV adds a physical drive to a logical volume.
 func (a *Adapter) AddPDToLV(
 	lvMetadata *logicalvolume.Metadata,
-	pdMetadata *physicaldrive.Metadata,
+	pdMetadatas ...*physicaldrive.Metadata,
 ) error {
 	if err := lvMetadata.Validate(); err != nil {
 		return errors.Wrap(err, ErrInvalidLogicalVolumeMetadata.Error())
@@ -163,7 +163,7 @@ func (a *Adapter) DeleteLV(metadata *logicalvolume.Metadata) error {
 // DeletePDFromLV deletes a physical drive from a logical volume.
 func (a *Adapter) DeletePDFromLV(
 	lvMetadata *logicalvolume.Metadata,
-	pdMetadata *physicaldrive.Metadata,
+	pdMetadatas ...*physicaldrive.Metadata,
 ) error {
 	if err := lvMetadata.Validate(); err != nil {
 		return errors.Wrap(err, ErrInvalidLogicalVolumeMetadata.Error())
