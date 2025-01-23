@@ -117,5 +117,6 @@ func getKey(decoder *json.Decoder) (string, bool) {
 // isJSONObject checks if a JSON RawMessage is an object.
 func isJSONObject(data json.RawMessage) bool {
 	trimmed := strings.TrimSpace(string(data))
+
 	return len(trimmed) > 0 && trimmed[0] == '{'
 }
