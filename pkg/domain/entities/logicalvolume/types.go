@@ -6,9 +6,10 @@ import (
 )
 
 const (
-	RAID0DiskRequirement  = 1
-	RAID1DiskRequirement  = 2
-	RAID10DiskRequirement = 4
+	RAID0DiskRequirement  int    = 1
+	RAID1DiskRequirement  int    = 2
+	RAID10DiskRequirement int    = 4
+	SizeTolerancePercent  uint64 = 5
 )
 
 type (

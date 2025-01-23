@@ -15,7 +15,10 @@ import (
 )
 
 // patternLV is the pattern for the logical volume selector.
-const patternLV string = "/c%d/v%s"
+const (
+	patternLV string = "/c%d/v%s"
+	percent   uint64 = 100
+)
 
 // logicalvolumes returns all logical volumes for a given controller.
 func (a *Adapter) logicalvolumes(metadata *raidcontroller.Metadata) (
@@ -485,8 +488,12 @@ func checkSizing(
 	// Collect IDs of drives that don't match the mode size
 	var mismatchedIDs []string
 
+	// Check if the size of each drive is within the tolerance of the mode size
+	lowerLimit := modeSize - (modeSize * logicalvolume.SizeTolerancePercent / percent)
+	upperLimit := modeSize + (modeSize * logicalvolume.SizeTolerancePercent / percent)
+
 	for _, pd := range pds {
-		if pd.Size != modeSize {
+		if pd.Size < lowerLimit || pd.Size > upperLimit {
 			mismatchedIDs = append(mismatchedIDs, pd.ID)
 		}
 	}
