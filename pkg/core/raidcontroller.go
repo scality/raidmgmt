@@ -2,38 +2,35 @@ package core
 
 import (
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog"
 	"github.com/scality/raidmgmt/domain/entities/logicalvolume"
 	"github.com/scality/raidmgmt/domain/entities/physicaldrive"
 	"github.com/scality/raidmgmt/domain/entities/raidcontroller"
 	"github.com/scality/raidmgmt/domain/ports"
 )
 
+var (
+	ErrInvalidRAIDControllerMetadata = errors.New("invalid RAID controller metadata")
+	ErrInvalidPhysicalDriveMetadata  = errors.New("invalid physical drive metadata")
+	ErrInvalidLogicalVolumeMetadata  = errors.New("invalid logical volume metadata")
+)
+
 type RAIDController struct {
-	log   zerolog.Logger
 	iface ports.RAIDController
 }
 
 var _ ports.RAIDController = &RAIDController{}
 
 // New returns a new RAID controller.
-func New(log zerolog.Logger, iface ports.RAIDController) *RAIDController {
+func New(iface ports.RAIDController) *RAIDController {
 	return &RAIDController{
-		log:   log,
 		iface: iface,
 	}
 }
 
 // Controllers returns a list of RAID controllers.
 func (r *RAIDController) Controllers() ([]*raidcontroller.RAIDController, error) {
-	r.log.Debug().Msg("Getting RAID controllers")
-
 	controllers, err := r.iface.Controllers()
 	if err != nil {
-		r.log.Error().
-			Err(err).
-			Msg("Failed to get RAID controllers")
-
 		return nil, errors.Wrap(err, "failed to get RAID controllers")
 	}
 
@@ -45,17 +42,12 @@ func (r *RAIDController) Controller(metadata *raidcontroller.Metadata) (
 	*raidcontroller.RAIDController,
 	error,
 ) {
-	r.log.Debug().
-		Int("id", metadata.ID).
-		Msg("Getting RAID controller")
+	if err := metadata.Validate(); err != nil {
+		return nil, errors.Wrap(err, ErrInvalidRAIDControllerMetadata.Error())
+	}
 
 	controller, err := r.iface.Controller(metadata)
 	if err != nil {
-		r.log.Error().
-			Int("id", metadata.ID).
-			Err(err).
-			Msg("Failed to get RAID controller")
-
 		return nil, errors.Wrap(err, "failed to get RAID controller")
 	}
 
@@ -67,17 +59,12 @@ func (r *RAIDController) PhysicalDrives(metadata *raidcontroller.Metadata) (
 	[]*physicaldrive.PhysicalDrive,
 	error,
 ) {
-	r.log.Debug().
-		Int("id", metadata.ID).
-		Msg("Getting physical drives")
+	if err := metadata.Validate(); err != nil {
+		return nil, errors.Wrap(err, ErrInvalidRAIDControllerMetadata.Error())
+	}
 
 	physicalDrives, err := r.iface.PhysicalDrives(metadata)
 	if err != nil {
-		r.log.Error().
-			Err(err).
-			Int("id", metadata.ID).
-			Msg("Failed to get physical drives")
-
 		return nil, errors.Wrap(err, "failed to get physical drives")
 	}
 
@@ -89,19 +76,12 @@ func (r *RAIDController) PhysicalDrive(metadata *physicaldrive.Metadata) (
 	*physicaldrive.PhysicalDrive,
 	error,
 ) {
-	slot := metadata.Slot.String()
-
-	r.log.Debug().
-		Str("slot", slot).
-		Msg("Getting physical drive")
+	if err := metadata.Validate(); err != nil {
+		return nil, errors.Wrap(err, ErrInvalidPhysicalDriveMetadata.Error())
+	}
 
 	physicalDrive, err := r.iface.PhysicalDrive(metadata)
 	if err != nil {
-		r.log.Error().
-			Err(err).
-			Str("slot", slot).
-			Msg("Failed to get physical drive")
-
 		return nil, errors.Wrap(err, "failed to get physical drive")
 	}
 
@@ -113,17 +93,12 @@ func (r *RAIDController) LogicalVolumes(metadata *raidcontroller.Metadata) (
 	[]*logicalvolume.LogicalVolume,
 	error,
 ) {
-	r.log.Debug().
-		Int("id", metadata.ID).
-		Msg("Getting logical volumes")
+	if err := metadata.Validate(); err != nil {
+		return nil, errors.Wrap(err, ErrInvalidRAIDControllerMetadata.Error())
+	}
 
 	logicalVolumes, err := r.iface.LogicalVolumes(metadata)
 	if err != nil {
-		r.log.Error().
-			Err(err).
-			Int("id", metadata.ID).
-			Msg("Failed to get logical volumes")
-
 		return nil, errors.Wrap(err, "failed to get logical volumes")
 	}
 
@@ -135,17 +110,12 @@ func (r *RAIDController) LogicalVolume(metadata *logicalvolume.Metadata) (
 	*logicalvolume.LogicalVolume,
 	error,
 ) {
-	r.log.Debug().
-		Str("id", metadata.ID).
-		Msg("Getting logical volume")
+	if err := metadata.Validate(); err != nil {
+		return nil, errors.Wrap(err, ErrInvalidLogicalVolumeMetadata.Error())
+	}
 
 	logicalVolume, err := r.iface.LogicalVolume(metadata)
 	if err != nil {
-		r.log.Error().
-			Err(err).
-			Str("id", metadata.ID).
-			Msg("Failed to get logical volume")
-
 		return nil, errors.Wrap(err, "failed to get logical volume")
 	}
 
@@ -154,18 +124,11 @@ func (r *RAIDController) LogicalVolume(metadata *logicalvolume.Metadata) (
 
 // EnableJBOD enables JBOD mode on a physical drive.
 func (r *RAIDController) EnableJBOD(metadata *physicaldrive.Metadata) error {
-	slot := metadata.Slot.String()
-
-	r.log.Debug().
-		Str("slot", slot).
-		Msg("Enabling JBOD for physical drive")
+	if err := metadata.Validate(); err != nil {
+		return errors.Wrap(err, ErrInvalidPhysicalDriveMetadata.Error())
+	}
 
 	if err := r.iface.EnableJBOD(metadata); err != nil {
-		r.log.Error().
-			Err(err).
-			Str("slot", slot).
-			Msg("Failed to enable JBOD for physical drive")
-
 		return errors.Wrap(err, "failed to enable JBOD for physical drive")
 	}
 
@@ -174,18 +137,11 @@ func (r *RAIDController) EnableJBOD(metadata *physicaldrive.Metadata) error {
 
 // DisableJBOD disables JBOD mode on a physical drive.
 func (r *RAIDController) DisableJBOD(metadata *physicaldrive.Metadata) error {
-	slot := metadata.Slot.String()
-
-	r.log.Debug().
-		Str("slot", slot).
-		Msg("Disabling JBOD for physical drive")
+	if err := metadata.Validate(); err != nil {
+		return errors.Wrap(err, ErrInvalidPhysicalDriveMetadata.Error())
+	}
 
 	if err := r.iface.DisableJBOD(metadata); err != nil {
-		r.log.Error().
-			Err(err).
-			Str("slot", slot).
-			Msg("Failed to disable JBOD for physical drive")
-
 		return errors.Wrap(err, "failed to disable JBOD for physical drive")
 	}
 
@@ -197,16 +153,15 @@ func (r *RAIDController) SetLVCacheOptions(
 	metadata *logicalvolume.Metadata,
 	cacheOpts *logicalvolume.CacheOptions,
 ) error {
-	r.log.Debug().
-		Str("id", metadata.ID).
-		Msg("Setting cache options for logical volume")
+	if err := metadata.Validate(); err != nil {
+		return errors.Wrap(err, ErrInvalidLogicalVolumeMetadata.Error())
+	}
+
+	if err := cacheOpts.Validate(); err != nil {
+		return errors.Wrap(err, "invalid cache options")
+	}
 
 	if err := r.iface.SetLVCacheOptions(metadata, cacheOpts); err != nil {
-		r.log.Error().
-			Err(err).
-			Str("id", metadata.ID).
-			Msg("Failed to set cache options for logical volume")
-
 		return errors.Wrap(err, "failed to set cache options for logical volume")
 	}
 
@@ -214,18 +169,16 @@ func (r *RAIDController) SetLVCacheOptions(
 }
 
 // CreateLV creates a logical volume from a request.
-func (r *RAIDController) CreateLV(lvRequest *logicalvolume.Request) (
+func (r *RAIDController) CreateLV(request *logicalvolume.Request) (
 	*logicalvolume.LogicalVolume,
 	error,
 ) {
-	r.log.Debug().Msg("Creating logical volume")
+	if err := request.Validate(); err != nil {
+		return nil, errors.Wrap(err, "invalid logical volume request")
+	}
 
-	newLV, err := r.iface.CreateLV(lvRequest)
+	newLV, err := r.iface.CreateLV(request)
 	if err != nil {
-		r.log.Error().
-			Err(err).
-			Msg("Failed to create logical volume")
-
 		return nil, errors.Wrap(err, "failed to create logical volume")
 	}
 
@@ -235,22 +188,19 @@ func (r *RAIDController) CreateLV(lvRequest *logicalvolume.Request) (
 // AddPDToLV adds a physical drive to a logical volume.
 func (r *RAIDController) AddPDToLV(
 	lvMetadata *logicalvolume.Metadata,
-	pdMetadata *physicaldrive.Metadata,
+	pdMetadatas ...*physicaldrive.Metadata,
 ) error {
-	slot := pdMetadata.Slot.String()
+	if err := lvMetadata.Validate(); err != nil {
+		return errors.Wrap(err, ErrInvalidLogicalVolumeMetadata.Error())
+	}
 
-	r.log.Debug().
-		Str("lv_id", lvMetadata.ID).
-		Str("slot", slot).
-		Msg("Adding physical drive to logical volume")
+	for _, pd := range pdMetadatas {
+		if err := pd.Validate(); err != nil {
+			return errors.Wrap(err, ErrInvalidPhysicalDriveMetadata.Error())
+		}
+	}
 
-	if err := r.iface.AddPDToLV(lvMetadata, pdMetadata); err != nil {
-		r.log.Error().
-			Err(err).
-			Str("lv_id", lvMetadata.ID).
-			Str("slot", slot).
-			Msg("Failed to add physical drive to logical volume")
-
+	if err := r.iface.AddPDToLV(lvMetadata, pdMetadatas...); err != nil {
 		return errors.Wrap(err, "failed to add physical drive to logical volume")
 	}
 
@@ -259,16 +209,11 @@ func (r *RAIDController) AddPDToLV(
 
 // DeleteLV deletes a logical volume.
 func (r *RAIDController) DeleteLV(metadata *logicalvolume.Metadata) error {
-	r.log.Debug().
-		Str("id", metadata.ID).
-		Msg("Deleting logical volume")
+	if err := metadata.Validate(); err != nil {
+		return errors.Wrap(err, ErrInvalidLogicalVolumeMetadata.Error())
+	}
 
 	if err := r.iface.DeleteLV(metadata); err != nil {
-		r.log.Error().
-			Err(err).
-			Str("id", metadata.ID).
-			Msg("Failed to delete logical volume")
-
 		return errors.Wrap(err, "failed to delete logical volume")
 	}
 
@@ -278,22 +223,19 @@ func (r *RAIDController) DeleteLV(metadata *logicalvolume.Metadata) error {
 // DeletePDFromLV deletes a physical drive from a logical volume.
 func (r *RAIDController) DeletePDFromLV(
 	lvMetadata *logicalvolume.Metadata,
-	pdMetadata *physicaldrive.Metadata,
+	pdMetadatas ...*physicaldrive.Metadata,
 ) error {
-	slot := pdMetadata.Slot.String()
+	if err := lvMetadata.Validate(); err != nil {
+		return errors.Wrap(err, ErrInvalidLogicalVolumeMetadata.Error())
+	}
 
-	r.log.Debug().
-		Str("lv_id", lvMetadata.ID).
-		Str("slot", slot).
-		Msg("Removing physical drive from logical volume")
+	for _, pd := range pdMetadatas {
+		if err := pd.Validate(); err != nil {
+			return errors.Wrap(err, ErrInvalidPhysicalDriveMetadata.Error())
+		}
+	}
 
-	if err := r.iface.DeletePDFromLV(lvMetadata, pdMetadata); err != nil {
-		r.log.Error().
-			Err(err).
-			Str("lv_id", lvMetadata.ID).
-			Str("slot", slot).
-			Msg("Failed to remove physical drive from logical volume")
-
+	if err := r.iface.DeletePDFromLV(lvMetadata, pdMetadatas...); err != nil {
 		return errors.Wrap(err, "failed to remove physical drive from logical volume")
 	}
 
@@ -302,18 +244,11 @@ func (r *RAIDController) DeletePDFromLV(
 
 // StartBlink starts blinking for a physical drive.
 func (r *RAIDController) StartBlink(metadata *physicaldrive.Metadata) error {
-	slot := metadata.Slot.String()
-
-	r.log.Debug().
-		Str("slot", slot).
-		Msg("Starting blinking for physical drive")
+	if err := metadata.Validate(); err != nil {
+		return errors.Wrap(err, ErrInvalidPhysicalDriveMetadata.Error())
+	}
 
 	if err := r.iface.StartBlink(metadata); err != nil {
-		r.log.Error().
-			Err(err).
-			Str("slot", slot).
-			Msg("Failed to start blinking for physical drive")
-
 		return errors.Wrap(err, "failed to start blinking for physical drive")
 	}
 
@@ -322,18 +257,11 @@ func (r *RAIDController) StartBlink(metadata *physicaldrive.Metadata) error {
 
 // StopBlink stops blinking for a physical drive.
 func (r *RAIDController) StopBlink(metadata *physicaldrive.Metadata) error {
-	slot := metadata.Slot.String()
-
-	r.log.Debug().
-		Str("slot", slot).
-		Msg("Stopping blinking for physical drive")
+	if err := metadata.Validate(); err != nil {
+		return errors.Wrap(err, ErrInvalidPhysicalDriveMetadata.Error())
+	}
 
 	if err := r.iface.StopBlink(metadata); err != nil {
-		r.log.Error().
-			Err(err).
-			Str("slot", slot).
-			Msg("Failed to stop blinking for physical drive")
-
 		return errors.Wrap(err, "failed to stop blinking for physical drive")
 	}
 

@@ -35,10 +35,6 @@ func (a *Adapter) PhysicalDrives(
 	metadata *raidcontroller.Metadata) (
 	[]*physicaldrive.PhysicalDrive, error,
 ) {
-	if err := metadata.Validate(); err != nil {
-		return nil, errors.Wrap(err, ErrInvalidRAIDControllerMetadata.Error())
-	}
-
 	physicalDrives, err := a.physicaldrives(metadata)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get physical drives")
@@ -52,10 +48,6 @@ func (a *Adapter) LogicalVolumes(
 	metadata *raidcontroller.Metadata) (
 	[]*logicalvolume.LogicalVolume, error,
 ) {
-	if err := metadata.Validate(); err != nil {
-		return nil, errors.Wrap(err, ErrInvalidRAIDControllerMetadata.Error())
-	}
-
 	logicalVolumes, err := a.logicalvolumes(metadata)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get logical volumes")
@@ -66,10 +58,6 @@ func (a *Adapter) LogicalVolumes(
 
 // EnableJBOD enables JBOD mode on a physical drive.
 func (a *Adapter) EnableJBOD(metadata *physicaldrive.Metadata) error {
-	if err := metadata.Validate(); err != nil {
-		return errors.Wrap(err, ErrInvalidPhysicalDriveMetadata.Error())
-	}
-
 	if err := a.setJBOD(metadata, "set"); err != nil {
 		return errors.Wrap(err, "failed to enable JBOD")
 	}
@@ -79,10 +67,6 @@ func (a *Adapter) EnableJBOD(metadata *physicaldrive.Metadata) error {
 
 // DisableJBOD disables JBOD mode on a physical drive.
 func (a *Adapter) DisableJBOD(metadata *physicaldrive.Metadata) error {
-	if err := metadata.Validate(); err != nil {
-		return errors.Wrap(err, ErrInvalidPhysicalDriveMetadata.Error())
-	}
-
 	if err := a.setJBOD(metadata, "delete"); err != nil {
 		return errors.Wrap(err, "failed to disable JBOD")
 	}
@@ -95,14 +79,6 @@ func (a *Adapter) SetLVCacheOptions(
 	metadata *logicalvolume.Metadata,
 	cacheOpts *logicalvolume.CacheOptions,
 ) error {
-	if err := metadata.Validate(); err != nil {
-		return errors.Wrap(err, ErrInvalidLogicalVolumeMetadata.Error())
-	}
-
-	if err := cacheOpts.Validate(); err != nil {
-		return errors.Wrap(err, "invalid cache options")
-	}
-
 	if err := a.setLVCacheOptions(metadata, cacheOpts); err != nil {
 		return errors.Wrap(err, "failed to set cache options")
 	}
@@ -115,10 +91,6 @@ func (a *Adapter) CreateLV(
 	request *logicalvolume.Request) (
 	*logicalvolume.LogicalVolume, error,
 ) {
-	if err := request.Validate(); err != nil {
-		return nil, errors.Wrap(err, "invalid logical volume request")
-	}
-
 	newLv, err := a.createLV(request)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create logical volume")
@@ -132,15 +104,7 @@ func (a *Adapter) AddPDToLV(
 	lvMetadata *logicalvolume.Metadata,
 	pdMetadatas ...*physicaldrive.Metadata,
 ) error {
-	if err := lvMetadata.Validate(); err != nil {
-		return errors.Wrap(err, ErrInvalidLogicalVolumeMetadata.Error())
-	}
-
-	if err := pdMetadata.Validate(); err != nil {
-		return errors.Wrap(err, ErrInvalidPhysicalDriveMetadata.Error())
-	}
-
-	if err := a.migrate(lvMetadata, pdMetadata, "add"); err != nil {
+	if err := a.migrate("add", lvMetadata, pdMetadatas...); err != nil {
 		return errors.Wrap(err, "failed to add physical drive to logical volume")
 	}
 
@@ -149,10 +113,6 @@ func (a *Adapter) AddPDToLV(
 
 // DeleteLV deletes a logical volume.
 func (a *Adapter) DeleteLV(metadata *logicalvolume.Metadata) error {
-	if err := metadata.Validate(); err != nil {
-		return errors.Wrap(err, ErrInvalidLogicalVolumeMetadata.Error())
-	}
-
 	if err := a.deleteLV(metadata); err != nil {
 		return errors.Wrap(err, "failed to delete logical volume")
 	}
@@ -165,15 +125,7 @@ func (a *Adapter) DeletePDFromLV(
 	lvMetadata *logicalvolume.Metadata,
 	pdMetadatas ...*physicaldrive.Metadata,
 ) error {
-	if err := lvMetadata.Validate(); err != nil {
-		return errors.Wrap(err, ErrInvalidLogicalVolumeMetadata.Error())
-	}
-
-	if err := pdMetadata.Validate(); err != nil {
-		return errors.Wrap(err, ErrInvalidPhysicalDriveMetadata.Error())
-	}
-
-	if err := a.migrate(lvMetadata, pdMetadata, "remove"); err != nil {
+	if err := a.migrate("remove", lvMetadata, pdMetadatas...); err != nil {
 		return errors.Wrap(err, "failed to delete physical drive from logical volume")
 	}
 
@@ -182,10 +134,6 @@ func (a *Adapter) DeletePDFromLV(
 
 // StartBlink starts the blinking of the given physical drive.
 func (a *Adapter) StartBlink(metadata *physicaldrive.Metadata) error {
-	if err := metadata.Validate(); err != nil {
-		return errors.Wrap(err, ErrInvalidPhysicalDriveMetadata.Error())
-	}
-
 	if err := a.blink(metadata, "start"); err != nil {
 		return errors.Wrap(err, "failed to start blinking")
 	}
@@ -195,10 +143,6 @@ func (a *Adapter) StartBlink(metadata *physicaldrive.Metadata) error {
 
 // StopBlink stops the blinking of the given physical drive.
 func (a *Adapter) StopBlink(metadata *physicaldrive.Metadata) error {
-	if err := metadata.Validate(); err != nil {
-		return errors.Wrap(err, ErrInvalidPhysicalDriveMetadata.Error())
-	}
-
 	if err := a.blink(metadata, "stop"); err != nil {
 		return errors.Wrap(err, "failed to stop blinking")
 	}
@@ -210,10 +154,6 @@ func (a *Adapter) StopBlink(metadata *physicaldrive.Metadata) error {
 func (a *Adapter) Controller(metadata *raidcontroller.Metadata) (
 	*raidcontroller.RAIDController, error,
 ) {
-	if err := metadata.Validate(); err != nil {
-		return nil, errors.Wrap(err, ErrInvalidRAIDControllerMetadata.Error())
-	}
-
 	controller, err := a.controller(metadata)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to get controller %d", metadata.ID)
@@ -227,10 +167,6 @@ func (a *Adapter) PhysicalDrive(metadata *physicaldrive.Metadata) (
 	*physicaldrive.PhysicalDrive,
 	error,
 ) {
-	if err := metadata.Validate(); err != nil {
-		return nil, errors.Wrap(err, ErrInvalidPhysicalDriveMetadata.Error())
-	}
-
 	pd, err := a.physicalDrive(metadata)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to get physical drive %s", metadata.Slot.String())
@@ -244,10 +180,6 @@ func (a *Adapter) LogicalVolume(metadata *logicalvolume.Metadata) (
 	*logicalvolume.LogicalVolume,
 	error,
 ) {
-	if err := metadata.Validate(); err != nil {
-		return nil, errors.Wrap(err, ErrInvalidLogicalVolumeMetadata.Error())
-	}
-
 	lv, err := a.logicalVolume(metadata)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to get logical volume %s", metadata.ID)
