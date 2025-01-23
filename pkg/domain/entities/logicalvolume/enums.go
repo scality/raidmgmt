@@ -1,7 +1,7 @@
 package logicalvolume
 
 type (
-	RAIDLevel   uint8
+	RAIDLevel   string
 	ReadPolicy  string
 	WritePolicy string
 	IOPolicy    string
@@ -9,10 +9,10 @@ type (
 )
 
 const (
-	RAIDLevelUnknown RAIDLevel = iota
-	RAIDLevel0
-	RAIDLevel1
-	RAIDLevel10
+	RAIDLevelUnknown RAIDLevel = "unknown"
+	RAIDLevel0       RAIDLevel = "0"
+	RAIDLevel1       RAIDLevel = "1"
+	RAIDLevel10      RAIDLevel = "10"
 )
 
 const (
@@ -33,8 +33,6 @@ const (
 const (
 	LVStatusUnknown LVStatus = iota
 	LVStatusOptimal
-	LVStatusOffline
-	LVStatusPartiallyDegraded
 	LVStatusDegraded
 	LVStatusFailed
 )

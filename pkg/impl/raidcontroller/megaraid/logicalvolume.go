@@ -154,8 +154,6 @@ func (vd *VD) LVStatus() logicalvolume.LVStatus {
 		"Optl": logicalvolume.LVStatusOptimal,
 		// TODO : check the real values
 		"Dgrd": logicalvolume.LVStatusDegraded,
-		"OfLn": logicalvolume.LVStatusOffline,
-		"Pdgd": logicalvolume.LVStatusPartiallyDegraded,
 		"Fail": logicalvolume.LVStatusFailed,
 	}
 
@@ -293,7 +291,7 @@ func (a *Adapter) createLV(request *logicalvolume.Request) (
 ) {
 	selector := selectorCtrl(request.CtrlMetadata)
 
-	raidLevel := fmt.Sprintf("type=raid%d", request.RAIDLevel)
+	raidLevel := fmt.Sprintf("type=raid%s", request.RAIDLevel)
 
 	// Get the physical drives from the metadata
 	pds, err := a.fillPhysicalDrives(request.PDrivesMetadata)
@@ -378,7 +376,7 @@ func (a *Adapter) identifyUnavailableDrives(request *logicalvolume.Request) erro
 		}
 
 		// Check if the physical drive is available
-		if !pd.Available() {
+		if !pd.IsAvailable() {
 			unavailableDrives = append(unavailableDrives, pdMeta.Slot.String())
 		}
 	}
@@ -547,7 +545,7 @@ func (a *Adapter) migrate(
 
 	actionArg := fmt.Sprintf("option=%s", action)
 
-	raidtype := fmt.Sprintf("type=raid%d", lv.RAIDLevel)
+	raidtype := fmt.Sprintf("type=raid%s", lv.RAIDLevel)
 
 	drives := fmt.Sprintf("drives=%s:%s", pdMetadata.Slot.Enclosure, pdMetadata.Slot.Bay)
 
