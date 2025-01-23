@@ -28,7 +28,7 @@ func (m *Metadata) Validate() error {
 	}
 
 	if m.ID == "" {
-		return errors.New("is empty")
+		return errors.New("id is empty")
 	}
 
 	if err := m.CtrlMetadata.Validate(); err != nil {
