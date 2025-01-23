@@ -5,7 +5,7 @@ import "github.com/pkg/errors"
 type (
 	// RAIDController represents a RAID controller card.
 	RAIDController struct {
-		Metadata *Metadata // Metadata of the RAID controller card
+		*Metadata // Metadata of the RAID controller card
 
 		Name            string // Name of the RAID controller card
 		Serial          string // Serial number of the RAID controller card
