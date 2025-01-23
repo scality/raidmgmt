@@ -71,13 +71,13 @@ type (
 		DeviceGroup         int    `json:"DG"`
 		Size                string `json:"Size"` // Size (humanized)
 		Interface           string `json:"Intf"`
-		MediaType           string `json:"Med"`
+		MediaType           string `json:"Med"` // Media Type (HDD, SSD, NVMe)
 		SelfEncryptingDrive string `json:"SED"`
 		ProtectionInfo      string `json:"PI"`
 		SectorSize          string `json:"SeSz"`
 		Model               string `json:"Model"`
 		Spun                string `json:"Sp"`
-		Type                string `json:"Type"`
+		Type                string `json:"Type"` // Type of disk (JBOD, RAID)
 	}
 
 	DriveDeviceAttributes struct {
