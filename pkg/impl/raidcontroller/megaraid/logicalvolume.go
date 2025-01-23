@@ -115,13 +115,13 @@ func (vd *VD) CacheOptions() (*logicalvolume.CacheOptions, error) {
 	switch {
 	case strings.HasPrefix(remaining, "WB"):
 		writePolicy = logicalvolume.WritePolicyWriteBack
-		remaining = strings.ReplaceAll(remaining, "WB", "")
+		remaining = strings.TrimPrefix(remaining, "WB")
 	case strings.HasPrefix(remaining, "AWB"):
 		writePolicy = logicalvolume.WritePolicyAlwaysWriteBack
-		remaining = strings.ReplaceAll(remaining, "AWB", "")
+		remaining = strings.TrimPrefix(remaining, "AWB")
 	case strings.HasPrefix(remaining, "WT"):
 		writePolicy = logicalvolume.WritePolicyWriteThrough
-		remaining = strings.ReplaceAll(remaining, "WT", "")
+		remaining = strings.TrimPrefix(remaining, "WT")
 	}
 
 	// Parsing IO policy
@@ -130,10 +130,10 @@ func (vd *VD) CacheOptions() (*logicalvolume.CacheOptions, error) {
 	switch {
 	case strings.HasPrefix(remaining, "C"):
 		ioPolicy = logicalvolume.IOPolicyCached
-		remaining = strings.ReplaceAll(remaining, "C", "")
+		remaining = strings.TrimPrefix(remaining, "C")
 	case strings.HasPrefix(remaining, "D"):
 		ioPolicy = logicalvolume.IOPolicyDirect
-		remaining = strings.ReplaceAll(remaining, "D", "")
+		remaining = strings.TrimPrefix(remaining, "D")
 	}
 
 	if remaining != "" {
