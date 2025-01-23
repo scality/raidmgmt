@@ -243,8 +243,7 @@ func (a *Adapter) logicalVolume(
 	}
 
 	logicalVolume := &logicalvolume.LogicalVolume{
-		CtrlMetadata:    metadata.CtrlMetadata,
-		ID:              metadata.ID,
+		Metadata:        metadata,
 		DevicePath:      vdProperties.OSDriveName,
 		RAIDLevel:       vd.RAIDLevel(),
 		PDrivesMetadata: pdsMetadata,

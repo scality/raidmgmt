@@ -14,9 +14,8 @@ const (
 type (
 	// LogicalVolume represents a logical volume.
 	LogicalVolume struct {
-		CtrlMetadata *raidcontroller.Metadata // Controller of the logical volume
-		ID           string                   // ID
-		DevicePath   string                   // Device path of the array (e.g.: /dev/sda)
+		*Metadata // Metadata of the logical volume
+
 		//nolint:lll // The comment is long but it is necessary to explain the field
 		PermanentPath   string                    // Permanent path of the array (e.g.: /dev/disk/by-id/...)
 		RAIDLevel       RAIDLevel                 // RAID level of the array

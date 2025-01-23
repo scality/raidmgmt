@@ -95,15 +95,3 @@ func (r *Request) checkRAIDRequirement() error {
 
 	return nil
 }
-
-// ToMetadata returns the Metadata instance of the LogicalVolume.
-func (lv *LogicalVolume) ToMetadata() *Metadata {
-	if lv == nil {
-		return nil
-	}
-
-	return &Metadata{
-		CtrlMetadata: lv.CtrlMetadata,
-		ID:           lv.ID,
-	}
-}
