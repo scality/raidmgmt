@@ -23,7 +23,7 @@ type (
 		PDrivesMetadata []*physicaldrive.Metadata // Physical drives composing the logical volume
 		CacheOptions    *CacheOptions             // Cache options
 		Status          LVStatus                  // State (e.g.: Online, Offline, Degraded)
-		Reason          *string                   // Reason for the logical volume state
+		Reason          string                    // Reason for the logical volume state
 	}
 
 	// Metadata represents the metadata of a logical volume.
