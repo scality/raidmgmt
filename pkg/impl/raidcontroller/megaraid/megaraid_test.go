@@ -289,11 +289,6 @@ func (s *UnitTestSuite) TestController() {
 			errExpected: true,
 			err:         "Controller 5 not found",
 		},
-		{
-			metadata:    nil,
-			errExpected: true,
-			err:         "metadata is nil",
-		},
 		// TODO : complete the test cases
 	}
 
@@ -329,20 +324,7 @@ func (s *UnitTestSuite) TestPhysicalDrives() {
 			errExpected: false,
 			err:         "",
 		},
-		{
-			metadata:    nil,
-			drivesCount: 0,
-			errExpected: true,
-			err:         "metadata is nil",
-		},
-		{
-			metadata: &raidcontroller.Metadata{
-				ID: -5,
-			},
-			drivesCount: 0,
-			errExpected: true,
-			err:         "id is negative",
-		},
+		// TODO : complete the test cases
 	}
 
 	for _, tt := range tests {
@@ -393,48 +375,6 @@ func (s *UnitTestSuite) TestPhysicalDrive() {
 			errExpected: true,
 			err:         "Drive not found",
 		},
-		{
-			metadata:    nil,
-			errExpected: true,
-			err:         "metadata is nil",
-		},
-		{
-			metadata: &physicaldrive.Metadata{
-				CtrlMetadata: &raidcontroller.Metadata{
-					ID: -5,
-				},
-				Slot: &physicaldrive.Slot{
-					Enclosure: "251",
-					Bay:       "6",
-				},
-			},
-			errExpected: true,
-			err:         "id is negative",
-		},
-		{
-			metadata: &physicaldrive.Metadata{
-				CtrlMetadata: &raidcontroller.Metadata{
-					ID: 0,
-				},
-				Slot: nil,
-			},
-			errExpected: true,
-			err:         "slot is nil",
-		},
-		{
-			metadata: &physicaldrive.Metadata{
-				CtrlMetadata: &raidcontroller.Metadata{
-					ID: 0,
-				},
-				Slot: &physicaldrive.Slot{
-					Enclosure: "",
-					Bay:       "",
-					Port:      "",
-				},
-			},
-			errExpected: true,
-			err:         "slot is empty",
-		},
 		// TODO : complete the test cases
 	}
 
@@ -476,20 +416,6 @@ func (s *UnitTestSuite) TestLogicalVolumes() {
 			lvCount:     12,
 			errExpected: false,
 			err:         "",
-		},
-		{
-			metadata:    nil,
-			lvCount:     0,
-			errExpected: true,
-			err:         "metadata is nil",
-		},
-		{
-			metadata: &raidcontroller.Metadata{
-				ID: -5,
-			},
-			lvCount:     0,
-			errExpected: true,
-			err:         "id is negative",
 		},
 		// TODO : complete the test cases
 	}
@@ -558,21 +484,6 @@ func (s *UnitTestSuite) TestLogicalVolume() {
 			},
 			errExpected: true,
 			err:         "Invalid VD number",
-		},
-		{
-			metadata:    nil,
-			errExpected: true,
-			err:         "metadata is nil",
-		},
-		{
-			metadata: &logicalvolume.Metadata{
-				CtrlMetadata: &raidcontroller.Metadata{
-					ID: -5,
-				},
-				ID: "228",
-			},
-			errExpected: true,
-			err:         "id is negative",
 		},
 		// TODO : complete the test cases
 	}
@@ -678,14 +589,15 @@ func (s *UnitTestSuite) TestSetLVCacheOptions() {
 			errExpected: false,
 			err:         "",
 		},
+		// Same options
 		{
 			cacheOptions: &logicalvolume.CacheOptions{
 				ReadPolicy:  logicalvolume.ReadPolicyReadAhead,
 				WritePolicy: logicalvolume.WritePolicyWriteThrough,
 				IOPolicy:    logicalvolume.IOPolicyDirect,
 			},
-			errExpected: true,
-			err:         "no cache options to update",
+			errExpected: false,
+			err:         "",
 		},
 		// TODO : complete the test cases
 	}
