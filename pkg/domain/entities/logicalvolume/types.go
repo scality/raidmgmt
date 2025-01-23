@@ -1,3 +1,4 @@
+//nolint:cyclop // The package is not that complex
 package logicalvolume
 
 import (
