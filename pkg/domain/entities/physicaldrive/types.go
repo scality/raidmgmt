@@ -8,6 +8,11 @@ import (
 	"github.com/scality/raidmgmt/domain/entities/raidcontroller"
 )
 
+const (
+	emptySlot string = "<empty>"
+	nilSlot   string = "<nil>"
+)
+
 type (
 	// PhysicalDrive represents a physical drive.
 	PhysicalDrive struct {
@@ -41,7 +46,7 @@ type (
 // String returns the string representation of the Slot instance.
 func (s *Slot) String() string {
 	if s == nil {
-		return "<nil>"
+		return nilSlot
 	}
 
 	var parts []string
@@ -60,7 +65,7 @@ func (s *Slot) String() string {
 
 	str := strings.Join(parts, ":")
 	if str == "" {
-		return "<empty>"
+		return emptySlot
 	}
 
 	return str
@@ -113,7 +118,7 @@ func (m *Metadata) Validate() error {
 		return errors.New("slot is nil")
 	}
 
-	if m.Slot.String() == "<empty>" {
+	if m.Slot.String() == emptySlot {
 		return errors.New("slot is empty")
 	}
 
