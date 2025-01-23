@@ -2,6 +2,7 @@ package megaraid
 
 import (
 	"fmt"
+	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
@@ -610,4 +611,21 @@ func hasMatchingPDs(lvPDs []*physicaldrive.Metadata, pdSlots map[physicaldrive.S
 	}
 
 	return false
+}
+
+// CustomEvalSymlinks is a variable that holds a function that evaluates symlinks.
+// It is used to mock the filepath.EvalSymlinks function in tests.
+// nolint: gochecknoglobals // This is a variable that is used to mock a function in tests.
+var CustomEvalSymlinks = filepath.EvalSymlinks
+
+// permanentPath returns the permanent path of a virtual drive.
+func (vdp *VDProperties) permanentPath() (string, error) {
+	sysPath := fmt.Sprintf("/dev/disk/by-id/wwn-0x%s", vdp.SCSINAAID)
+
+	permanentPath, err := CustomEvalSymlinks(sysPath)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to evaluate symlink")
+	}
+
+	return permanentPath, nil
 }
