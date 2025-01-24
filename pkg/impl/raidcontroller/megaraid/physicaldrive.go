@@ -167,7 +167,8 @@ func (pd *PD) PDStatus() physicaldrive.PDStatus {
 	pdStatusMap := map[string]physicaldrive.PDStatus{
 		"Onln": physicaldrive.PDStatusUsed,
 		// TODO : check the real values
-		"UGood":  physicaldrive.PDStatusUnassignedGood,
+		"UGood": physicaldrive.PDStatusUnassignedGood,
+		// TODO : add reason for those statuses
 		"UBad":   physicaldrive.PDStatusUnassignedBad,
 		"Failed": physicaldrive.PDStatusFailed,
 	}

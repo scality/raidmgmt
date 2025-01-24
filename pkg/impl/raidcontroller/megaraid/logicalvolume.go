@@ -155,8 +155,9 @@ func (vd *VD) LVStatus() logicalvolume.LVStatus {
 	// lvStatusMap maps the logical volume status string to the logical volume status type.
 	lvStatusMap := map[string]logicalvolume.LVStatus{
 		"Optl": logicalvolume.LVStatusOptimal,
-		// TODO : check the real values
+		// TODO : check the real values and add reason for those statuses
 		"Dgrd": logicalvolume.LVStatusDegraded,
+		"Pdgd": logicalvolume.LVStatusDegraded,
 		"Fail": logicalvolume.LVStatusFailed,
 	}
 
