@@ -199,3 +199,19 @@ func findMostFrequentSize(pds []*physicaldrive.PhysicalDrive) uint64 {
 
 	return mostFrequentSize
 }
+
+// RAIDLevelMap maps the RAID level string to the RAID level type.
+func RAIDLevelMap(str string) RAIDLevel {
+	// raidLevelMap maps the RAID level string to the RAID level type.
+	raidLevelMap := map[string]RAIDLevel{
+		"RAID0":  RAIDLevel0,
+		"RAID1":  RAIDLevel1,
+		"RAID10": RAIDLevel10,
+	}
+
+	if raidLevel, ok := raidLevelMap[strings.ToUpper(str)]; ok {
+		return raidLevel
+	}
+
+	return RAIDLevelUnknown
+}

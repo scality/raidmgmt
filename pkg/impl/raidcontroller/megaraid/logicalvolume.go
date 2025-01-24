@@ -70,22 +70,6 @@ func (vd *VD) VirtualDriveID() string {
 	return deviceGroupVirtualDrive[1]
 }
 
-// RAIDLevel returns the RAID level of a logical volume.
-func (vd *VD) RAIDLevel() logicalvolume.RAIDLevel {
-	// raidLevelMap maps the RAID level string to the RAID level type.
-	raidLevelMap := map[string]logicalvolume.RAIDLevel{
-		"RAID0":  logicalvolume.RAIDLevel0,
-		"RAID1":  logicalvolume.RAIDLevel1,
-		"RAID10": logicalvolume.RAIDLevel10,
-	}
-
-	if raidLevel, ok := raidLevelMap[vd.Type]; ok {
-		return raidLevel
-	}
-
-	return logicalvolume.RAIDLevelUnknown
-}
-
 // CacheOptions returns the cache options for a logical volume.
 func (vd *VD) CacheOptions() (*logicalvolume.CacheOptions, error) {
 	if vd.Cache == "" {
@@ -248,7 +232,7 @@ func (a *Adapter) logicalVolume(
 	logicalVolume := &logicalvolume.LogicalVolume{
 		Metadata:        metadata,
 		DevicePath:      vdProperties.OSDriveName,
-		RAIDLevel:       vd.RAIDLevel(),
+		RAIDLevel:       logicalvolume.RAIDLevelMap(vd.Type),
 		PDrivesMetadata: pdsMetadata,
 		CacheOptions:    cacheOptions,
 		Status:          vd.LVStatus(),
