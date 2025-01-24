@@ -1,7 +1,10 @@
 package logicalvolume
 
 import (
+	"strings"
+
 	"github.com/pkg/errors"
+	"github.com/scality/raidmgmt/domain/entities/physicaldrive"
 )
 
 // Validate checks if the CacheOptions instance is valid.
@@ -100,4 +103,99 @@ func (r *Request) checkRAIDRequirement() error {
 	}
 
 	return nil
+}
+
+// ValidateRAIDCreation validates the creation of a RAID logical volume
+// by checking the availability of the physical drives and their sizes.
+// We need to get the full physical drive instances to check the sizes.
+func ValidateRAIDCreation(
+	pds []*physicaldrive.PhysicalDrive,
+	raidLevel RAIDLevel,
+) error {
+	if len(pds) == 0 {
+		return errors.New("no physical drives")
+	}
+
+	if raidLevel == RAIDLevelUnknown {
+		return errors.New("unknown RAID level")
+	}
+
+	// Check if there are unavailable drives
+	unavailableDrives := unavailablesDrives(pds)
+
+	// If there are unavailable drives, return an error
+	if len(unavailableDrives) > 0 {
+		return errors.Errorf(ErrUnavailableDrives, strings.Join(unavailableDrives, ", "))
+	}
+
+	// Don't check size for RAID 0
+	if raidLevel == RAIDLevel0 {
+		return nil
+	}
+
+	// Find the most frequent size among the physical drives
+	mode := findMostFrequentSize(pds)
+
+	// Collect IDs of drives that don't fit within the tolerance of the mode size
+	outsideToleranceIDs := outsideToleranceIDs(pds, mode)
+
+	// If there are mismatches, return an error
+	if len(outsideToleranceIDs) > 0 {
+		return errors.Errorf("mismatched sizes for drives with IDs: %v", outsideToleranceIDs)
+	}
+
+	return nil
+}
+
+// unavailablesDrives returns the IDs of the unavailable physical drives.
+func unavailablesDrives(pds []*physicaldrive.PhysicalDrive) []string {
+	var unavailableDrives []string
+
+	for _, pd := range pds {
+		// Check if the physical drive is available
+		if !pd.IsAvailable() {
+			unavailableDrives = append(unavailableDrives, pd.Slot.String())
+		}
+	}
+
+	return unavailableDrives
+}
+
+func outsideToleranceIDs(pds []*physicaldrive.PhysicalDrive, mostFrequentSize uint64) []string {
+	var outsideToleranceIDs []string
+
+	// Check if the size of each drive is within the tolerance of the mode size
+	lowerLimit := mostFrequentSize - (mostFrequentSize * sizeTolerancePercent / percent)
+	upperLimit := mostFrequentSize + (mostFrequentSize * sizeTolerancePercent / percent)
+
+	for _, pd := range pds {
+		if pd.Size < lowerLimit || pd.Size > upperLimit {
+			outsideToleranceIDs = append(outsideToleranceIDs, pd.ID)
+		}
+	}
+
+	return outsideToleranceIDs
+}
+
+// findMostFrequentSize finds the most frequent size among the physical drives.
+func findMostFrequentSize(pds []*physicaldrive.PhysicalDrive) uint64 {
+	// Count occurrences of each size
+	sizeCounts := make(map[uint64]int)
+
+	for _, drive := range pds {
+		sizeCounts[drive.Size]++
+	}
+
+	// Find the most frequent size (mode)
+	var mostFrequentSize uint64
+
+	maxCount := 0
+	for size, count := range sizeCounts {
+		if count > maxCount {
+			mostFrequentSize = size
+			maxCount = count
+		}
+	}
+
+	return mostFrequentSize
 }

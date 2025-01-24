@@ -7,10 +7,14 @@ import (
 )
 
 const (
-	RAID0DiskRequirement  int    = 1
-	RAID1DiskRequirement  int    = 2
-	RAID10DiskRequirement int    = 4
-	SizeTolerancePercent  uint64 = 5
+	RAID0DiskRequirement  int = 1
+	RAID1DiskRequirement  int = 2
+	RAID10DiskRequirement int = 4
+
+	sizeTolerancePercent uint64 = 5
+	percent              uint64 = 100
+
+	ErrUnavailableDrives = "unavailable drives: %s"
 )
 
 type (

@@ -17,7 +17,6 @@ import (
 // patternLV is the pattern for the logical volume selector.
 const (
 	patternLV string = "/c%d/v%s"
-	percent   uint64 = 100
 )
 
 // logicalvolumes returns all logical volumes for a given controller.
@@ -302,18 +301,10 @@ func (a *Adapter) createLV(request *logicalvolume.Request) (
 		return nil, errors.Wrap(err, "failed to fill physical drives")
 	}
 
-	// Check if the disks have the same size
-	// When the RAID level is 0,the size check is not necessary
-	if request.RAIDLevel != logicalvolume.RAIDLevel0 {
-		if err := checkSizing(pds); err != nil {
-			return nil, errors.Wrap(err, "size check failed")
-		}
-	}
-
 	// Check if the physical drives are available
-	err = a.identifyUnavailableDrives(request)
+	err = logicalvolume.ValidateRAIDCreation(pds, request.RAIDLevel)
 	if err != nil {
-		return nil, errors.Wrap(err, "physical drive availability check failed")
+		return nil, errors.Wrap(err, "failed to validate RAID creation")
 	}
 
 	drives, err := formatDrivesString(request.PDrivesMetadata)
@@ -378,31 +369,6 @@ func (a *Adapter) fillPhysicalDrives(pdMetadatas []*physicaldrive.Metadata) (
 	return pds, nil
 }
 
-// identifyUnavailableDrives checks if the physical drives are available.
-func (a *Adapter) identifyUnavailableDrives(request *logicalvolume.Request) error {
-	var unavailableDrives []string
-
-	for _, pdMeta := range request.PDrivesMetadata {
-		// Get the physical drive
-		pd, err := a.physicalDrive(pdMeta)
-		if err != nil {
-			return errors.Wrapf(err, "failed to get physical drive %s", pdMeta.Slot.String())
-		}
-
-		// Check if the physical drive is available
-		if !pd.IsAvailable() {
-			unavailableDrives = append(unavailableDrives, pdMeta.Slot.String())
-		}
-	}
-
-	// If there are unavailable drives, return an error
-	if len(unavailableDrives) > 0 {
-		return errors.Errorf(ErrUnavailableDrives, strings.Join(unavailableDrives, ", "))
-	}
-
-	return nil
-}
-
 // enclosureSlots returns the enclosure number and the slots of the physical drives.
 //
 // The function is not too complex, and the complexity is due to the
@@ -462,48 +428,6 @@ func enclosureSlots(pdsMetadatas []*physicaldrive.Metadata) (
 	}
 
 	return enclosure, slots, nil
-}
-
-// checkSizing validates the sizes of the physical drives.
-func checkSizing(
-	pds []*physicaldrive.PhysicalDrive,
-) error {
-	// Count occurrences of each size
-	sizeCounts := make(map[uint64]int)
-	for _, drive := range pds {
-		sizeCounts[drive.Size]++
-	}
-
-	// Find the most frequent size (mode)
-	var modeSize uint64
-
-	maxCount := 0
-	for size, count := range sizeCounts {
-		if count > maxCount {
-			modeSize = size
-			maxCount = count
-		}
-	}
-
-	// Collect IDs of drives that don't match the mode size
-	var mismatchedIDs []string
-
-	// Check if the size of each drive is within the tolerance of the mode size
-	lowerLimit := modeSize - (modeSize * logicalvolume.SizeTolerancePercent / percent)
-	upperLimit := modeSize + (modeSize * logicalvolume.SizeTolerancePercent / percent)
-
-	for _, pd := range pds {
-		if pd.Size < lowerLimit || pd.Size > upperLimit {
-			mismatchedIDs = append(mismatchedIDs, pd.ID)
-		}
-	}
-
-	// If there are mismatches, return an error
-	if len(mismatchedIDs) > 0 {
-		return errors.Errorf("mismatched sizes for drives with IDs: %v", mismatchedIDs)
-	}
-
-	return nil
 }
 
 // setLVCacheOptions sets the cache options for a logical volume.
