@@ -20,6 +20,8 @@ const (
 
 // mapSize is a map of size units to their respective bytes.
 var mapSize = map[string]uint64{
+	"KB": KB,
+	"MB": MB,
 	"GB": GB,
 	"TB": TB,
 	"PB": PB,
