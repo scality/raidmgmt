@@ -1,11 +1,11 @@
 package raidcontroller
 
-import "errors"
+import "github.com/pkg/errors"
 
 type (
 	// RAIDController represents a RAID controller card.
 	RAIDController struct {
-		Metadata *Metadata // Metadata of the RAID controller card
+		*Metadata // Metadata of the RAID controller card
 
 		Name            string // Name of the RAID controller card
 		Serial          string // Serial number of the RAID controller card
@@ -22,11 +22,11 @@ type (
 // Validate validates the Metadata instance.
 func (m *Metadata) Validate() error {
 	if m == nil {
-		return errors.New("Metadata is nil")
+		return errors.New("metadata is nil")
 	}
 
 	if m.ID < 0 {
-		return errors.New("ID is negative")
+		return errors.New("id is negative")
 	}
 
 	return nil

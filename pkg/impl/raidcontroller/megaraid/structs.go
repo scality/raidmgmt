@@ -2,10 +2,6 @@ package megaraid
 
 import (
 	"encoding/json"
-	"fmt"
-	"path/filepath"
-
-	"github.com/pkg/errors"
 )
 
 type (
@@ -75,13 +71,13 @@ type (
 		DeviceGroup         int    `json:"DG"`
 		Size                string `json:"Size"` // Size (humanized)
 		Interface           string `json:"Intf"`
-		MediaType           string `json:"Med"`
+		MediaType           string `json:"Med"` // Media Type (HDD, SSD, NVMe)
 		SelfEncryptingDrive string `json:"SED"`
 		ProtectionInfo      string `json:"PI"`
 		SectorSize          string `json:"SeSz"`
 		Model               string `json:"Model"`
 		Spun                string `json:"Sp"`
-		Type                string `json:"Type"`
+		Type                string `json:"Type"` // Type of disk (JBOD, RAID)
 	}
 
 	DriveDeviceAttributes struct {
@@ -227,15 +223,15 @@ type (
 		SupportLaneCurrentSpeed                   string `json:"Support Lane current speed"`
 		SupportNVMeWidth                          string `json:"Support NVMe Width"`
 		SupportLaneDeviceType                     string `json:"Support Lane DeviceType"`
-		SupportExtendedDrivePerformanceMonitoring string `json:"Support Extended Drive performance Monitoring"`
+		SupportExtendedDrivePerformanceMonitoring string `json:"Support Extended Drive performance Monitoring"` //nolint:lll // The JSON tag is long
 		SupportNVMeRepair                         string `json:"Support NVMe Repair"`
 		SupportPlatformSecurity                   string `json:"Support Platform Security"`
 		SupportNoneModeParams                     string `json:"Support None Mode Params"`
 		SupportExtendedControllerProperty         string `json:"Support Extended Controller Property"`
-		SupportSmartPollIntervalForDirectAttached string `json:"Support Smart Poll Interval for DirectAttached"`
+		SupportSmartPollIntervalForDirectAttached string `json:"Support Smart Poll Interval for DirectAttached"` //nolint:lll // The JSON tag is long
 		SupportWriteJournalPinning                string `json:"Support Write Journal Pinning"`
 		SupportSMPPassthruWithPortNumber          string `json:"Support SMP Passthru with Port Number"`
-		SupportNVMeInitErrorDeviceConnectorIndex  string `json:"Support NVMe Init Error Device ConnectorIndex"`
+		SupportNVMeInitErrorDeviceConnectorIndex  string `json:"Support NVMe Init Error Device ConnectorIndex"` //nolint:lll // The JSON tag is long
 	}
 
 	Capabilities struct {
@@ -265,19 +261,3 @@ type (
 		MaxStripSize                   string `json:"Max Strip Size"`
 	}
 )
-
-// CustomEvalSymlinks is a variable that holds a function that evaluates symlinks.
-// It is used to mock the filepath.EvalSymlinks function in tests.
-var CustomEvalSymlinks = filepath.EvalSymlinks
-
-// permanentPath returns the permanent path of a virtual drive.
-func (vdp *VDProperties) permanentPath() (string, error) {
-	sysPath := fmt.Sprintf("/dev/disk/by-id/wwn-0x%s", vdp.SCSINAAID)
-
-	permanentPath, err := CustomEvalSymlinks(sysPath)
-	if err != nil {
-		return "", errors.Wrap(err, "failed to evaluate symlink")
-	}
-
-	return permanentPath, nil
-}

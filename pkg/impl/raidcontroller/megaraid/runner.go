@@ -8,7 +8,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-var (
+const (
 	// STORCLI is the path to the storcli command.
 	STORCLI = "/opt/MegaRAID/storcli/storcli64"
 
@@ -23,9 +23,7 @@ type Runner interface {
 	Run(args []string) (*CmdOutput, error)
 }
 
-// MegaRAIDRunner is a struct that implements the CmdRunner interface.
-// It is used to run commands for the MegaRAID controller.
-// Both storcli and perccli commands can be used.
+// TODO : Rename this struct according to Valentin's CommandRunner interface.
 type MegaRAIDRunner struct {
 	cli string
 }
@@ -79,8 +77,8 @@ func (mrr *MegaRAIDRunner) Run(args []string) (*CmdOutput, error) {
 	argsJSON := append(args, "J")
 
 	// Run the command
-	// Disable gosec G204 linter as the command is not user input
-	cmd := exec.Command(mrr.cli, argsJSON...) // nolint:gosec
+	//nolint:gosec // Disable gosec G204 linter as the command is not user input
+	cmd := exec.Command(mrr.cli, argsJSON...)
 
 	output, err := cmd.Output()
 	if err != nil {

@@ -2,6 +2,7 @@ package megaraid
 
 import (
 	"fmt"
+	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
@@ -14,30 +15,18 @@ import (
 )
 
 // patternLV is the pattern for the logical volume selector.
-const patternLV string = "/c%d/v%s"
+const (
+	patternLV string = "/c%d/v%s"
+)
 
-// raidLevelMap maps the RAID level string to the RAID level type.
-var raidLevelMap = map[string]logicalvolume.RAIDLevel{
-	"RAID0":  logicalvolume.RAIDLevel0,
-	"RAID1":  logicalvolume.RAIDLevel1,
-	"RAID10": logicalvolume.RAIDLevel10,
-}
-
-// lvStatusMap maps the logical volume status string to the logical volume status type.
-var lvStatusMap = map[string]logicalvolume.LVStatus{
-	"Optl": logicalvolume.LVStatusOptimal,
-	// TODO : check the real values
-	"Dgrd": logicalvolume.LVStatusDegraded,
-	"OfLn": logicalvolume.LVStatusOffline,
-	"Pdgd": logicalvolume.LVStatusPartiallyDegraded,
-	"Fail": logicalvolume.LVStatusFailed,
-}
-
-// FIXME would need some refactor to avoid code duplication
-// with the logicalVolume function
 // logicalvolumes returns all logical volumes for a given controller.
-func (a *Adapter) logicalvolumes(metadata *raidcontroller.Metadata) ([]*logicalvolume.LogicalVolume, error) {
-	vds, err := a.showAllVirtualDrives(metadata.ID)
+func (a *Adapter) logicalvolumes(metadata *raidcontroller.Metadata) (
+	[]*logicalvolume.LogicalVolume,
+	error,
+) {
+	selector := selectorCtrl(metadata)
+
+	vds, err := a.showAllVirtualDrives(selector)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get all virtual drives")
 	}
@@ -52,55 +41,9 @@ func (a *Adapter) logicalvolumes(metadata *raidcontroller.Metadata) ([]*logicalv
 			ID:           virtualDriveID,
 		}
 
-		// Get the selector for the logical volume
-		selector, err := selectorLV(lvMetadata)
+		logicalVolume, err := a.logicalVolume(lvMetadata)
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to get selector")
-		}
-
-		output, err := a.runner.Run([]string{selector, "show", "all"})
-		if err != nil {
-			return nil, errors.Wrap(err, ErrCommandFailed.Error())
-		}
-
-		responseData := output.Controllers[0].ResponseData
-		key := fmt.Sprintf("VD%s Properties", virtualDriveID)
-
-		vdProperties, err := utils.UnmarshalToPointer[VDProperties](responseData, key)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to unmarshal VD properties")
-		}
-
-		key = fmt.Sprintf("PDs for VD %s", virtualDriveID)
-
-		pDrives, err := utils.UnmarshalToSlice[PD](responseData, key)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to unmarshal PDs")
-		}
-
-		pdsMetadata := pdsToMetadatas(pDrives, metadata)
-
-		cacheOptions, err := vd.CacheOptions()
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to get cache options")
-		}
-
-		permanentPath, err := vdProperties.permanentPath()
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to get permanent path")
-		}
-
-		logicalVolume := &logicalvolume.LogicalVolume{
-			CtrlMetadata:    metadata,
-			ID:              virtualDriveID,
-			DevicePath:      vdProperties.OSDriveName,
-			RAIDLevel:       vd.RAIDLevel(),
-			PDrivesMetadata: pdsMetadata,
-			CacheOptions:    cacheOptions,
-			Status:          vd.LVStatus(),
-			PermanentPath:   permanentPath,
-			// TODO
-			// Reason:         "",
+			return nil, errors.Wrapf(err, "failed to get logical volume %s", virtualDriveID)
 		}
 
 		logicalVolumes = append(logicalVolumes, logicalVolume)
@@ -108,33 +51,15 @@ func (a *Adapter) logicalvolumes(metadata *raidcontroller.Metadata) ([]*logicalv
 
 	sort.Slice(logicalVolumes, func(i, j int) bool {
 		// Pass the error check because the slice is already validated
-		a, _ := strconv.Atoi(logicalVolumes[i].ID) // nolint:errcheck
-		b, _ := strconv.Atoi(logicalVolumes[j].ID) // nolint:errcheck
+		//nolint:errcheck // no err is possible since it's already validated
+		a, _ := strconv.Atoi(logicalVolumes[i].ID)
+		//nolint:errcheck // same as above
+		b, _ := strconv.Atoi(logicalVolumes[j].ID)
 
 		return a < b
 	})
 
 	return logicalVolumes, nil
-}
-
-func pdsToMetadatas(pDrives []PD, ctrlMetadata *raidcontroller.Metadata) []*physicaldrive.Metadata {
-	pdsMetadata := make([]*physicaldrive.Metadata, 0)
-
-	for _, pd := range pDrives {
-		enclosure, slot := pd.EnclosureSlot()
-
-		pdMetadata := &physicaldrive.Metadata{
-			CtrlMetadata: ctrlMetadata,
-			Slot: &physicaldrive.Slot{
-				Enclosure: enclosure,
-				Bay:       slot,
-			},
-		}
-
-		pdsMetadata = append(pdsMetadata, pdMetadata)
-	}
-
-	return pdsMetadata
 }
 
 // VirtualDriveID returns the Virtual Drive ID.
@@ -143,15 +68,6 @@ func (vd *VD) VirtualDriveID() string {
 	deviceGroupVirtualDrive := strings.Split(vd.DGVD, "/")
 
 	return deviceGroupVirtualDrive[1]
-}
-
-// RAIDLevel returns the RAID level of a logical volume.
-func (vd *VD) RAIDLevel() logicalvolume.RAIDLevel {
-	if raidLevel, ok := raidLevelMap[vd.Type]; ok {
-		return raidLevel
-	}
-
-	return logicalvolume.RAIDLevelUnknown
 }
 
 // CacheOptions returns the cache options for a logical volume.
@@ -165,9 +81,10 @@ func (vd *VD) CacheOptions() (*logicalvolume.CacheOptions, error) {
 	// Then, we remove the policy from the cache string to parse the
 	// write policy and IO policy.
 
+	remaining := vd.Cache
+
 	// Parsing read policy
 	readPolicy := logicalvolume.ReadPolicyUnknown
-	remaining := vd.Cache
 
 	switch {
 	case strings.HasPrefix(vd.Cache, "R"):
@@ -184,13 +101,13 @@ func (vd *VD) CacheOptions() (*logicalvolume.CacheOptions, error) {
 	switch {
 	case strings.HasPrefix(remaining, "WB"):
 		writePolicy = logicalvolume.WritePolicyWriteBack
-		remaining = strings.ReplaceAll(remaining, "WB", "")
+		remaining = strings.TrimPrefix(remaining, "WB")
 	case strings.HasPrefix(remaining, "AWB"):
 		writePolicy = logicalvolume.WritePolicyAlwaysWriteBack
-		remaining = strings.ReplaceAll(remaining, "AWB", "")
+		remaining = strings.TrimPrefix(remaining, "AWB")
 	case strings.HasPrefix(remaining, "WT"):
 		writePolicy = logicalvolume.WritePolicyWriteThrough
-		remaining = strings.ReplaceAll(remaining, "WT", "")
+		remaining = strings.TrimPrefix(remaining, "WT")
 	}
 
 	// Parsing IO policy
@@ -199,14 +116,14 @@ func (vd *VD) CacheOptions() (*logicalvolume.CacheOptions, error) {
 	switch {
 	case strings.HasPrefix(remaining, "C"):
 		ioPolicy = logicalvolume.IOPolicyCached
-		remaining = strings.ReplaceAll(remaining, "C", "")
+		remaining = strings.TrimPrefix(remaining, "C")
 	case strings.HasPrefix(remaining, "D"):
 		ioPolicy = logicalvolume.IOPolicyDirect
-		remaining = strings.ReplaceAll(remaining, "D", "")
+		remaining = strings.TrimPrefix(remaining, "D")
 	}
 
 	if remaining != "" {
-		return nil, fmt.Errorf("unrecognized cache options: %s", remaining)
+		return nil, errors.Errorf(ErrUnrecognizedCacheOptions, vd.Cache)
 	}
 
 	return &logicalvolume.CacheOptions{
@@ -218,6 +135,15 @@ func (vd *VD) CacheOptions() (*logicalvolume.CacheOptions, error) {
 
 // LVStatus returns the logical volume status.
 func (vd *VD) LVStatus() logicalvolume.LVStatus {
+	// lvStatusMap maps the logical volume status string to the logical volume status type.
+	lvStatusMap := map[string]logicalvolume.LVStatus{
+		"Optl": logicalvolume.LVStatusOptimal,
+		// TODO : check the real values and add reason for those statuses
+		"Dgrd": logicalvolume.LVStatusDegraded,
+		"Pdgd": logicalvolume.LVStatusDegraded,
+		"Fail": logicalvolume.LVStatusFailed,
+	}
+
 	if status, ok := lvStatusMap[vd.State]; ok {
 		return status
 	}
@@ -235,33 +161,28 @@ func selectorLV(m *logicalvolume.Metadata) (string, error) {
 	return fmt.Sprintf(patternLV, m.CtrlMetadata.ID, m.ID), nil
 }
 
-// FIXME would need some refactor to avoid code duplication
-// with the logicalvolumes function
 // logicalVolume returns a logical volume for a given logical volume metadata.
 func (a *Adapter) logicalVolume(
 	metadata *logicalvolume.Metadata) (
 	*logicalvolume.LogicalVolume, error,
 ) {
-	responseData, err := a.showAllVirtualDrive(metadata)
+	selector, err := selectorLV(metadata)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get selector")
+	}
+
+	responseData, err := a.showAllVirtualDrive(selector)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get virtual drive info")
 	}
 
-	// pass the error checking since it's already done
-	// in the ShowAllVirtualDrive
-	key, _ := selectorLV(metadata) // nolint:errcheck
-
-	vds, err := utils.UnmarshalToSlice[VD](responseData, key)
+	vds, err := utils.UnmarshalToSlice[VD](responseData, selector)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to unmarshal virtual drive")
 	}
 
-	if len(vds) == 0 {
-		return nil, errors.New("no virtual drive found")
-	}
-
-	if len(vds) > 1 {
-		return nil, errors.New("multiple virtual drives found")
+	if err := validateVDs(vds); err != nil {
+		return nil, errors.Wrap(err, "failed to validate virtual drives")
 	}
 
 	vd := vds[0]
@@ -271,13 +192,14 @@ func (a *Adapter) logicalVolume(
 		return nil, errors.Wrap(err, "failed to get cache options")
 	}
 
-	key = fmt.Sprintf("PDs for VD %s", metadata.ID)
+	selector = fmt.Sprintf("PDs for VD %s", metadata.ID)
 
-	pDrives, err := utils.UnmarshalToSlice[PD](responseData, key)
+	pDrives, err := utils.UnmarshalToSlice[PD](responseData, selector)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to unmarshal PDs")
 	}
 
+	// Get the physical drives metadata
 	pdsMetadata := make([]*physicaldrive.Metadata, len(pDrives))
 
 	for i := range pDrives {
@@ -294,9 +216,10 @@ func (a *Adapter) logicalVolume(
 		pdsMetadata[i] = pdMetadata
 	}
 
-	key = fmt.Sprintf("VD%s Properties", metadata.ID)
+	selector = fmt.Sprintf("VD%s Properties", metadata.ID)
 
-	vdProperties, err := utils.UnmarshalToPointer[VDProperties](responseData, key)
+	// Get the VD properties for the permanent path
+	vdProperties, err := utils.UnmarshalToPointer[VDProperties](responseData, selector)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to unmarshal VD properties")
 	}
@@ -307,10 +230,9 @@ func (a *Adapter) logicalVolume(
 	}
 
 	logicalVolume := &logicalvolume.LogicalVolume{
-		CtrlMetadata:    metadata.CtrlMetadata,
-		ID:              metadata.ID,
+		Metadata:        metadata,
 		DevicePath:      vdProperties.OSDriveName,
-		RAIDLevel:       vd.RAIDLevel(),
+		RAIDLevel:       logicalvolume.RAIDLevelMap(vd.Type),
 		PDrivesMetadata: pdsMetadata,
 		CacheOptions:    cacheOptions,
 		Status:          vd.LVStatus(),
@@ -320,6 +242,18 @@ func (a *Adapter) logicalVolume(
 	}
 
 	return logicalVolume, nil
+}
+
+func validateVDs(vds []VD) error {
+	if len(vds) == 0 {
+		return errors.New("no virtual drive found")
+	}
+
+	if len(vds) > 1 {
+		return errors.New("multiple virtual drives found")
+	}
+
+	return nil
 }
 
 // deleteLV deletes a logical volume.
@@ -343,45 +277,24 @@ func (a *Adapter) createLV(request *logicalvolume.Request) (
 ) {
 	selector := selectorCtrl(request.CtrlMetadata)
 
-	raidLevel := fmt.Sprintf("type=raid%d", request.RAIDLevel)
+	raidLevel := fmt.Sprintf("type=raid%s", request.RAIDLevel)
 
-	pds := make([]*physicaldrive.PhysicalDrive, len(request.PDrivesMetadata))
-
-	// Get the physical drives
-	for i, pdMeta := range request.PDrivesMetadata {
-		pd, err := a.physicalDrive(pdMeta)
-		if err != nil {
-			return nil, errors.Wrapf(err, "failed to get physical drive %s", pdMeta.Slot.String())
-		}
-
-		pds[i] = pd
-	}
-
-	// Check if the disks have the same size
-	// When the RAID level is 0 and there is only one disk
-	// the size check is not necessary
-	if request.RAIDLevel != logicalvolume.RAIDLevel0 || len(pds) != 1 {
-		err := checkSizing(pds)
-		if err != nil {
-			return nil, errors.Wrap(err, "size check failed")
-		}
+	// Get the physical drives from the metadata
+	pds, err := a.fillPhysicalDrives(request.PDrivesMetadata)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to fill physical drives")
 	}
 
 	// Check if the physical drives are available
-	// FIXME I prefer to keep the feature of having the user
-	// to get all the errors at once
-	err := a.identifyUnavailableDrives(request)
+	err = logicalvolume.ValidateRAIDCreation(pds, request.RAIDLevel)
 	if err != nil {
-		return nil, errors.Wrap(err, "physical drive availability check failed")
+		return nil, errors.Wrap(err, "failed to validate RAID creation")
 	}
 
-	// Prepare the string of drives
-	enclosure, slots, err := slotsEnclosure(request.PDrivesMetadata)
+	drives, err := formatDrivesString(request.PDrivesMetadata)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get slots and enclosure")
+		return nil, errors.Wrap(err, "failed to format drives string")
 	}
-
-	drives := fmt.Sprintf("drives=%d:%s", enclosure, strings.Join(slots, ","))
 
 	// Prepare the cache options
 	read := string("rdpolicy=" + request.CacheOptions.ReadPolicy)
@@ -404,58 +317,79 @@ func (a *Adapter) createLV(request *logicalvolume.Request) (
 	return newLV, nil
 }
 
-// identifyUnavailableDrives checks if the physical drives are available.
-func (a *Adapter) identifyUnavailableDrives(request *logicalvolume.Request) error {
-	var unavailableDrives []string
-
-	for _, pdMeta := range request.PDrivesMetadata {
-		// Get the physical drive
-		pd, err := a.physicalDrive(pdMeta)
-		if err != nil {
-			return errors.Wrapf(err, "failed to get physical drive %s", pdMeta.Slot.String())
-		}
-
-		// Check if the physical drive is available
-		if !pd.Available() {
-			unavailableDrives = append(unavailableDrives, pdMeta.Slot.String())
-		}
+func formatDrivesString(pdMetas []*physicaldrive.Metadata) (string, error) {
+	enclosure, slots, err := enclosureSlots(pdMetas)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to get enclosure and slots")
 	}
 
-	// If there are unavailable drives, return an error
-	if len(unavailableDrives) > 0 {
-		return fmt.Errorf("unavailable drives: %s", strings.Join(unavailableDrives, ", "))
+	slotsJoined := strings.Join(slots, ",")
+	drives := fmt.Sprintf("drives=%d:%s", enclosure, slotsJoined)
+
+	// If the enclosure is not set, reformat the drives string
+	if enclosure < 0 {
+		drives = fmt.Sprintf("drives=%s", slotsJoined)
 	}
 
-	return nil
+	return drives, nil
 }
 
-// slotsEnclosure returns the enclosure number and the slots of the physical drives.
-func slotsEnclosure(pdsMetadata []*physicaldrive.Metadata) (int, []string, error) {
+func (a *Adapter) fillPhysicalDrives(pdMetadatas []*physicaldrive.Metadata) (
+	[]*physicaldrive.PhysicalDrive,
+	error,
+) {
+	pds := make([]*physicaldrive.PhysicalDrive, len(pdMetadatas))
+
+	for i, pdMeta := range pdMetadatas {
+		pd, err := a.physicalDrive(pdMeta)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to get physical drive %s",
+				pdMeta.Slot.String())
+		}
+
+		pds[i] = pd
+	}
+
+	return pds, nil
+}
+
+// enclosureSlots returns the enclosure number and the slots of the physical drives.
+//
+// The function is not too complex, and the complexity is due to the
+// multiple checks and conversions.
+//
+//nolint:gocognit // The function is actually not too complex
+func enclosureSlots(pdsMetadatas []*physicaldrive.Metadata) (
+	enclosure int,
+	slots []string,
+	err error,
+) {
 	// Map to check if there are multiple enclosures
 	enclosures := make(map[int]struct{})
+	defaultEnclosure := -1
 
 	// Slice to store the slots
-	slots := make([]string, len(pdsMetadata))
+	slots = make([]string, len(pdsMetadatas))
 
-	for i, pd := range pdsMetadata {
+	for i, pd := range pdsMetadatas {
 		enclosure, bay := pd.Slot.Enclosure, pd.Slot.Bay
 
 		enclosureInt, err := strconv.Atoi(enclosure)
 		if err != nil {
-			return -1, nil, errors.Wrap(err, "failed to convert enclosure to int")
+			return defaultEnclosure, nil, errors.Wrap(err, "failed to convert enclosure to int")
 		}
 
 		if enclosureInt < 0 {
-			return -1, nil, fmt.Errorf("invalid enclosure ID: %s", enclosure)
+			return defaultEnclosure, nil, errors.Errorf(ErrInvalidEnclosureID, enclosure)
 		}
 
 		bayInt, err := strconv.Atoi(bay)
 		if err != nil {
-			return -1, nil, errors.Wrap(err, "failed to convert bay to int")
+			return defaultEnclosure, nil, errors.Wrap(err, "failed to convert bay to int")
 		}
 
 		if bayInt < 0 {
-			return -1, nil, fmt.Errorf("invalid bay ID: %s", bay)
+			return defaultEnclosure, nil, errors.Errorf(ErrInvalidBayID, bay)
 		}
 
 		// Add the enclosure to the map
@@ -468,54 +402,16 @@ func slotsEnclosure(pdsMetadata []*physicaldrive.Metadata) (int, []string, error
 
 	// Check if there are multiple enclosures
 	if len(enclosures) > 1 {
-		return -1, nil, errors.New("multiple enclosures not supported")
+		return defaultEnclosure, nil, errors.New("multiple enclosures not supported")
 	}
 
 	// Get the enclosure number
-	enclosure := 0
+	enclosure = defaultEnclosure
 	for key := range enclosures {
 		enclosure = key
 	}
 
 	return enclosure, slots, nil
-}
-
-// checkSizing validates the sizes of the physical drives.
-func checkSizing(
-	pds []*physicaldrive.PhysicalDrive,
-) error {
-	// Count occurrences of each size
-	sizeCounts := make(map[uint64]int)
-	for _, drive := range pds {
-		sizeCounts[drive.Size]++
-	}
-
-	// Find the most frequent size (mode)
-	var modeSize uint64
-
-	maxCount := 0
-	for size, count := range sizeCounts {
-		if count > maxCount {
-			modeSize = size
-			maxCount = count
-		}
-	}
-
-	// Collect IDs of drives that don't match the mode size
-	var mismatchedIDs []string
-
-	for _, pd := range pds {
-		if pd.Size != modeSize {
-			mismatchedIDs = append(mismatchedIDs, pd.ID)
-		}
-	}
-
-	// If there are mismatches, return an error
-	if len(mismatchedIDs) > 0 {
-		return errors.Errorf("mismatched sizes for drives with IDs: %v", mismatchedIDs)
-	}
-
-	return nil
 }
 
 // setLVCacheOptions sets the cache options for a logical volume.
@@ -544,9 +440,9 @@ func (a *Adapter) setLVCacheOptions(
 		options = append(options, "iopolicy="+string(cacheOpts.IOPolicy))
 	}
 
-	// If no options need to be updated, return an error
+	// If no options need to be updated, return nil
 	if len(options) == 0 {
-		return errors.New("no cache options to update")
+		return nil
 	}
 
 	// Get the selector
@@ -568,9 +464,9 @@ func (a *Adapter) setLVCacheOptions(
 
 // migrate deletes or adds a physical drive to a logical volume.
 func (a *Adapter) migrate(
-	lvMetadata *logicalvolume.Metadata,
-	pdMetadata *physicaldrive.Metadata,
 	action string,
+	lvMetadata *logicalvolume.Metadata,
+	pdMetadatas ...*physicaldrive.Metadata,
 ) error {
 	// Get the logical volume
 	lv, err := a.logicalVolume(lvMetadata)
@@ -580,18 +476,11 @@ func (a *Adapter) migrate(
 
 	actionArg := fmt.Sprintf("option=%s", action)
 
-	raidtype := fmt.Sprintf("type=raid%d", lv.RAIDLevel)
+	raidLevel := fmt.Sprintf("type=raid%s", lv.RAIDLevel)
 
-	drives := fmt.Sprintf("drives=%s:%s", pdMetadata.Slot.Enclosure, pdMetadata.Slot.Bay)
-
-	enclosureInt, err := strconv.Atoi(pdMetadata.Slot.Enclosure)
+	drives, err := formatDrivesString(pdMetadatas)
 	if err != nil {
-		return errors.Wrapf(err, "failed to convert enclosure to int: %s", pdMetadata.Slot.Enclosure)
-	}
-
-	// If the enclosure is not set, reformat the drives string
-	if enclosureInt < 0 {
-		drives = fmt.Sprintf("drives=%s", pdMetadata.Slot.Bay)
+		return errors.Wrap(err, "failed to format drives string")
 	}
 
 	selector, err := selectorLV(lvMetadata)
@@ -599,7 +488,7 @@ func (a *Adapter) migrate(
 		return errors.Wrap(err, "failed to get selector")
 	}
 
-	args := []string{selector, "start", "migrate", raidtype, actionArg, drives}
+	args := []string{selector, "start", "migrate", raidLevel, actionArg, drives}
 
 	_, err = a.runner.Run(args)
 	if err != nil {
@@ -609,36 +498,58 @@ func (a *Adapter) migrate(
 	return nil
 }
 
-func (a *Adapter) findNewLogicalVolume(
-	pds []*physicaldrive.Metadata) (
-	*logicalvolume.LogicalVolume, error,
+func (a *Adapter) findNewLogicalVolume(pds []*physicaldrive.Metadata) (
+	*logicalvolume.LogicalVolume,
+	error,
 ) {
-	// Get the controller metadata
 	ctrlMetadata := pds[0].CtrlMetadata
 
-	// Get logical volume IDs from the physical drives
-	// to find the new logical volume
-	var newLv *logicalvolume.LogicalVolume
-
-	// Get the logical volumes
+	// Get logical volumes
 	lvs, err := a.logicalvolumes(ctrlMetadata)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get logical volumes")
 	}
 
+	// Create a map of physical drive slots for efficient lookup
+	pdSlots := make(map[physicaldrive.Slot]struct{})
+	for _, pd := range pds {
+		pdSlots[*pd.Slot] = struct{}{}
+	}
+
 	// Find the new logical volume
 	for _, lv := range lvs {
-		// Check if the logical volume has the same physical drives
-		for _, pd := range lv.PDrivesMetadata {
-			// Check if the physical drive is in the list
-			for _, newPD := range pds {
-				// If the physical drive is in the list, set the new logical volume
-				if pd.Slot.IsEqualTo(newPD.Slot) {
-					newLv = lv
-				}
-			}
+		if hasMatchingPDs(lv.PDrivesMetadata, pdSlots) {
+			return lv, nil
 		}
 	}
 
-	return newLv, nil
+	return nil, errors.New("new logical volume not found")
+}
+
+// hasMatchingPDs checks if the logical volume has the same physical drives.
+func hasMatchingPDs(lvPDs []*physicaldrive.Metadata, pdSlots map[physicaldrive.Slot]struct{}) bool {
+	for _, lvPD := range lvPDs {
+		if _, found := pdSlots[*lvPD.Slot]; found {
+			return true
+		}
+	}
+
+	return false
+}
+
+// CustomEvalSymlinks is a variable that holds a function that evaluates symlinks.
+// It is used to mock the filepath.EvalSymlinks function in tests.
+// nolint: gochecknoglobals // This is a variable that is used to mock a function in tests.
+var CustomEvalSymlinks = filepath.EvalSymlinks
+
+// permanentPath returns the permanent path of a virtual drive.
+func (vdp *VDProperties) permanentPath() (string, error) {
+	sysPath := fmt.Sprintf("/dev/disk/by-id/wwn-0x%s", vdp.SCSINAAID)
+
+	permanentPath, err := CustomEvalSymlinks(sysPath)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to evaluate symlink")
+	}
+
+	return permanentPath, nil
 }

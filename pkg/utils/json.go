@@ -49,6 +49,7 @@ func UnmarshalToPointer[T any](responseData json.RawMessage, key string) (*T, er
 // If the key is found, the value is returned as json.RawMessage.
 // The function recurses if the value is an object.
 // If the key is not found, the function returns false.
+// nolint: gocognit
 func searchForKey(data json.RawMessage, targetKey string) (json.RawMessage, bool) {
 	decoder := json.NewDecoder(bytes.NewReader(data))
 
@@ -116,5 +117,6 @@ func getKey(decoder *json.Decoder) (string, bool) {
 // isJSONObject checks if a JSON RawMessage is an object.
 func isJSONObject(data json.RawMessage) bool {
 	trimmed := strings.TrimSpace(string(data))
+
 	return len(trimmed) > 0 && trimmed[0] == '{'
 }
