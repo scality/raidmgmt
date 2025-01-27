@@ -2,6 +2,7 @@ package core
 
 import (
 	"github.com/pkg/errors"
+
 	"github.com/scality/raidmgmt/domain/entities/logicalvolume"
 	"github.com/scality/raidmgmt/domain/entities/physicaldrive"
 	"github.com/scality/raidmgmt/domain/entities/raidcontroller"
@@ -185,22 +186,22 @@ func (r *RAIDController) CreateLV(request *logicalvolume.Request) (
 	return newLV, nil
 }
 
-// AddPDToLV adds a physical drive to a logical volume.
-func (r *RAIDController) AddPDToLV(
+// AddPDsToLV adds a physical drive to a logical volume.
+func (r *RAIDController) AddPDsToLV(
 	lvMetadata *logicalvolume.Metadata,
-	pdMetadatas ...*physicaldrive.Metadata,
+	pdsMetadata ...*physicaldrive.Metadata,
 ) error {
 	if err := lvMetadata.Validate(); err != nil {
 		return errors.Wrap(err, ErrInvalidLogicalVolumeMetadata.Error())
 	}
 
-	for _, pd := range pdMetadatas {
+	for _, pd := range pdsMetadata {
 		if err := pd.Validate(); err != nil {
 			return errors.Wrap(err, ErrInvalidPhysicalDriveMetadata.Error())
 		}
 	}
 
-	if err := r.iface.AddPDToLV(lvMetadata, pdMetadatas...); err != nil {
+	if err := r.iface.AddPDsToLV(lvMetadata, pdsMetadata...); err != nil {
 		return errors.Wrap(err, "failed to add physical drive to logical volume")
 	}
 
@@ -220,22 +221,22 @@ func (r *RAIDController) DeleteLV(metadata *logicalvolume.Metadata) error {
 	return nil
 }
 
-// DeletePDFromLV deletes a physical drive from a logical volume.
-func (r *RAIDController) DeletePDFromLV(
+// DeletePDsFromLV deletes a physical drive from a logical volume.
+func (r *RAIDController) DeletePDsFromLV(
 	lvMetadata *logicalvolume.Metadata,
-	pdMetadatas ...*physicaldrive.Metadata,
+	pdsMetadata ...*physicaldrive.Metadata,
 ) error {
 	if err := lvMetadata.Validate(); err != nil {
 		return errors.Wrap(err, ErrInvalidLogicalVolumeMetadata.Error())
 	}
 
-	for _, pd := range pdMetadatas {
+	for _, pd := range pdsMetadata {
 		if err := pd.Validate(); err != nil {
 			return errors.Wrap(err, ErrInvalidPhysicalDriveMetadata.Error())
 		}
 	}
 
-	if err := r.iface.DeletePDFromLV(lvMetadata, pdMetadatas...); err != nil {
+	if err := r.iface.DeletePDsFromLV(lvMetadata, pdsMetadata...); err != nil {
 		return errors.Wrap(err, "failed to remove physical drive from logical volume")
 	}
 
