@@ -1,0 +1,1 @@
+{"Controllers":[{"Command Status":{"CLI Version":"007.1616.0000.0000 Dec 24, 2020","Operating system":"Linux 4.18.0-553.22.1.el8_10.x86_64","Controller":0,"Status":"Failure","Description":"Delete JBOD Drive Failed.","Detailed Status":[{"Drive":"/c0/e251/s6","Status":"Failure","ErrCd":255,"ErrMsg":"Operation not allowed."}]}}]}
