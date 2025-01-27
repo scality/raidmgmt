@@ -45,7 +45,7 @@ func (m *MDADM) CreateLV(request *logicalvolume.Request) (*logicalvolume.Logical
 	// Prepare the mdadm create command
 	createCmdArgs := []string{
 		"--create", fmt.Sprintf("/dev/%s", request.Name),
-		"--level", logicalvolume.RAIDLevelMapToString[request.RAIDLevel],
+		"--level", string(request.RAIDLevel),
 		"--raid-devices", fmt.Sprintf("%d", len(physicalDrivesName)),
 	}
 
@@ -126,7 +126,7 @@ func (m *MDADM) AddPDsToLV(
 
 	addCmd := []string{
 		"--grow", logicalVolume.DevicePath,
-		"--level", logicalvolume.RAIDLevelMapToString[logicalVolume.RAIDLevel],
+		"--level", string(logicalVolume.RAIDLevel),
 		"--raid-devices", fmt.Sprintf("%d", arrayLength),
 		"--add",
 	}
@@ -142,6 +142,7 @@ func (m *MDADM) AddPDsToLV(
 	return nil
 }
 
+//nolint:funlen // This function is long because of MDADM
 func (m *MDADM) DeletePDsFromLV(
 	lvMetadata *logicalvolume.Metadata,
 	pvsMetadata ...*physicaldrive.Metadata,

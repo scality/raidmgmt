@@ -1,7 +1,6 @@
 package commandrunner_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -18,11 +17,8 @@ func TestMockMDADMRun(t *testing.T) {
 
 	runner := commandrunner.NewMDADM()
 
-	// Run the function
+	// Run the function & assert the results
 	output, err := runner.Run([]string{"mocked mdadm command"})
-	fmt.Println("output: ", string(output))
-
-	// Assert results
 	assert.NoError(t, err)
 	assert.Equal(t, []byte("PASS\n"), output)
 }

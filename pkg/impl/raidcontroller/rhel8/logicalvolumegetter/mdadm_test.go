@@ -72,7 +72,7 @@ func TestMDADMLogicalVolumesSingle(t *testing.T) {
 	logicalVolumes, err := mdadm.LogicalVolumes(nil)
 	assert.Nil(t, err)
 	assert.Equal(t, 1, len(logicalVolumes))
-	assert.Equal(t, "0030d06e:fd0fa07d:0d04737a:dc97e22c", logicalVolumes[0].ID)
+	assert.Equal(t, "0", logicalVolumes[0].ID)
 	assert.Equal(t, 2, len(logicalVolumes[0].PDrivesMetadata))
 	assert.Equal(t, logicalvolume.RAIDLevel1, logicalVolumes[0].RAIDLevel)
 }
@@ -91,11 +91,11 @@ func TestMDADMLogicalVolumes(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, 2, len(logicalVolumes))
 
-	assert.Equal(t, "2324eedd:1728e4cd:9436cae5:3bc05c63", logicalVolumes[0].ID)
+	assert.Equal(t, "0", logicalVolumes[0].ID)
 	assert.Equal(t, 2, len(logicalVolumes[0].PDrivesMetadata))
 	assert.Equal(t, logicalvolume.RAIDLevel1, logicalVolumes[0].RAIDLevel)
 
-	assert.Equal(t, "ce9f3ef6:917f16d7:900f8175:652f76d9", logicalVolumes[1].ID)
+	assert.Equal(t, "1", logicalVolumes[1].ID)
 	assert.Equal(t, 2, len(logicalVolumes[1].PDrivesMetadata))
 	assert.Equal(t, logicalvolume.RAIDLevel1, logicalVolumes[1].RAIDLevel)
 }

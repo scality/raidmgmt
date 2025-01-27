@@ -28,7 +28,7 @@ func (m *MockCommandRunner) RunWithCombinedOutput(args []string) ([]byte, error)
 }
 
 func TestUDevADMResolvePhysicalDriveDeviceNameFromID(t *testing.T) {
-	// // Create a mock object
+	// Create a mock object
 	mockRunner := &MockCommandRunner{}
 
 	deviceName := "nvme1n1"

@@ -65,14 +65,14 @@ func (m *MDADM) LogicalVolumes(
 	for _, detail := range details {
 		// Fill the information about the logical volume
 		logicalVolume := &logicalvolume.LogicalVolume{
-			ID:              detail.UUID,
+			Metadata: &logicalvolume.Metadata{
+				CtrlMetadata: metadata,
+				ID:           detail.Name,
+			},
 			DevicePath:      detail.DeviceName,
+			RAIDLevel:       detail.RaidLevel,
 			PDrivesMetadata: make([]*physicaldrive.Metadata, detail.DevicesCount),
 		}
-
-		raidLevel := strings.ToUpper(detail.RaidLevel)
-
-		logicalVolume.RAIDLevel = logicalvolume.RAIDLevelMap[raidLevel]
 
 		if metadata != nil {
 			logicalVolume.CtrlMetadata = metadata
@@ -129,23 +129,21 @@ func (m *MDADM) logicalVolume(
 		return nil, errors.Wrap(err, "failed to parse mdadm export output")
 	}
 
-	raidLevel, ok := logicalvolume.RAIDLevelMap[strings.ToUpper(details[0].RaidLevel)]
-	if !ok {
-		return nil, errors.Errorf("unknown RAID level: %s", details[0].RaidLevel)
-	}
-
 	logicalVolume := &logicalvolume.LogicalVolume{
-		ID:              details[0].Name,
-		CtrlMetadata:    metadata.CtrlMetadata,
+		Metadata: &logicalvolume.Metadata{
+			ID:           details[0].Name,
+			CtrlMetadata: metadata.CtrlMetadata,
+		},
 		DevicePath:      details[0].DeviceName,
-		RAIDLevel:       raidLevel,
+		RAIDLevel:       details[0].RaidLevel,
 		PDrivesMetadata: make([]*physicaldrive.Metadata, 0, details[0].DevicesCount),
 	}
 
 	for _, device := range details[0].Devices {
 		logicalVolume.PDrivesMetadata = append(logicalVolume.PDrivesMetadata, &physicaldrive.Metadata{
-			DevicePath:   device.Path,
-			CtrlMetadata: metadata.CtrlMetadata, // FIXME Add a const in the controller metadata to identify the controller
+			DevicePath: device.Path,
+			// FIXME Add a const in the controller metadata to identify the controller
+			CtrlMetadata: metadata.CtrlMetadata,
 		})
 	}
 

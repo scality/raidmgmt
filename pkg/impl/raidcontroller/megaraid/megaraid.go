@@ -2,6 +2,7 @@ package megaraid
 
 import (
 	"github.com/pkg/errors"
+
 	"github.com/scality/raidmgmt/domain/entities/logicalvolume"
 	"github.com/scality/raidmgmt/domain/entities/physicaldrive"
 	"github.com/scality/raidmgmt/domain/entities/raidcontroller"
@@ -100,11 +101,11 @@ func (a *Adapter) CreateLV(
 }
 
 // AddPDToLV adds a physical drive to a logical volume.
-func (a *Adapter) AddPDToLV(
+func (a *Adapter) AddPDsToLV(
 	lvMetadata *logicalvolume.Metadata,
-	pdMetadatas ...*physicaldrive.Metadata,
+	pdsMetadata ...*physicaldrive.Metadata,
 ) error {
-	if err := a.migrate("add", lvMetadata, pdMetadatas...); err != nil {
+	if err := a.migrate("add", lvMetadata, pdsMetadata...); err != nil {
 		return errors.Wrap(err, "failed to add physical drive to logical volume")
 	}
 
@@ -121,11 +122,11 @@ func (a *Adapter) DeleteLV(metadata *logicalvolume.Metadata) error {
 }
 
 // DeletePDFromLV deletes a physical drive from a logical volume.
-func (a *Adapter) DeletePDFromLV(
+func (a *Adapter) DeletePDsFromLV(
 	lvMetadata *logicalvolume.Metadata,
-	pdMetadatas ...*physicaldrive.Metadata,
+	pdsMetadata ...*physicaldrive.Metadata,
 ) error {
-	if err := a.migrate("remove", lvMetadata, pdMetadatas...); err != nil {
+	if err := a.migrate("remove", lvMetadata, pdsMetadata...); err != nil {
 		return errors.Wrap(err, "failed to delete physical drive from logical volume")
 	}
 

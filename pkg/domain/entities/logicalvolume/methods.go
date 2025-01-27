@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
+
 	"github.com/scality/raidmgmt/domain/entities/physicaldrive"
 )
 

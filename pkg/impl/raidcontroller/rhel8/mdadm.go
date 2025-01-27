@@ -7,6 +7,8 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
+
+	"github.com/scality/raidmgmt/domain/entities/logicalvolume"
 )
 
 const (
@@ -21,7 +23,7 @@ var (
 
 type (
 	MDADMExportDetails struct {
-		RaidLevel    string                  // MD_LEVEL
+		RaidLevel    logicalvolume.RAIDLevel // MD_LEVEL
 		DevicesCount int                     // MD_DEVICES
 		Metadata     string                  // MD_METADATA
 		UUID         string                  // MD_UUID
@@ -78,7 +80,9 @@ func ParseMDADMExportOutput(output []byte) ([]*MDADMExportDetails, error) {
 		for _, line := range strings.Split(string(block), "\n") {
 			switch {
 			case strings.HasPrefix(line, "MD_LEVEL="):
-				currentDetails.RaidLevel = strings.TrimPrefix(line, "MD_LEVEL=")
+				raidLevel := strings.TrimPrefix(line, "MD_LEVEL=")
+
+				currentDetails.RaidLevel = logicalvolume.RAIDLevelMap(raidLevel)
 			case strings.HasPrefix(line, "MD_DEVICES="):
 				_, err := fmt.Sscanf(line, "MD_DEVICES=%d", &currentDetails.DevicesCount)
 				if err != nil {

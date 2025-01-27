@@ -41,6 +41,7 @@ type (
 	// Metadata represents the metadata of a physical drive.
 	Metadata struct {
 		CtrlMetadata *raidcontroller.Metadata // Controller metadata of the disk
+		DevicePath   string                   // Device path of the disk
 		Slot         *Slot                    // Slot
 	}
 )
