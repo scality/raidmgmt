@@ -93,9 +93,8 @@ func TestMDADM_CreateLV(t *testing.T) {
 					parameters: []string{
 						"--create",
 						"/dev/md0",
-						"--level", "1",
+						"--level", "raid1",
 						"--raid-devices", "2",
-						"--force",
 						"/dev/nvme1n1",
 						"/dev/nvme2n1",
 					},
@@ -103,20 +102,12 @@ func TestMDADM_CreateLV(t *testing.T) {
 				},
 				{
 					mocker:  mockLogicalVolumeGetter,
-					command: "LogicalVolumes",
-					parameters: &raidcontroller.Metadata{
-						ID: 1,
-					},
-					returnValues: []any{[]*logicalvolume.LogicalVolume{}, nil},
-				},
-				{
-					mocker:  mockLogicalVolumeGetter,
 					command: "LogicalVolume",
 					parameters: &logicalvolume.Metadata{
-						ID: "/dev/md0",
+						ID: "0",
 					},
 					returnValues: []any{&logicalvolume.LogicalVolume{
-						ID:         "/dev/md0",
+						ID:         "0",
 						DevicePath: "/dev/md0",
 						RAIDLevel:  logicalvolume.RAIDLevel1,
 						PDrivesMetadata: []*physicaldrive.Metadata{
@@ -135,8 +126,10 @@ func TestMDADM_CreateLV(t *testing.T) {
 				},
 			},
 			input: &logicalvolume.Request{
+				Name:         "md0",
+				ID:           "0",
 				CtrlMetadata: controllerMetadata,
-				RAIDLevel:    logicalvolume.RAIDLevel0,
+				RAIDLevel:    logicalvolume.RAIDLevel1,
 				PDrivesMetadata: []*physicaldrive.Metadata{
 					{
 						DevicePath:   "/dev/nvme1n1",
@@ -305,112 +298,163 @@ func TestMDADM_DeleteLV(t *testing.T) {
 	}
 }
 
-func TestMDADM_AddPVToLV(t *testing.T) {
+func TestMDADM_AddPVsToLV_1PhysicalDrive(t *testing.T) {
 	mockCommandRunner, mockLogicalVolumeGetter := &MockCommandRunner{}, &MockLogicalVolumesGetter{}
 
-	type input struct {
-		lv *logicalvolume.Metadata
-		pv *physicaldrive.Metadata
+	mockLogicalVolumeGetter.On("LogicalVolume", &logicalvolume.Metadata{ID: "md0"}).Return(&logicalvolume.LogicalVolume{
+		ID:         "md0",
+		DevicePath: "/dev/md0",
+		RAIDLevel:  logicalvolume.RAIDLevel0,
+		PDrivesMetadata: []*physicaldrive.Metadata{
+			{DevicePath: "/dev/nvme1n1"},
+			{DevicePath: "/dev/nvme2n1"},
+		},
+	}, nil)
+
+	mockCommandRunner.On("Run", []string{
+		"--grow", "/dev/md0",
+		"--level", "raid0",
+		"--raid-devices", "3",
+		"--add", "/dev/nvme3n1",
+	}).Return([]byte(""), nil)
+
+	mdadm := &logicalvolumemanager.MDADM{
+		CommandRunner:        mockCommandRunner,
+		LogicalVolumesGetter: mockLogicalVolumeGetter,
 	}
 
-	testCases := []struct {
-		name        string
-		mockings    []mocking
-		input       input
-		expectError bool
-	}{
-		{
-			name:        "Nil logical volume metadata",
-			mockings:    []mocking{},
-			input:       input{lv: nil, pv: &physicaldrive.Metadata{}},
-			expectError: true,
-		},
-		{
-			name:        "Nil physical drive metadata",
-			mockings:    []mocking{},
-			input:       input{lv: &logicalvolume.Metadata{}, pv: nil},
-			expectError: true,
-		},
-		{
-			name: "Add physical drive to logical volume",
-			mockings: []mocking{
-				{
-					mocker:     mockLogicalVolumeGetter,
-					command:    "LogicalVolume",
-					parameters: &logicalvolume.Metadata{ID: "md0"},
-					returnValues: []any{
-						&logicalvolume.LogicalVolume{
-							ID:         "md0",
-							DevicePath: "/dev/md0",
-							RAIDLevel:  0,
-							PDrivesMetadata: []*physicaldrive.Metadata{
-								{
-									DevicePath: "/dev/nvme1n1",
-								},
-								{
-									DevicePath: "/dev/nvme2n1",
-								},
-							},
-						}, nil,
-					},
-				},
-				{
-					mocker:  mockCommandRunner,
-					command: "Run",
-					parameters: []string{
-						"--add",
-						"/dev/md0",
-						"/dev/nvme1n1",
-					},
-					returnValues: []any{[]byte(""), nil},
-				},
-				{
-					mocker:  mockCommandRunner,
-					command: "Run",
-					parameters: []string{
-						"--grow",
-						"/dev/md0",
-						"--raid-devices", fmt.Sprintf("%d", 2+1), // 2 existing drives + 1 new drive, cf l336
-					},
-					returnValues: []any{[]byte(""), nil},
-				},
-			},
-			input: input{
-				lv: &logicalvolume.Metadata{ID: "md0"},
-				pv: &physicaldrive.Metadata{DevicePath: "/dev/nvme1n1"},
-			},
-			expectError: false,
-		},
-	}
+	err := mdadm.AddPDsToLV(&logicalvolume.Metadata{ID: "md0"}, &physicaldrive.Metadata{DevicePath: "/dev/nvme3n1"})
+	assert.Nil(t, err)
 
-	for _, tc := range testCases {
-		t.Log(tc.name)
-
-		for _, m := range tc.mockings {
-			t.Log("mockings to apply: ", m.command, m.parameters, m.returnValues)
-			m.mocker.On(m.command, m.parameters).Return(m.returnValues...)
-		}
-
-		mdadm := &logicalvolumemanager.MDADM{
-			CommandRunner:        mockCommandRunner,
-			LogicalVolumesGetter: mockLogicalVolumeGetter,
-		}
-
-		err := mdadm.AddPDToLV(tc.input.lv, tc.input.pv)
-		if tc.expectError {
-			assert.NotNil(t, err)
-		} else {
-			assert.Nil(t, err)
-		}
-
-		t.Cleanup(func() {
-			mockCommandRunner.AssertExpectations(t)
-			mockLogicalVolumeGetter.AssertExpectations(t)
-		})
-	}
+	t.Cleanup(func() {
+		mockCommandRunner.AssertExpectations(t)
+		mockLogicalVolumeGetter.AssertExpectations(t)
+	})
 }
 
-func TestMDADM_DeletePVFromLV(t *testing.T) {
+func TestMDADM_AddPDstoLV_NilLogicalVolumeMetadata(t *testing.T) {
+	mockCommandRunner, mockLogicalVolumeGetter := &MockCommandRunner{}, &MockLogicalVolumesGetter{}
+
+	mdadm := &logicalvolumemanager.MDADM{
+		CommandRunner:        mockCommandRunner,
+		LogicalVolumesGetter: mockLogicalVolumeGetter,
+	}
+
+	err := mdadm.AddPDsToLV(nil, &physicaldrive.Metadata{})
+	assert.NotNil(t, err)
+
+	t.Cleanup(func() {
+		mockCommandRunner.AssertExpectations(t)
+		mockLogicalVolumeGetter.AssertExpectations(t)
+	})
+}
+
+func TestMDADM_AddPDsToLV_NilDriveMetadata(t *testing.T) {
+	t.Parallel()
+
+	mdadm := &logicalvolumemanager.MDADM{}
+
+	err := mdadm.AddPDsToLV(&logicalvolume.Metadata{}, nil)
+	assert.NotNil(t, err)
+}
+
+func TestAddPhysicalDrivesToLogicalVolume(t *testing.T) {
+	mockCommandRunner, mockLogicalVolumeGetter := &MockCommandRunner{}, &MockLogicalVolumesGetter{}
+
+	mockLogicalVolumeGetter.On("LogicalVolume", &logicalvolume.Metadata{ID: "md0"}).Return(&logicalvolume.LogicalVolume{
+		ID:         "md0",
+		DevicePath: "/dev/md0",
+		RAIDLevel:  logicalvolume.RAIDLevel0,
+		PDrivesMetadata: []*physicaldrive.Metadata{
+			{DevicePath: "/dev/nvme1n1"},
+			{DevicePath: "/dev/nvme2n1"},
+		},
+	}, nil)
+
+	mockCommandRunner.On("Run", []string{
+		"--grow", "/dev/md0",
+		"--level", "raid0",
+		"--raid-devices", "4",
+		"--add", "/dev/nvme3n1", "/dev/nvme4n1",
+	}).Return([]byte(""), nil)
+
+	mdadm := &logicalvolumemanager.MDADM{
+		CommandRunner:        mockCommandRunner,
+		LogicalVolumesGetter: mockLogicalVolumeGetter,
+	}
+
+	err := mdadm.AddPDsToLV(&logicalvolume.Metadata{ID: "md0"}, &physicaldrive.Metadata{DevicePath: "/dev/nvme3n1"}, &physicaldrive.Metadata{DevicePath: "/dev/nvme4n1"})
+	assert.Nil(t, err)
+
+	t.Cleanup(func() {
+		mockCommandRunner.AssertExpectations(t)
+		mockLogicalVolumeGetter.AssertExpectations(t)
+	})
+}
+
+func TestAddPhysicalDrivesToLogicalVolumeRAID10_1Disk(t *testing.T) {
+	mockCommandRunner, mockLogicalVolumeGetter := &MockCommandRunner{}, &MockLogicalVolumesGetter{}
+
+	mockLogicalVolumeGetter.On("LogicalVolume", &logicalvolume.Metadata{ID: "md0"}).Return(&logicalvolume.LogicalVolume{
+		ID:         "md0",
+		DevicePath: "/dev/md0",
+		RAIDLevel:  logicalvolume.RAIDLevel10,
+		PDrivesMetadata: []*physicaldrive.Metadata{
+			{DevicePath: "/dev/nvme1n1"},
+			{DevicePath: "/dev/nvme2n1"},
+		},
+	}, nil)
+
+	mdadm := &logicalvolumemanager.MDADM{
+		CommandRunner:        mockCommandRunner,
+		LogicalVolumesGetter: mockLogicalVolumeGetter,
+	}
+
+	err := mdadm.AddPDsToLV(&logicalvolume.Metadata{ID: "md0"}, &physicaldrive.Metadata{DevicePath: "/dev/nvme3n1"})
+	assert.NotNil(t, err)
+	assert.Equal(t, "cannot add an odd number of physical drives to a RAID10", err.Error())
+
+	t.Cleanup(func() {
+		mockCommandRunner.AssertExpectations(t)
+		mockLogicalVolumeGetter.AssertExpectations(t)
+	})
+}
+
+func TestAddPhysicalDrivesToLogicalVolumeRAID10_2Disk(t *testing.T) {
+	mockCommandRunner, mockLogicalVolumeGetter := &MockCommandRunner{}, &MockLogicalVolumesGetter{}
+
+	mockLogicalVolumeGetter.On("LogicalVolume", &logicalvolume.Metadata{ID: "md0"}).Return(&logicalvolume.LogicalVolume{
+		ID:         "md0",
+		DevicePath: "/dev/md0",
+		RAIDLevel:  logicalvolume.RAIDLevel10,
+		PDrivesMetadata: []*physicaldrive.Metadata{
+			{DevicePath: "/dev/nvme1n1"},
+			{DevicePath: "/dev/nvme2n1"},
+		},
+	}, nil)
+
+	mdadm := &logicalvolumemanager.MDADM{
+		CommandRunner:        mockCommandRunner,
+		LogicalVolumesGetter: mockLogicalVolumeGetter,
+	}
+
+	mockCommandRunner.On("Run", []string{
+		"--grow", "/dev/md0",
+		"--level", "raid10",
+		"--raid-devices", "4",
+		"--add", "/dev/nvme3n1", "/dev/nvme4n1",
+	}).Return([]byte(""), nil)
+
+	err := mdadm.AddPDsToLV(&logicalvolume.Metadata{ID: "md0"}, &physicaldrive.Metadata{DevicePath: "/dev/nvme3n1"}, &physicaldrive.Metadata{DevicePath: "/dev/nvme4n1"})
+	assert.Nil(t, err)
+
+	t.Cleanup(func() {
+		mockCommandRunner.AssertExpectations(t)
+		mockLogicalVolumeGetter.AssertExpectations(t)
+	})
+}
+
+func TestMDADM_DeletePVsFromLV(t *testing.T) {
 	mockCommandRunner, mockLogicalVolumeGetter := &MockCommandRunner{}, &MockLogicalVolumesGetter{}
 
 	type input struct {
@@ -424,28 +468,16 @@ func TestMDADM_DeletePVFromLV(t *testing.T) {
 		input       input
 		expectError bool
 	}{
-		{
-			name:        "Nil logical volume metadata",
-			mockings:    []mocking{},
-			input:       input{lv: nil, pv: &physicaldrive.Metadata{}},
-			expectError: true,
-		},
-		{
-			name:        "Nil physical drive metadata",
-			mockings:    []mocking{},
-			input:       input{lv: &logicalvolume.Metadata{}, pv: nil},
-			expectError: true,
-		},
 		{
 			name: "Remove physical drive from logical volume",
 			mockings: []mocking{
 				{
 					mocker:     mockLogicalVolumeGetter,
 					command:    "LogicalVolume",
-					parameters: &logicalvolume.Metadata{ID: "md0"},
+					parameters: &logicalvolume.Metadata{ID: "0"},
 					returnValues: []any{
 						&logicalvolume.LogicalVolume{
-							ID:         "md0",
+							ID:         "0",
 							DevicePath: "/dev/md0",
 							RAIDLevel:  0,
 							PDrivesMetadata: []*physicaldrive.Metadata{
@@ -491,10 +523,22 @@ func TestMDADM_DeletePVFromLV(t *testing.T) {
 				},
 			},
 			input: input{
-				lv: &logicalvolume.Metadata{ID: "md0"},
+				lv: &logicalvolume.Metadata{ID: "0"},
 				pv: &physicaldrive.Metadata{DevicePath: "/dev/nvme1n1"},
 			},
 			expectError: false,
+		},
+		{
+			name:        "Nil logical volume metadata",
+			mockings:    []mocking{},
+			input:       input{lv: nil, pv: &physicaldrive.Metadata{}},
+			expectError: true,
+		},
+		{
+			name:        "Nil physical drive metadata",
+			mockings:    []mocking{},
+			input:       input{lv: &logicalvolume.Metadata{}, pv: nil},
+			expectError: true,
 		},
 	}
 
@@ -503,7 +547,8 @@ func TestMDADM_DeletePVFromLV(t *testing.T) {
 
 		for _, m := range tc.mockings {
 			t.Log("mockings to apply: ", m.command, m.parameters, m.returnValues)
-			m.mocker.On(m.command, m.parameters).Return(m.returnValues...)
+
+			m.mocker.On(m.command, m.parameters).Return(m.returnValues...).Maybe()
 		}
 
 		mdadm := &logicalvolumemanager.MDADM{
@@ -511,7 +556,7 @@ func TestMDADM_DeletePVFromLV(t *testing.T) {
 			LogicalVolumesGetter: mockLogicalVolumeGetter,
 		}
 
-		err := mdadm.DeletePDFromLV(tc.input.lv, tc.input.pv)
+		err := mdadm.DeletePDsFromLV(tc.input.lv, tc.input.pv)
 		if tc.expectError {
 			assert.NotNil(t, err)
 		} else {
@@ -523,4 +568,64 @@ func TestMDADM_DeletePVFromLV(t *testing.T) {
 			mockLogicalVolumeGetter.AssertExpectations(t)
 		})
 	}
+}
+
+func TestMDADM_DeletePDsFromLV_RAID0(t *testing.T) {
+	mockCommandRunner, mockLogicalVolumeGetter := &MockCommandRunner{}, &MockLogicalVolumesGetter{}
+
+	mockLogicalVolumeGetter.On("LogicalVolume", &logicalvolume.Metadata{ID: "0"}).Return(&logicalvolume.LogicalVolume{
+		ID:         "0",
+		DevicePath: "/dev/md0",
+		RAIDLevel:  logicalvolume.RAIDLevel0,
+		PDrivesMetadata: []*physicaldrive.Metadata{
+			{DevicePath: "/dev/nvme1n1"},
+			{DevicePath: "/dev/nvme2n1"},
+		},
+	}, nil)
+
+	mdadm := &logicalvolumemanager.MDADM{
+		CommandRunner:        mockCommandRunner,
+		LogicalVolumesGetter: mockLogicalVolumeGetter,
+	}
+
+	err := mdadm.DeletePDsFromLV(&logicalvolume.Metadata{ID: "0"}, &physicaldrive.Metadata{DevicePath: "/dev/nvme1n1"})
+	assert.NotNil(t, err)
+	assert.Equal(t, "cannot remove physical drives from a RAID0", err.Error())
+
+	t.Cleanup(func() {
+		mockCommandRunner.AssertExpectations(t)
+		mockLogicalVolumeGetter.AssertExpectations(t)
+	})
+}
+
+func TestMDADM_DeletePDsFromLV_RAID10_2Disks(t *testing.T) {
+	mockCommandRunner, mockLogicalVolumeGetter := &MockCommandRunner{}, &MockLogicalVolumesGetter{}
+
+	mockLogicalVolumeGetter.On("LogicalVolume", &logicalvolume.Metadata{ID: "0"}).Return(&logicalvolume.LogicalVolume{
+		ID:         "0",
+		DevicePath: "/dev/md0",
+		RAIDLevel:  logicalvolume.RAIDLevel10,
+		PDrivesMetadata: []*physicaldrive.Metadata{
+			{DevicePath: "/dev/nvme1n1"},
+			{DevicePath: "/dev/nvme2n1"},
+		},
+	}, nil)
+
+	mdadm := &logicalvolumemanager.MDADM{
+		CommandRunner:        mockCommandRunner,
+		LogicalVolumesGetter: mockLogicalVolumeGetter,
+	}
+
+	err := mdadm.DeletePDsFromLV(
+		&logicalvolume.Metadata{ID: "0"},
+		&physicaldrive.Metadata{DevicePath: "/dev/nvme1n1"},
+		&physicaldrive.Metadata{DevicePath: "/dev/nvme2n1"},
+	)
+	assert.NotNil(t, err)
+	assert.Equal(t, "cannot remove more than one physical drive from a RAID10", err.Error())
+
+	t.Cleanup(func() {
+		mockCommandRunner.AssertExpectations(t)
+		mockLogicalVolumeGetter.AssertExpectations(t)
+	})
 }

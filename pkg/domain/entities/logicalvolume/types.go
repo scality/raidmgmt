@@ -28,15 +28,20 @@ type (
 	// Metadata represents the metadata of a logical volume.
 	Metadata struct {
 		CtrlMetadata *raidcontroller.Metadata // Controller of the logical volume
-		ID           string                   // ID
+		// In the cases of RHEL8/mdadm based implementations
+		// the ID is the name of the logical volume, like md0, md/0_0.
+		// It will be appended to /dev/ to get the device path.
+		ID string // ID
 	}
 
 	// Request represents the request to create a logical volume.
 	Request struct {
+		ID              string                    // ID
 		CtrlMetadata    *raidcontroller.Metadata  // Controller of the logical volume
 		RAIDLevel       RAIDLevel                 // RAID level of the array (e.g.: RAID 0, RAID 1, RAID 10, ...)
 		PDrivesMetadata []*physicaldrive.Metadata // Physical drives composing the logical volume
 		CacheOptions    *CacheOptions             // Cache options
+		Name            string                    // Name of the logical volume
 	}
 
 	// CacheOptions represents the cache options of a logical volume.
@@ -46,3 +51,15 @@ type (
 		IOPolicy    IOPolicy    // IO policy of the cache (e.g.: Direct, Cached)
 	}
 )
+
+var RAIDLevelMap = map[string]RAIDLevel{ //nolint:gochecknoglobals // Will be fixed eventually
+	"RAID0":  RAIDLevel0,
+	"RAID1":  RAIDLevel1,
+	"RAID10": RAIDLevel10,
+}
+
+var RAIDLevelMapToString = map[RAIDLevel]string{ //nolint:gochecknoglobals,lll // Will be fixed eventually
+	RAIDLevel0:  "raid0",
+	RAIDLevel1:  "raid1",
+	RAIDLevel10: "raid10",
+}

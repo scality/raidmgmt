@@ -30,15 +30,7 @@ type (
 	}
 )
 
-var (
-	_ ports.LogicalVolumesGetter = &MDADM{}
-	// FIXME IMHO, this map doesn't belong here.
-	raidLevelMap = map[string]logicalvolume.RAIDLevel{ //nolint:gochecknoglobals,lll // Will be fixed eventually
-		"RAID0":  logicalvolume.RAIDLevel0,
-		"RAID1":  logicalvolume.RAIDLevel1,
-		"RAID10": logicalvolume.RAIDLevel10,
-	}
-)
+var _ ports.LogicalVolumesGetter = &MDADM{}
 
 func NewMDADM(
 	runner commandrunner.CommandRunner,
@@ -80,7 +72,7 @@ func (m *MDADM) LogicalVolumes(
 
 		raidLevel := strings.ToUpper(detail.RaidLevel)
 
-		logicalVolume.RAIDLevel = raidLevelMap[raidLevel]
+		logicalVolume.RAIDLevel = logicalvolume.RAIDLevelMap[raidLevel]
 
 		if metadata != nil {
 			logicalVolume.CtrlMetadata = metadata
@@ -111,13 +103,15 @@ func (m *MDADM) LogicalVolume(
 func (m *MDADM) logicalVolume(
 	metadata *logicalvolume.Metadata,
 ) (*logicalvolume.LogicalVolume, error) {
-	// It is assumed that the ID is an integer or the suffix of the device name
-	deviceName := metadata.ID
+	// It is assumed that the ID is the suffix of the device name
+	// 	md0, md1, md/0_0 should also be supported
+	deviceNamePrefix := "/dev/"
 
-	// FIXME Not sure how to handle cases where the device is created in /dev/md/x format
-	if !strings.HasPrefix(deviceName, "/dev/md") {
-		deviceName = "/dev/" + deviceName
+	if !strings.HasPrefix(metadata.ID, "md") {
+		deviceNamePrefix = "/dev/md"
 	}
+
+	deviceName := deviceNamePrefix + metadata.ID
 
 	// Get the details of the logical volume
 	output, err := m.Run([]string{
@@ -135,12 +129,11 @@ func (m *MDADM) logicalVolume(
 		return nil, errors.Wrap(err, "failed to parse mdadm export output")
 	}
 
-	raidLevel, ok := raidLevelMap[details[0].RaidLevel]
+	raidLevel, ok := logicalvolume.RAIDLevelMap[strings.ToUpper(details[0].RaidLevel)]
 	if !ok {
 		return nil, errors.Errorf("unknown RAID level: %s", details[0].RaidLevel)
 	}
 
-	// FIXME I think we can get more fields from the output
 	logicalVolume := &logicalvolume.LogicalVolume{
 		ID:              details[0].Name,
 		CtrlMetadata:    metadata.CtrlMetadata,
@@ -151,7 +144,8 @@ func (m *MDADM) logicalVolume(
 
 	for _, device := range details[0].Devices {
 		logicalVolume.PDrivesMetadata = append(logicalVolume.PDrivesMetadata, &physicaldrive.Metadata{
-			DevicePath: device.Path,
+			DevicePath:   device.Path,
+			CtrlMetadata: metadata.CtrlMetadata, // FIXME Add a const in the controller metadata to identify the controller
 		})
 	}
 

@@ -1,7 +1,6 @@
 package commandrunner_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -20,7 +19,6 @@ func TestMockUDevADMRun(t *testing.T) {
 
 	// Run the function
 	output, err := runner.Run([]string{"mocked udevadm command"})
-	fmt.Println("output: ", string(output))
 
 	// Assert results
 	assert.NoError(t, err)

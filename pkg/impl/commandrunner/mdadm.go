@@ -6,7 +6,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-const mdadmBinaryPath = "" // FIXME Figure out where the binary lives
+const mdadmBinaryPath = "/usr/sbin/mdadm"
 
 type MDADM struct {
 	cliPath string
