@@ -62,6 +62,7 @@ func splitOutputOnMDLevel(output []byte) [][]byte {
 	return append(block, output[index:])
 }
 
+//nolint:gocognit // This function is complex by nature
 func ParseMDADMExportOutput(output []byte) ([]*MDADMExportDetails, error) {
 	if len(output) == 0 || output == nil {
 		return []*MDADMExportDetails{}, nil

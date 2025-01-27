@@ -1,8 +1,8 @@
+//nolint:cyclop,gocognit // Difficult to make those implementations smaller / less complicated
 package logicalvolumemanager
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/pkg/errors"
 
@@ -45,7 +45,7 @@ func (m *MDADM) CreateLV(request *logicalvolume.Request) (*logicalvolume.Logical
 	// Prepare the mdadm create command
 	createCmdArgs := []string{
 		"--create", fmt.Sprintf("/dev/%s", request.Name),
-		"--level", strings.ToLower(logicalvolume.RAIDLevelMapToString[request.RAIDLevel]),
+		"--level", logicalvolume.RAIDLevelMapToString[request.RAIDLevel],
 		"--raid-devices", fmt.Sprintf("%d", len(physicalDrivesName)),
 	}
 
@@ -112,6 +112,7 @@ func (m *MDADM) AddPDsToLV(
 		return errors.Wrap(err, "failed to get logical volume")
 	}
 
+	// RAID level checks
 	if logicalVolume.RAIDLevel == logicalvolume.RAIDLevel10 && len(pvsMetadata)%2 != 0 {
 		return errors.New("cannot add an odd number of physical drives to a RAID10")
 	}
@@ -163,6 +164,7 @@ func (m *MDADM) DeletePDsFromLV(
 		return errors.Wrap(err, "failed to get logical volume")
 	}
 
+	// RAID level checks
 	if logicalVolume.RAIDLevel == logicalvolume.RAIDLevel0 {
 		return errors.New("cannot remove physical drives from a RAID0")
 	} else if logicalVolume.RAIDLevel == logicalvolume.RAIDLevel10 && len(pvsMetadata) > 1 {
@@ -224,6 +226,8 @@ func (m *MDADM) deleteLV(volume *logicalvolume.LogicalVolume) error {
 		return errors.Wrapf(err, "failed to stop logical volume: %s", volume.DevicePath)
 	}
 
+	// Apply this command to every drives present in the logical volume
+	// 	to make them available for reuse
 	for _, device := range volume.PDrivesMetadata {
 		// Remove the superblock of the device
 		_, err = m.Run([]string{
