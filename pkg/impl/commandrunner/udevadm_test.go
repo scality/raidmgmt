@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/scality/raidmgmt/commandrunner"
+	"github.com/scality/raidmgmt/pkg/impl/commandrunner"
 )
 
 func TestMockUDevADMRun(t *testing.T) {

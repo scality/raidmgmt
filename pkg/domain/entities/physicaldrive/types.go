@@ -5,7 +5,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/scality/raidmgmt/domain/entities/raidcontroller"
+	"github.com/scality/raidmgmt/pkg/domain/entities/raidcontroller"
 )
 
 const (

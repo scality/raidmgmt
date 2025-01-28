@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 
 	"github.com/pkg/errors"
-	"github.com/scality/raidmgmt/utils"
+	"github.com/scality/raidmgmt/pkg/utils"
 )
 
 // showAll returns all information for all controllers.

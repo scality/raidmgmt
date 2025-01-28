@@ -9,10 +9,10 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/scality/raidmgmt/domain/entities/logicalvolume"
-	"github.com/scality/raidmgmt/domain/entities/physicaldrive"
-	"github.com/scality/raidmgmt/domain/entities/raidcontroller"
-	"github.com/scality/raidmgmt/utils"
+	"github.com/scality/raidmgmt/pkg/domain/entities/logicalvolume"
+	"github.com/scality/raidmgmt/pkg/domain/entities/physicaldrive"
+	"github.com/scality/raidmgmt/pkg/domain/entities/raidcontroller"
+	"github.com/scality/raidmgmt/pkg/utils"
 )
 
 // patternLV is the pattern for the logical volume selector.

@@ -1,8 +1,8 @@
 package logicalvolume
 
 import (
-	"github.com/scality/raidmgmt/domain/entities/physicaldrive"
-	"github.com/scality/raidmgmt/domain/entities/raidcontroller"
+	"github.com/scality/raidmgmt/pkg/domain/entities/physicaldrive"
+	"github.com/scality/raidmgmt/pkg/domain/entities/raidcontroller"
 )
 
 const (
