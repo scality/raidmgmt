@@ -14,7 +14,7 @@ linters:
   - goimports                 # format and fix imports
   - lll                       # long line length detection
   - tagalign                  # align struct tags
-  - tagliatelle               # check struct tags naming
+#  - tagliatelle               # check struct tags naming
   - whitespace                # leading and trailing whitespace detection
   - wsl                       # empty lines guidelines
   # correctness & bug prevention -> error handling
