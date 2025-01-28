@@ -23,7 +23,7 @@ type Runner interface {
 	Run(args []string) (*CmdOutput, error)
 }
 
-// TODO : Rename this struct according to Valentin's CommandRunner interface.
+//nolint:revive // FIXME Rename this to CommandRunner
 type MegaRAIDRunner struct {
 	cli string
 }

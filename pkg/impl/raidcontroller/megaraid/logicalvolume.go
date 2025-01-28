@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
+
 	"github.com/scality/raidmgmt/domain/entities/logicalvolume"
 	"github.com/scality/raidmgmt/domain/entities/physicaldrive"
 	"github.com/scality/raidmgmt/domain/entities/raidcontroller"
@@ -71,6 +72,8 @@ func (vd *VD) VirtualDriveID() string {
 }
 
 // CacheOptions returns the cache options for a logical volume.
+//
+//nolint:funlen // The function is not too complex
 func (vd *VD) CacheOptions() (*logicalvolume.CacheOptions, error) {
 	if vd.Cache == "" {
 		return nil, errors.New("no cache options found")
@@ -162,6 +165,8 @@ func selectorLV(m *logicalvolume.Metadata) (string, error) {
 }
 
 // logicalVolume returns a logical volume for a given logical volume metadata.
+//
+//nolint:funlen // The function is not too complex
 func (a *Adapter) logicalVolume(
 	metadata *logicalvolume.Metadata) (
 	*logicalvolume.LogicalVolume, error,
