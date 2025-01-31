@@ -2,10 +2,10 @@ package megaraid
 
 import (
 	"encoding/json"
-	"os"
 	"os/exec"
 
 	"github.com/pkg/errors"
+	"github.com/scality/raidmgmt/utils"
 )
 
 const (
@@ -50,30 +50,13 @@ func NewMegaRAIDRunner(arg string) (*MegaRAIDRunner, error) {
 	}
 
 	// Check if the path exists
-	if err := validatePath(arg); err != nil {
+	if err := utils.ValidatePath(arg); err != nil {
 		return nil, errors.Wrap(err, "failed to validate path")
 	}
 
 	return &MegaRAIDRunner{
 		cli: path,
 	}, nil
-}
-
-func validatePath(path string) error {
-	info, err := os.Stat(path)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return errors.Wrapf(err, "path does not exist: %s", path)
-		}
-
-		return errors.Wrap(err, "error getting path info")
-	}
-
-	if info.IsDir() {
-		return errors.Wrapf(err, "path is a directory: %s", path)
-	}
-
-	return nil
 }
 
 // Run runs a command with the given arguments.
