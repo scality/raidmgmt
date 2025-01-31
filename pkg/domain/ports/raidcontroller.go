@@ -11,7 +11,7 @@ type RAIDController interface {
 	PhysicalDrivesGetter
 	LogicalVolumesGetter
 	LogicalVolumesManager
-	LVCacheSetter
+	LogicalVolumeCacheSetter
 	JBODSetter
 	Blinker
 }
@@ -47,11 +47,11 @@ type LogicalVolumesManager interface {
 	// DeleteLV deletes a logical volume
 	DeleteLV(metadata *logicalvolume.Metadata) error
 
-	// AddPDToLV adds a physical drive to a logical volume
-	AddPDToLV(lvMetadata *logicalvolume.Metadata, pdMetadatas ...*physicaldrive.Metadata) error
+	// AddPDsToLV adds a physical drive to a logical volume
+	AddPDsToLV(lvMetadata *logicalvolume.Metadata, pdMetadatas ...*physicaldrive.Metadata) error
 
-	// DeletePDFromLV deletes a physical drive from a logical volume
-	DeletePDFromLV(lvMetadata *logicalvolume.Metadata, pdMetadatas ...*physicaldrive.Metadata) error
+	// DeletePDsFromLV deletes a physical drive from a logical volume
+	DeletePDsFromLV(lvMetadata *logicalvolume.Metadata, pdMetadatas ...*physicaldrive.Metadata) error
 }
 
 type JBODSetter interface {
@@ -62,7 +62,7 @@ type JBODSetter interface {
 	DisableJBOD(metadata *physicaldrive.Metadata) error
 }
 
-type LVCacheSetter interface {
+type LogicalVolumeCacheSetter interface {
 	// SetLVCacheOptions sets cache options on a logical volume
 	SetLVCacheOptions(metadata *logicalvolume.Metadata, cacheOpts *logicalvolume.CacheOptions) error
 }
