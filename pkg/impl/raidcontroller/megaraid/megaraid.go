@@ -99,8 +99,8 @@ func (a *Adapter) CreateLV(
 	return newLv, nil
 }
 
-// AddPDToLV adds a physical drive to a logical volume.
-func (a *Adapter) AddPDToLV(
+// AddPDsToLV adds a physical drive to a logical volume.
+func (a *Adapter) AddPDsToLV(
 	lvMetadata *logicalvolume.Metadata,
 	pdMetadatas ...*physicaldrive.Metadata,
 ) error {
@@ -120,8 +120,8 @@ func (a *Adapter) DeleteLV(metadata *logicalvolume.Metadata) error {
 	return nil
 }
 
-// DeletePDFromLV deletes a physical drive from a logical volume.
-func (a *Adapter) DeletePDFromLV(
+// DeletePDsFromLV deletes a physical drive from a logical volume.
+func (a *Adapter) DeletePDsFromLV(
 	lvMetadata *logicalvolume.Metadata,
 	pdMetadatas ...*physicaldrive.Metadata,
 ) error {
