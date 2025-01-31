@@ -64,15 +64,24 @@ func (m *MDADM) LogicalVolumes(
 	logicalVolumes := make([]*logicalvolume.LogicalVolume, 0, len(details))
 
 	for _, detail := range details {
+		devicePath := deviceNameToDevicePath(detail.Name)
+
 		// Fill the information about the logical volume
 		logicalVolume := &logicalvolume.LogicalVolume{
 			Metadata: &logicalvolume.Metadata{
 				CtrlMetadata: metadata,
 				ID:           detail.Name,
 			},
-			DevicePath:      detail.DeviceName,
+			DevicePath:      devicePath,
 			RAIDLevel:       detail.RaidLevel,
-			PDrivesMetadata: make([]*physicaldrive.Metadata, detail.DevicesCount),
+			PDrivesMetadata: make([]*physicaldrive.Metadata, 0, detail.DevicesCount),
+		}
+
+		for _, device := range detail.Devices {
+			logicalVolume.PDrivesMetadata = append(logicalVolume.PDrivesMetadata, &physicaldrive.Metadata{
+				DevicePath:   device.Path,
+				CtrlMetadata: metadata,
+			})
 		}
 
 		if metadata != nil {
@@ -83,6 +92,26 @@ func (m *MDADM) LogicalVolumes(
 	}
 
 	return logicalVolumes, nil
+}
+
+const deviceNameRegexPattern = "^._.$"
+
+var deviceNameRegex = regexp.MustCompile(deviceNameRegexPattern)
+
+func deviceNameToDevicePath(deviceName string) string {
+	if deviceNameRegex.MatchString(deviceName) {
+		return fmt.Sprintf("/dev/md/%s", deviceName)
+	}
+
+	if strings.HasPrefix(deviceName, "/dev/") {
+		return deviceName
+	}
+
+	if !strings.HasPrefix(deviceName, "md") {
+		return fmt.Sprintf("/dev/md%s", deviceName)
+	}
+
+	return fmt.Sprintf("/dev/%s", deviceName)
 }
 
 // LogicalVolume returns a logical volume by its metadata.
@@ -106,22 +135,23 @@ func (m *MDADM) logicalVolume(
 ) (*logicalvolume.LogicalVolume, error) {
 	// It is assumed that the ID is the suffix of the device name
 	// 	md0, md1, md/0_0 should also be supported
-	deviceNamePrefix := "/dev/"
-
-	if !strings.HasPrefix(metadata.ID, "md") {
-		deviceNamePrefix = "/dev/md"
-	}
-
-	deviceName := deviceNamePrefix + metadata.ID
+	// deviceNamePrefix := "/dev/"
+	//
+	// if !strings.HasPrefix(metadata.ID, "md") {
+	// 	deviceNamePrefix = "/dev/md"
+	// }
+	//
+	// deviceName := deviceNamePrefix + metadata.ID
+	devicePath := deviceNameToDevicePath(metadata.ID)
 
 	// Get the details of the logical volume
 	output, err := m.Run([]string{
 		"--detail",
-		deviceName,
+		devicePath,
 		"--export", // Export to get a key=value format output
 	})
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to get details of logical volume %s", deviceName)
+		return nil, errors.Wrapf(err, "failed to get details of logical volume %s", devicePath)
 	}
 
 	// Parse the key=value output
@@ -135,7 +165,7 @@ func (m *MDADM) logicalVolume(
 			ID:           details[0].Name,
 			CtrlMetadata: metadata.CtrlMetadata,
 		},
-		DevicePath:      details[0].DeviceName,
+		DevicePath:      devicePath,
 		RAIDLevel:       details[0].RaidLevel,
 		PDrivesMetadata: make([]*physicaldrive.Metadata, 0, details[0].DevicesCount),
 	}
