@@ -135,13 +135,6 @@ func (m *MDADM) logicalVolume(
 ) (*logicalvolume.LogicalVolume, error) {
 	// It is assumed that the ID is the suffix of the device name
 	// 	md0, md1, md/0_0 should also be supported
-	// deviceNamePrefix := "/dev/"
-	//
-	// if !strings.HasPrefix(metadata.ID, "md") {
-	// 	deviceNamePrefix = "/dev/md"
-	// }
-	//
-	// deviceName := deviceNamePrefix + metadata.ID
 	devicePath := deviceNameToDevicePath(metadata.ID)
 
 	// Get the details of the logical volume
@@ -211,13 +204,13 @@ type (
 )
 
 func splitOutputOnMDLevel(output []byte) [][]byte {
-	pouet := mdadmMatchDeviceRegexp2.FindAllIndex(output, -1)
+	devicesIndexes := mdadmMatchDeviceRegexp2.FindAllIndex(output, -1)
 
 	block := make([][]byte, 0)
 
 	index := 0
 
-	for i, matchIndex := range pouet {
+	for i, matchIndex := range devicesIndexes {
 		if i == 0 {
 			continue
 		}
