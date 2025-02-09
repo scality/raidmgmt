@@ -4,7 +4,7 @@
 package main
 
 import (
-	_ "github.com/vektra/mockery/v2@v2.46.3"
+	_ "github.com/vektra/mockery/v2"
 )
 
 //go:generate mockery --name=PathResolver --output=mocks --outpkg=mocks

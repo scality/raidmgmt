@@ -8,10 +8,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
-	"github.com/scality/raidmgmt/domain/entities/logicalvolume"
-	"github.com/scality/raidmgmt/domain/entities/physicaldrive"
-	"github.com/scality/raidmgmt/domain/entities/raidcontroller"
-	"github.com/scality/raidmgmt/rhel8/logicalvolumemanager"
+	"github.com/scality/raidmgmt/pkg/domain/entities/logicalvolume"
+	"github.com/scality/raidmgmt/pkg/domain/entities/physicaldrive"
+	"github.com/scality/raidmgmt/pkg/domain/entities/raidcontroller"
+	"github.com/scality/raidmgmt/pkg/impl/raidcontroller/rhel8/logicalvolumemanager"
 )
 
 type (

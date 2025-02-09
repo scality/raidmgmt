@@ -3,7 +3,7 @@
 package mocks
 
 import (
-	megaraid "github.com/scality/raidmgmt/megaraid"
+	megaraid "github.com/scality/raidmgmt/pkg/impl/raidcontroller/megaraid"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -47,7 +47,8 @@ func (_m *Runner) Run(args []string) (*megaraid.CmdOutput, error) {
 func NewRunner(t interface {
 	mock.TestingT
 	Cleanup(func())
-}) *Runner {
+},
+) *Runner {
 	mock := &Runner{}
 	mock.Mock.Test(t)
 

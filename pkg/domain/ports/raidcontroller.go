@@ -1,9 +1,9 @@
 package ports
 
 import (
-	"github.com/scality/raidmgmt/domain/entities/logicalvolume"
-	"github.com/scality/raidmgmt/domain/entities/physicaldrive"
-	"github.com/scality/raidmgmt/domain/entities/raidcontroller"
+	"github.com/scality/raidmgmt/pkg/domain/entities/logicalvolume"
+	"github.com/scality/raidmgmt/pkg/domain/entities/physicaldrive"
+	"github.com/scality/raidmgmt/pkg/domain/entities/raidcontroller"
 )
 
 type RAIDController interface {

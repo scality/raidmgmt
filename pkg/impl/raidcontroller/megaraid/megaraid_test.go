@@ -8,11 +8,12 @@ import (
 	"testing"
 
 	"github.com/pkg/errors"
-	"github.com/scality/raidmgmt/domain/entities/logicalvolume"
-	"github.com/scality/raidmgmt/domain/entities/physicaldrive"
-	"github.com/scality/raidmgmt/domain/entities/raidcontroller"
-	"github.com/scality/raidmgmt/megaraid"
-	"github.com/scality/raidmgmt/megaraid/mocks"
+
+	"github.com/scality/raidmgmt/pkg/domain/entities/logicalvolume"
+	"github.com/scality/raidmgmt/pkg/domain/entities/physicaldrive"
+	"github.com/scality/raidmgmt/pkg/domain/entities/raidcontroller"
+	"github.com/scality/raidmgmt/pkg/impl/raidcontroller/megaraid"
+	"github.com/scality/raidmgmt/pkg/impl/raidcontroller/megaraid/mocks"
 
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
