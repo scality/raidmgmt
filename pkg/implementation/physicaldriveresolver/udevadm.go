@@ -6,7 +6,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/scality/raidmgmt/pkg/impl/commandrunner"
+	"github.com/scality/raidmgmt/pkg/implementation/commandrunner"
 )
 
 type UDevADM struct {

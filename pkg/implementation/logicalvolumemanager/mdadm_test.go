@@ -11,7 +11,7 @@ import (
 	"github.com/scality/raidmgmt/pkg/domain/entities/logicalvolume"
 	"github.com/scality/raidmgmt/pkg/domain/entities/physicaldrive"
 	"github.com/scality/raidmgmt/pkg/domain/entities/raidcontroller"
-	"github.com/scality/raidmgmt/pkg/impl/raidcontroller/rhel8/logicalvolumemanager"
+	"github.com/scality/raidmgmt/pkg/implementation/logicalvolumemanager"
 )
 
 type (

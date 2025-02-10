@@ -16,6 +16,12 @@ type RAIDController interface {
 	Blinker
 }
 
+type SoftwareRAIDController interface {
+	PhysicalDrivesGetter
+	LogicalVolumesGetter
+	LogicalVolumesManager
+}
+
 type ControllersGetter interface {
 	// Controllers returns a list of RAID controllers
 	Controllers() ([]*raidcontroller.RAIDController, error)

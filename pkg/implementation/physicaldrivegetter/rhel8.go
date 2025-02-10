@@ -1,3 +1,4 @@
+//nolint:cyclop // This package contains parser functions, which are inherently complex.
 package physicaldrivegetter
 
 import (
@@ -9,13 +10,13 @@ import (
 	"github.com/scality/raidmgmt/pkg/domain/entities/physicaldrive"
 	"github.com/scality/raidmgmt/pkg/domain/entities/raidcontroller"
 	"github.com/scality/raidmgmt/pkg/domain/ports"
-	"github.com/scality/raidmgmt/pkg/impl/commandrunner"
+	"github.com/scality/raidmgmt/pkg/implementation/commandrunner"
 )
 
 type (
 	RHEL8 struct {
-		uDevADM *commandrunner.UDevADM
-		lsblk   *commandrunner.LSBLK
+		UDevADM commandrunner.CommandRunner
+		LSBLK   commandrunner.CommandRunner
 	}
 
 	BlockDevice struct {
@@ -36,12 +37,14 @@ func NewRHEL8(
 	lsblkCommandRunner *commandrunner.LSBLK,
 ) *RHEL8 {
 	return &RHEL8{
-		uDevADM: uDevADMCommandRunner,
-		lsblk:   lsblkCommandRunner,
+		UDevADM: uDevADMCommandRunner,
+		LSBLK:   lsblkCommandRunner,
 	}
 }
 
-func (r *RHEL8) PhysicalDrives(metadata *raidcontroller.Metadata) ([]*physicaldrive.PhysicalDrive, error) {
+func (r *RHEL8) PhysicalDrives(
+	_ *raidcontroller.Metadata,
+) ([]*physicaldrive.PhysicalDrive, error) {
 	blockDevices, err := r.listBlockDevices()
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to list block devices")
@@ -63,7 +66,9 @@ func (r *RHEL8) PhysicalDrives(metadata *raidcontroller.Metadata) ([]*physicaldr
 	return physicalDrives, nil
 }
 
-func (r *RHEL8) PhysicalDrive(metadata *physicaldrive.Metadata) (*physicaldrive.PhysicalDrive, error) {
+func (r *RHEL8) PhysicalDrive(
+	metadata *physicaldrive.Metadata,
+) (*physicaldrive.PhysicalDrive, error) {
 	blockDevices, err := r.listBlockDevices()
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to list block devices")
@@ -73,7 +78,7 @@ func (r *RHEL8) PhysicalDrive(metadata *physicaldrive.Metadata) (*physicaldrive.
 
 	for _, device := range blockDevices {
 		if device.DevicePath == metadata.DevicePath {
-			output, err := r.uDevADM.Run([]string{
+			output, err := r.UDevADM.Run([]string{
 				"info",
 				"--query=all",
 				"--name=" + metadata.DevicePath,
@@ -82,7 +87,7 @@ func (r *RHEL8) PhysicalDrive(metadata *physicaldrive.Metadata) (*physicaldrive.
 				return nil, errors.Wrap(err, "failed to run udevadm physical drive command")
 			}
 
-			physicalDrive, err = r.ParseUDevADMOutput(output)
+			physicalDrive, err = ParseUDevADMOutput(output)
 			if err != nil {
 				return nil, errors.Wrap(err, "failed to parse udevadm output")
 			}
@@ -98,12 +103,16 @@ func (r *RHEL8) PhysicalDrive(metadata *physicaldrive.Metadata) (*physicaldrive.
 }
 
 func (r *RHEL8) listBlockDevices() ([]BlockDevice, error) {
-	output, err := r.lsblk.Run([]string{"--list", "--paths", "--bytes"})
+	output, err := r.LSBLK.Run([]string{
+		"--list",
+		"--paths",
+		"--bytes",
+	})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to list block devices")
 	}
 
-	blockDevices, err := r.ParseLSBLKOutput(output)
+	blockDevices, err := ParseLSBLKOutput(output)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse lsblk output")
 	}
@@ -111,7 +120,7 @@ func (r *RHEL8) listBlockDevices() ([]BlockDevice, error) {
 	return blockDevices, nil
 }
 
-func (r *RHEL8) ParseUDevADMOutput(output []byte) (*physicaldrive.PhysicalDrive, error) {
+func ParseUDevADMOutput(output []byte) (*physicaldrive.PhysicalDrive, error) {
 	lines := strings.Split(string(output), "\n")
 	physicalDrive := &physicaldrive.PhysicalDrive{}
 
@@ -130,8 +139,10 @@ func (r *RHEL8) ParseUDevADMOutput(output []byte) (*physicaldrive.PhysicalDrive,
 	return physicalDrive, nil
 }
 
-func (r *RHEL8) ParseLSBLKOutput(output []byte) ([]BlockDevice, error) {
+//nolint:gocognit,cyclop,funlen // Parser functions are complicated by essence.
+func ParseLSBLKOutput(output []byte) ([]BlockDevice, error) {
 	lines := strings.Split(string(output), "\n")
+	//nolint:mnd // No need for a constant here.
 	if len(lines) < 2 { // Check if there's at least a header and one device
 		return nil, nil
 	}
@@ -159,12 +170,12 @@ func (r *RHEL8) ParseLSBLKOutput(output []byte) ([]BlockDevice, error) {
 				case "RM":
 					device.RM = field
 				case "SIZE":
-					size, err := strconv.ParseInt(field, 10, 64)
+					size, err := strconv.ParseUint(field, 10, 64)
 					if err != nil {
 						return nil, errors.Wrap(err, "failed to parse size")
 					}
 
-					device.Size = uint64(size)
+					device.Size = size
 				case "RO":
 					device.RO = field
 				case "TYPE":

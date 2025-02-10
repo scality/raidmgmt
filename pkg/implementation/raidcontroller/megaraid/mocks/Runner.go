@@ -3,7 +3,7 @@
 package mocks
 
 import (
-	megaraid "github.com/scality/raidmgmt/pkg/impl/raidcontroller/megaraid"
+	megaraid "github.com/scality/raidmgmt/pkg/implementation/raidcontroller/megaraid"
 	mock "github.com/stretchr/testify/mock"
 )
 

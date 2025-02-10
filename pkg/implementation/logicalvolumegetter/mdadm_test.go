@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/mock"
 
 	"github.com/scality/raidmgmt/pkg/domain/entities/logicalvolume"
-	"github.com/scality/raidmgmt/pkg/impl/raidcontroller/rhel8/logicalvolumegetter"
+	"github.com/scality/raidmgmt/pkg/implementation/logicalvolumegetter"
 )
 
 const (
@@ -73,7 +73,7 @@ func TestMDADMLogicalVolumesSingle(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, 1, len(logicalVolumes))
 	assert.Equal(t, "0", logicalVolumes[0].ID)
-	assert.Equal(t, 2, len(logicalVolumes[0].PDrivesMetadata))
+	assert.Equal(t, 1, len(logicalVolumes[0].PDrivesMetadata))
 	assert.Equal(t, logicalvolume.RAIDLevel1, logicalVolumes[0].RAIDLevel)
 }
 

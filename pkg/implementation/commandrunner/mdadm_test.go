@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/scality/raidmgmt/pkg/impl/commandrunner"
+	"github.com/scality/raidmgmt/pkg/implementation/commandrunner"
 )
 
 func TestMockMDADMRun(t *testing.T) {

@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
-	"github.com/scality/raidmgmt/pkg/impl/physicaldriveresolver"
+	"github.com/scality/raidmgmt/pkg/implementation/physicaldriveresolver"
 )
 
 type (

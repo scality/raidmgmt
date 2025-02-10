@@ -9,7 +9,7 @@ import (
 	"github.com/scality/raidmgmt/pkg/domain/entities/logicalvolume"
 	"github.com/scality/raidmgmt/pkg/domain/entities/physicaldrive"
 	"github.com/scality/raidmgmt/pkg/domain/ports"
-	"github.com/scality/raidmgmt/pkg/impl/commandrunner"
+	"github.com/scality/raidmgmt/pkg/implementation/commandrunner"
 )
 
 type MDADM struct {

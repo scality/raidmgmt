@@ -1,3 +1,4 @@
+//nolint:cyclop // Command parser are generally complex.
 package logicalvolumegetter
 
 import (
@@ -11,12 +12,36 @@ import (
 	"github.com/scality/raidmgmt/pkg/domain/entities/physicaldrive"
 	"github.com/scality/raidmgmt/pkg/domain/entities/raidcontroller"
 	"github.com/scality/raidmgmt/pkg/domain/ports"
-	"github.com/scality/raidmgmt/pkg/impl/commandrunner"
+	"github.com/scality/raidmgmt/pkg/implementation/commandrunner"
+)
+
+const (
+	mdadmDeviceNameRegexPattern = "^._.$"
+
+	mdadmMatchDeviceRegexpPattern  = `MD_DEVICE_(.*)_(ROLE|DEV)=(.*)`
+	mdadmMatchDeviceRegexpPattern2 = `MD_LEVEL`
 )
 
 type (
 	MDADM struct {
 		commandrunner.CommandRunner
+	}
+
+	MDADMExportDetails struct {
+		RaidLevel    logicalvolume.RAIDLevel // MD_LEVEL
+		DevicesCount int                     // MD_DEVICES
+		Metadata     string                  // MD_METADATA
+		UUID         string                  // MD_UUID
+		Name         string                  // MD_NAME
+		ArraySize    string                  // MD_ARRAY_SIZE
+		DeviceName   string                  // MD_DEVNAME
+		Devices      map[string]MDADMDevices // MD_DEV_0, MD_DEV_1, ...
+	}
+
+	MDADMDevices struct {
+		Role  string
+		State string
+		Path  string
 	}
 
 	ExportDetails struct {
@@ -31,13 +56,19 @@ type (
 	}
 )
 
-var _ ports.LogicalVolumesGetter = &MDADM{}
+var (
+	_ ports.LogicalVolumesGetter = &MDADM{}
+
+	mdadmDeviceNameRegex    = regexp.MustCompile(mdadmDeviceNameRegexPattern)
+	mdadmMatchDeviceRegexp  = regexp.MustCompile(mdadmMatchDeviceRegexpPattern)
+	mdadmMatchDeviceRegexp2 = regexp.MustCompile(mdadmMatchDeviceRegexpPattern2)
+)
 
 func NewMDADM(
-	runner commandrunner.CommandRunner,
+	runner commandrunner.MDADM,
 ) *MDADM {
 	return &MDADM{
-		CommandRunner: runner,
+		CommandRunner: &runner,
 	}
 }
 
@@ -92,26 +123,6 @@ func (m *MDADM) LogicalVolumes(
 	}
 
 	return logicalVolumes, nil
-}
-
-const deviceNameRegexPattern = "^._.$"
-
-var deviceNameRegex = regexp.MustCompile(deviceNameRegexPattern)
-
-func deviceNameToDevicePath(deviceName string) string {
-	if deviceNameRegex.MatchString(deviceName) {
-		return fmt.Sprintf("/dev/md/%s", deviceName)
-	}
-
-	if strings.HasPrefix(deviceName, "/dev/") {
-		return deviceName
-	}
-
-	if !strings.HasPrefix(deviceName, "md") {
-		return fmt.Sprintf("/dev/md%s", deviceName)
-	}
-
-	return fmt.Sprintf("/dev/%s", deviceName)
 }
 
 // LogicalVolume returns a logical volume by its metadata.
@@ -174,60 +185,7 @@ func (m *MDADM) logicalVolume(
 	return logicalVolume, nil
 }
 
-const (
-	mdadmMatchDeviceRegexpPattern  = `MD_DEVICE_(.*)_(ROLE|DEV)=(.*)`
-	mdadmMatchDeviceRegexpPattern2 = `MD_LEVEL`
-)
-
-var (
-	mdadmMatchDeviceRegexp  = regexp.MustCompile(mdadmMatchDeviceRegexpPattern)
-	mdadmMatchDeviceRegexp2 = regexp.MustCompile(mdadmMatchDeviceRegexpPattern2)
-)
-
-type (
-	MDADMExportDetails struct {
-		RaidLevel    logicalvolume.RAIDLevel // MD_LEVEL
-		DevicesCount int                     // MD_DEVICES
-		Metadata     string                  // MD_METADATA
-		UUID         string                  // MD_UUID
-		Name         string                  // MD_NAME
-		ArraySize    string                  // MD_ARRAY_SIZE
-		DeviceName   string                  // MD_DEVNAME
-		Devices      map[string]MDADMDevices // MD_DEV_0, MD_DEV_1, ...
-	}
-
-	MDADMDevices struct {
-		Role  string
-		State string
-		Path  string
-	}
-)
-
-func splitOutputOnMDLevel(output []byte) [][]byte {
-	devicesIndexes := mdadmMatchDeviceRegexp2.FindAllIndex(output, -1)
-
-	block := make([][]byte, 0)
-
-	index := 0
-
-	for i, matchIndex := range devicesIndexes {
-		if i == 0 {
-			continue
-		}
-
-		currentIndex := matchIndex[0]
-
-		currentBlock := output[index:currentIndex]
-
-		block = append(block, currentBlock)
-
-		index = matchIndex[0]
-	}
-
-	return append(block, output[index:])
-}
-
-//nolint:gocognit,funlen // This function is complex by nature
+//nolint:gocognit,funlen,cyclop // This function is complex by nature
 func ParseMDADMExportOutput(output []byte) ([]*MDADMExportDetails, error) {
 	if len(output) == 0 || output == nil {
 		return []*MDADMExportDetails{}, nil
@@ -291,4 +249,44 @@ func ParseMDADMExportOutput(output []byte) ([]*MDADMExportDetails, error) {
 	}
 
 	return details, nil
+}
+
+func splitOutputOnMDLevel(output []byte) [][]byte {
+	devicesIndexes := mdadmMatchDeviceRegexp2.FindAllIndex(output, -1)
+
+	block := make([][]byte, 0)
+
+	index := 0
+
+	for i, matchIndex := range devicesIndexes {
+		if i == 0 {
+			continue
+		}
+
+		currentIndex := matchIndex[0]
+
+		currentBlock := output[index:currentIndex]
+
+		block = append(block, currentBlock)
+
+		index = matchIndex[0]
+	}
+
+	return append(block, output[index:])
+}
+
+func deviceNameToDevicePath(deviceName string) string {
+	if mdadmDeviceNameRegex.MatchString(deviceName) {
+		return fmt.Sprintf("/dev/md/%s", deviceName)
+	}
+
+	if strings.HasPrefix(deviceName, "/dev/") {
+		return deviceName
+	}
+
+	if !strings.HasPrefix(deviceName, "md") {
+		return fmt.Sprintf("/dev/md%s", deviceName)
+	}
+
+	return fmt.Sprintf("/dev/%s", deviceName)
 }
