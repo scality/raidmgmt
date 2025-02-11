@@ -21,12 +21,9 @@ type (
 
 	BlockDevice struct {
 		DevicePath string
-		MajMin     string
-		RM         string
 		Size       uint64
-		RO         string
+		Rotational string
 		Type       string
-		Mountpoint string
 	}
 )
 
@@ -96,7 +93,7 @@ func (r *RHEL8) PhysicalDrive(
 			physicalDrive.DevicePath = metadata.DevicePath
 			physicalDrive.Size = device.Size
 
-			switch device.RO {
+			switch device.Rotational {
 			case "0":
 				physicalDrive.Type = physicaldrive.DiskTypeSSD
 			case "1":
@@ -115,6 +112,8 @@ func (r *RHEL8) listBlockDevices() ([]BlockDevice, error) {
 		"--list",
 		"--paths",
 		"--bytes",
+		"--nodeps",
+		"--output name,rota,size,type",
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to list block devices")
@@ -182,10 +181,6 @@ func ParseLSBLKOutput(output []byte) ([]BlockDevice, error) {
 				switch header[i] {
 				case "NAME":
 					device.DevicePath = field
-				case "MAJ:MIN":
-					device.MajMin = field
-				case "RM":
-					device.RM = field
 				case "SIZE":
 					size, err := strconv.ParseUint(field, 10, 64)
 					if err != nil {
@@ -193,12 +188,10 @@ func ParseLSBLKOutput(output []byte) ([]BlockDevice, error) {
 					}
 
 					device.Size = size
-				case "RO":
-					device.RO = field
+				case "ROTA":
+					device.Rotational = field
 				case "TYPE":
 					device.Type = field
-				case "MOUNTPOINT":
-					device.Mountpoint = field
 				}
 			}
 		}

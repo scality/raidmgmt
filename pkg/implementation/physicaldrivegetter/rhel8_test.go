@@ -12,16 +12,13 @@ import (
 )
 
 const (
-	lsblkTestOutput = `NAME MAJ:MIN RM SIZE RO TYPE MOUNTPOINT
-md127 9:127 0 17160994816 0 raid0
-md127 9:127 0 17160994816 0 raid0
-/dev/nvme1n1 259:0  0 8589934592 0 disk
-/dev/nvme2n1 259:1  0 8589934592 0 disk
-/dev/nvme5n1 259:2  0 8589934592 0 disk
-/dev/nvme4n1 259:3  0 8589934592 0 disk
-/dev/nvme0n1 259:4  0 16106127360 0 disk
-/dev/nvme0n1p1 259:5  0 16105078784 0 part /
-/dev/nvme3n1 259:6  0 8589934592 0 disk`
+	lsblkTestOutput = `NAME         ROTA        SIZE TYPE
+/dev/nvme5n1    0  8589934592 disk
+/dev/nvme2n1    0  8589934592 disk
+/dev/nvme4n1    0  8589934592 disk
+/dev/nvme1n1    0  8589934592 disk
+/dev/nvme0n1    0 16106127360 disk
+/dev/nvme3n1    0  8589934592 disk`
 
 	uDevADMTestOutput = `P: /devices/pci0000:00/0000:00:1b.0/nvme/nvme1/nvme1n1
 N: nvme1n1
@@ -50,12 +47,12 @@ func TestParseLSBLKOutput(t *testing.T) {
 	output := []byte(lsblkTestOutput)
 
 	expected := []physicaldrivegetter.BlockDevice{
-		{DevicePath: "/dev/nvme1n1", MajMin: "259:0", RM: "0", Size: 8589934592, RO: "0", Type: "disk", Mountpoint: ""},
-		{DevicePath: "/dev/nvme2n1", MajMin: "259:1", RM: "0", Size: 8589934592, RO: "0", Type: "disk", Mountpoint: ""},
-		{DevicePath: "/dev/nvme5n1", MajMin: "259:2", RM: "0", Size: 8589934592, RO: "0", Type: "disk", Mountpoint: ""},
-		{DevicePath: "/dev/nvme4n1", MajMin: "259:3", RM: "0", Size: 8589934592, RO: "0", Type: "disk", Mountpoint: ""},
-		{DevicePath: "/dev/nvme0n1", MajMin: "259:4", RM: "0", Size: 16106127360, RO: "0", Type: "disk", Mountpoint: ""},
-		{DevicePath: "/dev/nvme3n1", MajMin: "259:6", RM: "0", Size: 8589934592, RO: "0", Type: "disk", Mountpoint: ""},
+		{DevicePath: "/dev/nvme5n1", Size: 8589934592, Type: "disk", Rotational: "0"},
+		{DevicePath: "/dev/nvme2n1", Size: 8589934592, Type: "disk", Rotational: "0"},
+		{DevicePath: "/dev/nvme4n1", Size: 8589934592, Type: "disk", Rotational: "0"},
+		{DevicePath: "/dev/nvme1n1", Size: 8589934592, Type: "disk", Rotational: "0"},
+		{DevicePath: "/dev/nvme0n1", Size: 16106127360, Type: "disk", Rotational: "0"},
+		{DevicePath: "/dev/nvme3n1", Size: 8589934592, Type: "disk", Rotational: "0"},
 	}
 
 	devices, err := physicaldrivegetter.ParseLSBLKOutput(output)
@@ -94,16 +91,21 @@ func TestPhysicalDrives(t *testing.T) {
 
 	r := physicaldrivegetter.RHEL8{UDevADM: &mockUDevADM, LSBLK: &mockLSBLK}
 
-	lsblkOutput := []byte(`NAME MAJ:MIN RM SIZE RO TYPE MOUNTPOINT
-/dev/nvme1n1 259:0  0 8589934592 0 disk
-/dev/nvme2n1 259:1  0 8589934592 0 disk`)
-
 	uDevADMOutput := []byte(`E: ID_MODEL=Amazon Elastic Block Store
 E: ID_SERIAL_SHORT=vol05ece746e40ff492f
 E: ID_WWN=nvme.1d0f-766f6c3035656365373436653430666634393266-416d617a6f6e20456c617374696320426c6f636b2053746f7265-00000001
 E: DEVNAME=/dev/nvme1n1`)
 
-	mockLSBLK.On("Run", []string{"--list", "--paths", "--bytes"}).Return(lsblkOutput, nil)
+	mockLSBLK.On("Run", []string{
+		"--list",
+		"--paths",
+		"--bytes",
+		"--nodeps",
+		"--output name,rota,size,type",
+	}).Return([]byte(`NAME         ROTA        SIZE TYPE
+/dev/nvme1n1    0  8589934592 disk
+/dev/nvme2n1    0  8589934592 disk`), nil)
+
 	mockUDevADM.On("Run", []string{"info", "--query=all", "--name=/dev/nvme1n1"}).Return(uDevADMOutput, nil)
 	mockUDevADM.On("Run", []string{"info", "--query=all", "--name=/dev/nvme2n1"}).Return(uDevADMOutput, nil)
 
@@ -141,15 +143,21 @@ func TestPhysicalDrive(t *testing.T) {
 
 	r := physicaldrivegetter.RHEL8{UDevADM: &mockUDevADM, LSBLK: &mockLSBLK}
 
-	lsblkOutput := []byte(`NAME MAJ:MIN RM SIZE RO TYPE MOUNTPOINT
-/dev/nvme1n1 259:0  0 8589934592 0 disk`)
+	lsblkOutput := []byte(`NAME         ROTA        SIZE TYPE
+/dev/nvme1n1    0  8589934592 disk`)
 
 	udevadmOutput := []byte(`E: ID_MODEL=Amazon Elastic Block Store
 E: ID_SERIAL_SHORT=vol05ece746e40ff492f
 E: ID_WWN=nvme.1d0f-766f6c3035656365373436653430666634393266-416d617a6f6e20456c617374696320426c6f636b2053746f7265-00000001
 E: DEVNAME=/dev/nvme1n1`)
 
-	mockLSBLK.On("Run", []string{"--list", "--paths", "--bytes"}).Return(lsblkOutput, nil)
+	mockLSBLK.On("Run", []string{
+		"--list",
+		"--paths",
+		"--bytes",
+		"--nodeps",
+		"--output name,rota,size,type",
+	}).Return(lsblkOutput, nil)
 	mockUDevADM.On("Run", []string{"info", "--query=all", "--name=/dev/nvme1n1"}).Return(udevadmOutput, nil)
 
 	metadata := &physicaldrive.Metadata{DevicePath: "/dev/nvme1n1"}
