@@ -66,6 +66,7 @@ func (r *RHEL8) PhysicalDrives(
 	return physicalDrives, nil
 }
 
+//nolint:gocognit // This function is complicated by essence.
 func (r *RHEL8) PhysicalDrive(
 	metadata *physicaldrive.Metadata,
 ) (*physicaldrive.PhysicalDrive, error) {
@@ -95,6 +96,13 @@ func (r *RHEL8) PhysicalDrive(
 			physicalDrive.DevicePath = metadata.DevicePath
 			physicalDrive.Size = device.Size
 
+			switch device.RO {
+			case "0":
+				physicalDrive.Type = physicaldrive.DiskTypeSSD
+			case "1":
+				physicalDrive.Type = physicaldrive.DiskTypeHDD
+			}
+
 			break
 		}
 	}
@@ -120,6 +128,7 @@ func (r *RHEL8) listBlockDevices() ([]BlockDevice, error) {
 	return blockDevices, nil
 }
 
+//nolint:gocognit,nestif // Parser functions are complicated by essence.
 func ParseUDevADMOutput(output []byte) (*physicaldrive.PhysicalDrive, error) {
 	lines := strings.Split(string(output), "\n")
 	physicalDrive := &physicaldrive.PhysicalDrive{}
@@ -133,6 +142,14 @@ func ParseUDevADMOutput(output []byte) (*physicaldrive.PhysicalDrive, error) {
 			physicalDrive.ID = strings.TrimPrefix(line, "E: ID_WWN=")
 		} else if strings.HasPrefix(line, "E: DEVNAME=") {
 			physicalDrive.DevicePath = strings.TrimPrefix(line, "E: DEVNAME=")
+		} else if strings.HasPrefix(line, "E: DEVLINKS=") {
+			devlinks := strings.Split(strings.TrimPrefix(line, "E: DEVLINKS="), " ")
+
+			for _, devlink := range devlinks {
+				if len(devlink) > len(physicalDrive.PermanentPath) && strings.Contains(devlink, "by-id") {
+					physicalDrive.PermanentPath = devlink
+				}
+			}
 		}
 	}
 
