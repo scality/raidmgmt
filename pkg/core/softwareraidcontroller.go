@@ -1,8 +1,6 @@
 package core
 
 import (
-	"github.com/pkg/errors"
-
 	"github.com/scality/raidmgmt/pkg/domain/entities/logicalvolume"
 	"github.com/scality/raidmgmt/pkg/domain/entities/physicaldrive"
 	"github.com/scality/raidmgmt/pkg/domain/entities/raidcontroller"
@@ -27,17 +25,7 @@ func NewSoftwareRAIDController(iface ports.SoftwareRAIDController) *SoftwareRAID
 func (s *SoftwareRAIDController) PhysicalDrives(
 	metadata *raidcontroller.Metadata,
 ) ([]*physicaldrive.PhysicalDrive, error) {
-	err := metadata.Validate()
-	if err != nil {
-		return nil, errors.Wrap(err, ErrInvalidRAIDControllerMetadata.Error())
-	}
-
-	physicalDrives, err := s.iface.PhysicalDrives(metadata)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to get physical drives")
-	}
-
-	return physicalDrives, nil
+	return physicalDrives(s.iface, metadata)
 }
 
 // PhysicalDrive returns a physical drive.
@@ -45,17 +33,7 @@ func (s *SoftwareRAIDController) PhysicalDrives(
 func (s *SoftwareRAIDController) PhysicalDrive(
 	metadata *physicaldrive.Metadata,
 ) (*physicaldrive.PhysicalDrive, error) {
-	err := metadata.Validate()
-	if err != nil {
-		return nil, errors.Wrap(err, ErrInvalidPhysicalDriveMetadata.Error())
-	}
-
-	physicalDrive, err := s.iface.PhysicalDrive(metadata)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to get physical drive")
-	}
-
-	return physicalDrive, nil
+	return physicalDrive(s.iface, metadata)
 }
 
 // LogicalVolumes returns a list of logical volumes.
@@ -63,17 +41,7 @@ func (s *SoftwareRAIDController) PhysicalDrive(
 func (s *SoftwareRAIDController) LogicalVolumes(
 	metadata *raidcontroller.Metadata,
 ) ([]*logicalvolume.LogicalVolume, error) {
-	err := metadata.Validate()
-	if err != nil {
-		return nil, errors.Wrap(err, ErrInvalidRAIDControllerMetadata.Error())
-	}
-
-	logicalVolumes, err := s.iface.LogicalVolumes(metadata)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to get logical volumes")
-	}
-
-	return logicalVolumes, nil
+	return logicalVolumes(s.iface, metadata)
 }
 
 // LogicalVolume returns a logical volume.
@@ -81,51 +49,21 @@ func (s *SoftwareRAIDController) LogicalVolumes(
 func (s *SoftwareRAIDController) LogicalVolume(
 	metadata *logicalvolume.Metadata,
 ) (*logicalvolume.LogicalVolume, error) {
-	err := metadata.Validate()
-	if err != nil {
-		return nil, errors.Wrap(err, ErrInvalidLogicalVolumeMetadata.Error())
-	}
-
-	logicalVolume, err := s.iface.LogicalVolume(metadata)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to get logical volume")
-	}
-
-	return logicalVolume, nil
+	return logicalVolume(s.iface, metadata)
 }
 
 // CreateLV creates a logical volume.
 func (s *SoftwareRAIDController) CreateLV(
 	request *logicalvolume.Request,
 ) (*logicalvolume.LogicalVolume, error) {
-	err := request.Validate()
-	if err != nil {
-		return nil, errors.Wrap(err, ErrInvalidLogicalVolumeRequest.Error())
-	}
-
-	logicalVolume, err := s.iface.CreateLV(request)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to create logical volume")
-	}
-
-	return logicalVolume, nil
+	return createLV(s.iface, request)
 }
 
 // DeleteLV deletes a logical volume.
 func (s *SoftwareRAIDController) DeleteLV(
 	metadata *logicalvolume.Metadata,
 ) error {
-	err := metadata.Validate()
-	if err != nil {
-		return errors.Wrap(err, ErrInvalidLogicalVolumeMetadata.Error())
-	}
-
-	err = s.iface.DeleteLV(metadata)
-	if err != nil {
-		return errors.Wrap(err, "failed to delete logical volume")
-	}
-
-	return nil
+	return deleteLV(s.iface, metadata)
 }
 
 // AddPDsToLV adds physical drives to a logical volume.
@@ -133,24 +71,7 @@ func (s *SoftwareRAIDController) AddPDsToLV(
 	lvMetadata *logicalvolume.Metadata,
 	pdsMetadata ...*physicaldrive.Metadata,
 ) error {
-	err := lvMetadata.Validate()
-	if err != nil {
-		return errors.Wrap(err, ErrInvalidLogicalVolumeMetadata.Error())
-	}
-
-	for _, pdMetadata := range pdsMetadata {
-		err := pdMetadata.Validate()
-		if err != nil {
-			return errors.Wrap(err, ErrInvalidPhysicalDriveMetadata.Error())
-		}
-	}
-
-	err = s.iface.AddPDsToLV(lvMetadata, pdsMetadata...)
-	if err != nil {
-		return errors.Wrap(err, "failed to add physical drives to logical volume")
-	}
-
-	return nil
+	return addPDsToLV(s.iface, lvMetadata, pdsMetadata...)
 }
 
 // DeletePDsFromLV deletes physical drives from a logical volume.
@@ -158,22 +79,5 @@ func (s *SoftwareRAIDController) DeletePDsFromLV(
 	lvMetadata *logicalvolume.Metadata,
 	pdsMetadata ...*physicaldrive.Metadata,
 ) error {
-	err := lvMetadata.Validate()
-	if err != nil {
-		return errors.Wrap(err, ErrInvalidLogicalVolumeMetadata.Error())
-	}
-
-	for _, pdMetadata := range pdsMetadata {
-		err := pdMetadata.Validate()
-		if err != nil {
-			return errors.Wrap(err, ErrInvalidPhysicalDriveMetadata.Error())
-		}
-	}
-
-	err = s.iface.DeletePDsFromLV(lvMetadata, pdsMetadata...)
-	if err != nil {
-		return errors.Wrap(err, "failed to delete physical drives from logical volume")
-	}
-
-	return nil
+	return deletePDsFromLV(s.iface, lvMetadata, pdsMetadata...)
 }

@@ -64,10 +64,12 @@ func TestParseUDevADMOutput(t *testing.T) {
 	output := []byte(uDevADMTestOutput)
 
 	expected := &physicaldrive.PhysicalDrive{
-		Model:         "Amazon Elastic Block Store",
-		Serial:        "vol05ece746e40ff492f",
-		ID:            "nvme.1d0f-766f6c3035656365373436653430666634393266-416d617a6f6e20456c617374696320426c6f636b2053746f7265-00000001",
-		DevicePath:    "/dev/nvme1n1",
+		Model:  "Amazon Elastic Block Store",
+		Serial: "vol05ece746e40ff492f",
+		ID:     "nvme.1d0f-766f6c3035656365373436653430666634393266-416d617a6f6e20456c617374696320426c6f636b2053746f7265-00000001",
+		Metadata: &physicaldrive.Metadata{
+			DevicePath: "/dev/nvme1n1",
+		},
 		PermanentPath: "/dev/disk/by-id/nvme-nvme.1d0f-766f6c3035656365373436653430666634393266-416d617a6f6e20456c617374696320426c6f636b2053746f7265-00000001",
 	}
 
@@ -112,20 +114,22 @@ E: DEVNAME=/dev/nvme1n1`)
 	metadata := &raidcontroller.Metadata{}
 	expected := []*physicaldrive.PhysicalDrive{
 		{
-			Model:      "Amazon Elastic Block Store",
-			Serial:     "vol05ece746e40ff492f",
-			ID:         "nvme.1d0f-766f6c3035656365373436653430666634393266-416d617a6f6e20456c617374696320426c6f636b2053746f7265-00000001",
-			DevicePath: "/dev/nvme1n1",
-			Size:       8589934592,
-			Type:       physicaldrive.DiskTypeSSD,
+			Model:  "Amazon Elastic Block Store",
+			Serial: "vol05ece746e40ff492f",
+			ID:     "nvme.1d0f-766f6c3035656365373436653430666634393266-416d617a6f6e20456c617374696320426c6f636b2053746f7265-00000001",
+			Metadata: &physicaldrive.Metadata{
+				DevicePath: "/dev/nvme1n1",
+			},
+			Size: 8589934592,
+			Type: physicaldrive.DiskTypeSSD,
 		},
 		{
-			Model:      "Amazon Elastic Block Store",
-			Serial:     "vol05ece746e40ff492f",
-			ID:         "nvme.1d0f-766f6c3035656365373436653430666634393266-416d617a6f6e20456c617374696320426c6f636b2053746f7265-00000001",
-			DevicePath: "/dev/nvme2n1",
-			Size:       8589934592,
-			Type:       physicaldrive.DiskTypeSSD,
+			Model:    "Amazon Elastic Block Store",
+			Serial:   "vol05ece746e40ff492f",
+			ID:       "nvme.1d0f-766f6c3035656365373436653430666634393266-416d617a6f6e20456c617374696320426c6f636b2053746f7265-00000001",
+			Metadata: &physicaldrive.Metadata{DevicePath: "/dev/nvme2n1"},
+			Size:     8589934592,
+			Type:     physicaldrive.DiskTypeSSD,
 		},
 	}
 
@@ -162,12 +166,12 @@ E: DEVNAME=/dev/nvme1n1`)
 
 	metadata := &physicaldrive.Metadata{DevicePath: "/dev/nvme1n1"}
 	expected := &physicaldrive.PhysicalDrive{
-		Model:      "Amazon Elastic Block Store",
-		Serial:     "vol05ece746e40ff492f",
-		ID:         "nvme.1d0f-766f6c3035656365373436653430666634393266-416d617a6f6e20456c617374696320426c6f636b2053746f7265-00000001",
-		DevicePath: "/dev/nvme1n1",
-		Size:       8589934592,
-		Type:       physicaldrive.DiskTypeSSD,
+		Model:    "Amazon Elastic Block Store",
+		Serial:   "vol05ece746e40ff492f",
+		ID:       "nvme.1d0f-766f6c3035656365373436653430666634393266-416d617a6f6e20456c617374696320426c6f636b2053746f7265-00000001",
+		Metadata: metadata,
+		Size:     8589934592,
+		Type:     physicaldrive.DiskTypeSSD,
 	}
 
 	physicalDrive, err := r.PhysicalDrive(metadata)

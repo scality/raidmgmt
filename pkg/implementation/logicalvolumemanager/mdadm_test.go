@@ -73,18 +73,6 @@ func TestMDADM_CreateLV(t *testing.T) {
 		expectError bool
 	}{
 		{
-			name:        "Nil logical volume creation request",
-			mockings:    []mocking{},
-			input:       nil,
-			expectError: true,
-		},
-		{
-			name:        "Empty logical volume creation request",
-			mockings:    []mocking{},
-			input:       &logicalvolume.Request{},
-			expectError: true,
-		},
-		{
 			name: "Valid single logical volume output",
 			mockings: []mocking{
 				{
@@ -194,12 +182,6 @@ func TestMDADM_DeleteLV(t *testing.T) {
 		input       *logicalvolume.Metadata
 		expectError bool
 	}{
-		{
-			name:        "Nil logical volume deletion request",
-			mockings:    []mocking{},
-			input:       nil,
-			expectError: true,
-		},
 		{
 			name: "Logical volume deletion request: remove volume working",
 			mockings: []mocking{
@@ -340,32 +322,6 @@ func TestMDADM_AddPVsToLV_1PhysicalDrive(t *testing.T) {
 	})
 }
 
-func TestMDADM_AddPDstoLV_NilLogicalVolumeMetadata(t *testing.T) {
-	mockCommandRunner, mockLogicalVolumeGetter := &MockCommandRunner{}, &MockLogicalVolumesGetter{}
-
-	mdadm := &logicalvolumemanager.MDADM{
-		CommandRunner:        mockCommandRunner,
-		LogicalVolumesGetter: mockLogicalVolumeGetter,
-	}
-
-	err := mdadm.AddPDsToLV(nil, &physicaldrive.Metadata{})
-	assert.NotNil(t, err)
-
-	t.Cleanup(func() {
-		mockCommandRunner.AssertExpectations(t)
-		mockLogicalVolumeGetter.AssertExpectations(t)
-	})
-}
-
-func TestMDADM_AddPDsToLV_NilDriveMetadata(t *testing.T) {
-	t.Parallel()
-
-	mdadm := &logicalvolumemanager.MDADM{}
-
-	err := mdadm.AddPDsToLV(&logicalvolume.Metadata{}, nil)
-	assert.NotNil(t, err)
-}
-
 func TestAddPhysicalDrivesToLogicalVolume(t *testing.T) {
 	mockCommandRunner, mockLogicalVolumeGetter := &MockCommandRunner{}, &MockLogicalVolumesGetter{}
 
@@ -460,62 +416,6 @@ func TestAddPhysicalDrivesToLogicalVolumeRAID10_2Disk(t *testing.T) {
 		mockCommandRunner.AssertExpectations(t)
 		mockLogicalVolumeGetter.AssertExpectations(t)
 	})
-}
-
-func TestMDADM_DeletePVsFromLV_nil(t *testing.T) {
-	mockCommandRunner, mockLogicalVolumeGetter := &MockCommandRunner{}, &MockLogicalVolumesGetter{}
-
-	type input struct {
-		lv *logicalvolume.Metadata
-		pv *physicaldrive.Metadata
-	}
-
-	testCases := []struct {
-		name     string
-		mockings []mocking
-		input
-		expectError bool
-	}{
-		{
-			name:        "Nil logical volume metadata",
-			mockings:    []mocking{},
-			input:       input{lv: nil, pv: &physicaldrive.Metadata{}},
-			expectError: true,
-		},
-		{
-			name:        "Nil physical drive metadata",
-			mockings:    []mocking{},
-			input:       input{lv: &logicalvolume.Metadata{}, pv: nil},
-			expectError: true,
-		},
-	}
-
-	for _, tc := range testCases {
-		t.Log(tc.name)
-
-		for _, m := range tc.mockings {
-			t.Log("mockings to apply: ", m.command, m.parameters, m.returnValues)
-
-			m.mocker.On(m.command, m.parameters).Return(m.returnValues...).Maybe()
-		}
-
-		mdadm := &logicalvolumemanager.MDADM{
-			CommandRunner:        mockCommandRunner,
-			LogicalVolumesGetter: mockLogicalVolumeGetter,
-		}
-
-		err := mdadm.DeletePDsFromLV(tc.input.lv, tc.input.pv)
-		if tc.expectError {
-			assert.NotNil(t, err)
-		} else {
-			assert.Nil(t, err)
-		}
-
-		t.Cleanup(func() {
-			mockCommandRunner.AssertExpectations(t)
-			mockLogicalVolumeGetter.AssertExpectations(t)
-		})
-	}
 }
 
 func TestMDADM_DeletePDsFromLV_RAID1(t *testing.T) {

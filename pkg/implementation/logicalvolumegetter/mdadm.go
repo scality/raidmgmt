@@ -83,13 +83,13 @@ func (m *MDADM) LogicalVolumes(
 		"--export", // Export to get a key=value format output
 	})
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to scan logical volumes")
+		return nil, errors.Wrap(err, "failed to run mdadm detail scan export command")
 	}
 
 	// Parse the key=value output
 	details, err := ParseMDADMExportOutput(output)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to parse mdadm export output")
+		return nil, errors.Wrap(err, "failed to parse mdadm scan output")
 	}
 
 	logicalVolumes := make([]*logicalvolume.LogicalVolume, 0, len(details))
@@ -115,10 +115,6 @@ func (m *MDADM) LogicalVolumes(
 			})
 		}
 
-		if metadata != nil {
-			logicalVolume.CtrlMetadata = metadata
-		}
-
 		logicalVolumes = append(logicalVolumes, logicalVolume)
 	}
 
@@ -127,21 +123,6 @@ func (m *MDADM) LogicalVolumes(
 
 // LogicalVolume returns a logical volume by its metadata.
 func (m *MDADM) LogicalVolume(
-	metadata *logicalvolume.Metadata,
-) (*logicalvolume.LogicalVolume, error) {
-	if metadata == nil {
-		return nil, errors.New("metadata is nil")
-	}
-
-	logicalVolume, err := m.logicalVolume(metadata)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to get logical volume")
-	}
-
-	return logicalVolume, nil
-}
-
-func (m *MDADM) logicalVolume(
 	metadata *logicalvolume.Metadata,
 ) (*logicalvolume.LogicalVolume, error) {
 	// It is assumed that the ID is the suffix of the device name
@@ -155,13 +136,13 @@ func (m *MDADM) logicalVolume(
 		"--export", // Export to get a key=value format output
 	})
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to get details of logical volume %s", devicePath)
+		return nil, errors.Wrap(err, "failed to run mdadm detail export command")
 	}
 
 	// Parse the key=value output
 	details, err := ParseMDADMExportOutput(output)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to parse mdadm export output")
+		return nil, errors.Wrap(err, "failed to parse mdadm detail export output")
 	}
 
 	logicalVolume := &logicalvolume.LogicalVolume{

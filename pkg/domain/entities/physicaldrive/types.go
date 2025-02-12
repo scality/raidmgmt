@@ -29,7 +29,6 @@ type (
 		Status        PDStatus `json:"status,omitempty"`         // State (e.g.: Online, Offline, Failed)
 		Reason        string   `json:"reason,omitempty"`         // Reason for the disk state
 		PermanentPath string   `json:"permanent_path,omitempty"` // Permanent path of the array (e.g.: /dev/disk/by-id/...)
-		DevicePath    string   `json:"device_path,omitempty"`    // Device path of the array (e.g.: /dev/sda)
 	}
 
 	// Slot identifies the slot of a disk.

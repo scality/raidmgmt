@@ -54,7 +54,7 @@ func (r *RHEL8) PhysicalDrives(
 			DevicePath: device.DevicePath,
 		})
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to get physical drive")
+			return nil, errors.Wrapf(err, "failed to get physical drive: %s", device.DevicePath)
 		}
 
 		physicalDrives = append(physicalDrives, physicalDrive)
@@ -82,15 +82,15 @@ func (r *RHEL8) PhysicalDrive(
 				"--name=" + metadata.DevicePath,
 			})
 			if err != nil {
-				return nil, errors.Wrap(err, "failed to run udevadm physical drive command")
+				return nil, errors.Wrap(err, "failed to run udevadm physical drive info command")
 			}
 
 			physicalDrive, err = ParseUDevADMOutput(output)
 			if err != nil {
-				return nil, errors.Wrap(err, "failed to parse udevadm output")
+				return nil, errors.Wrap(err, "failed to parse udevadm physical drive info command output")
 			}
 
-			physicalDrive.DevicePath = metadata.DevicePath
+			physicalDrive.Metadata = metadata
 			physicalDrive.Size = device.Size
 
 			switch device.Rotational {
@@ -116,12 +116,12 @@ func (r *RHEL8) listBlockDevices() ([]BlockDevice, error) {
 		"--output name,rota,size,type",
 	})
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to list block devices")
+		return nil, errors.Wrap(err, "failed to run lsblk command")
 	}
 
 	blockDevices, err := ParseLSBLKOutput(output)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to parse lsblk output")
+		return nil, errors.Wrap(err, "failed to parse lsblk command output")
 	}
 
 	return blockDevices, nil
@@ -133,17 +133,21 @@ func ParseUDevADMOutput(output []byte) (*physicaldrive.PhysicalDrive, error) {
 	physicalDrive := &physicaldrive.PhysicalDrive{}
 
 	for _, line := range lines {
-		if strings.HasPrefix(line, "E: ID_MODEL=") {
+		switch {
+		case strings.HasPrefix(line, "E: ID_MODEL="):
 			physicalDrive.Model = strings.TrimPrefix(line, "E: ID_MODEL=")
-		} else if strings.HasPrefix(line, "E: ID_SERIAL_SHORT=") {
+		case strings.HasPrefix(line, "E: ID_SERIAL_SHORT="):
 			physicalDrive.Serial = strings.TrimPrefix(line, "E: ID_SERIAL_SHORT=")
-		} else if strings.HasPrefix(line, "E: ID_WWN=") {
+		case strings.HasPrefix(line, "E: ID_WWN="):
 			physicalDrive.ID = strings.TrimPrefix(line, "E: ID_WWN=")
-		} else if strings.HasPrefix(line, "E: DEVNAME=") {
-			physicalDrive.DevicePath = strings.TrimPrefix(line, "E: DEVNAME=")
-		} else if strings.HasPrefix(line, "E: DEVLINKS=") {
-			devlinks := strings.Split(strings.TrimPrefix(line, "E: DEVLINKS="), " ")
+		case strings.HasPrefix(line, "E: DEVNAME="):
+			if physicalDrive.Metadata == nil {
+				physicalDrive.Metadata = &physicaldrive.Metadata{}
+			}
 
+			physicalDrive.DevicePath = strings.TrimPrefix(line, "E: DEVNAME=")
+		case strings.HasPrefix(line, "E: DEVLINKS="):
+			devlinks := strings.Split(strings.TrimPrefix(line, "E: DEVLINKS="), " ")
 			for _, devlink := range devlinks {
 				if len(devlink) > len(physicalDrive.PermanentPath) && strings.Contains(devlink, "by-id") {
 					physicalDrive.PermanentPath = devlink
