@@ -2,6 +2,7 @@
 package physicaldrivegetter
 
 import (
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -15,8 +16,9 @@ import (
 
 type (
 	RHEL8 struct {
-		UDevADM commandrunner.CommandRunner
-		LSBLK   commandrunner.CommandRunner
+		UDevADM  commandrunner.CommandRunner
+		LSBLK    commandrunner.CommandRunner
+		SmartCTL commandrunner.CommandRunner
 	}
 
 	BlockDevice struct {
@@ -24,6 +26,8 @@ type (
 		Size       uint64
 		Rotational string
 		Type       string
+		Tran       string
+		MountPoint string
 	}
 )
 
@@ -32,6 +36,7 @@ var _ ports.PhysicalDrivesGetter = &RHEL8{}
 func NewRHEL8(
 	uDevADMCommandRunner *commandrunner.UDevADM,
 	lsblkCommandRunner *commandrunner.LSBLK,
+	smartCTLCommandRunner *commandrunner.SmartCTL,
 ) *RHEL8 {
 	return &RHEL8{
 		UDevADM: uDevADMCommandRunner,
@@ -93,9 +98,27 @@ func (r *RHEL8) PhysicalDrive(
 			physicalDrive.Metadata = metadata
 			physicalDrive.Size = device.Size
 
+			if device.MountPoint != "" {
+				physicalDrive.Status = physicaldrive.PDStatusUsed
+			} else {
+				status, err := r.physicalDriveStatus(device.DevicePath)
+				if err != nil {
+					return nil, errors.Wrap(err, "failed to get physical drive status")
+				}
+
+				physicalDrive.Status = status
+			}
+
 			switch device.Rotational {
-			case "0":
-				physicalDrive.Type = physicaldrive.DiskTypeSSD
+			default:
+				physicalDrive.Type = physicaldrive.DiskTypeUnknown
+			case "0": // Not a rotative disk, it's an SSD or NVMe
+				switch device.Tran {
+				case "sata":
+					physicalDrive.Type = physicaldrive.DiskTypeSSD
+				case "nvme":
+					physicalDrive.Type = physicaldrive.DiskTypeNVMe
+				}
 			case "1":
 				physicalDrive.Type = physicaldrive.DiskTypeHDD
 			}
@@ -107,13 +130,69 @@ func (r *RHEL8) PhysicalDrive(
 	return physicalDrive, nil
 }
 
+func (r *RHEL8) physicalDriveStatus(devicePath string) (physicaldrive.PDStatus, error) {
+	output, err := r.SmartCTL.Run([]string{
+		"-a",
+		devicePath,
+	})
+	if err != nil {
+		return physicaldrive.PDStatusUnknown, errors.Wrap(err, "failed to run smartctl command")
+	}
+
+	smartCTLLines := strings.Split(string(output), "\n")
+
+	var healthStatus string
+	for _, line := range smartCTLLines {
+		if strings.Contains(line, "overall-health") {
+			parts := strings.Split(line, ":")
+			if len(parts) > 1 {
+				healthStatus = strings.TrimSpace(parts[1])
+				break
+			}
+		}
+	}
+
+	if healthStatus != "PASSED" {
+		return physicaldrive.PDStatusFailed, nil
+	}
+
+	reallocatedCount := 0
+	pendingCount := 0
+	uncorrectableCount := 0
+
+	for _, line := range smartCTLLines {
+		re := regexp.MustCompile(`Reallocated Sector Count:\s+\d+`)
+		if re.MatchString(line) {
+			parts := strings.Fields(line)
+			reallocatedCount, _ = strconv.Atoi(parts[len(parts)-1])
+		}
+		re = regexp.MustCompile(`Current Pending Sector:\s+\d+`)
+		if re.MatchString(line) {
+			parts := strings.Fields(line)
+			pendingCount, _ = strconv.Atoi(parts[len(parts)-1])
+		}
+		re = regexp.MustCompile(`Offline Uncorrectable:\s+\d+`)
+		if re.MatchString(line) {
+			parts := strings.Fields(line)
+			uncorrectableCount, _ = strconv.Atoi(parts[len(parts)-1])
+		}
+
+	}
+
+	if reallocatedCount > 0 || pendingCount > 0 || uncorrectableCount > 0 {
+		return physicaldrive.PDStatusFailed, nil
+	}
+
+	return physicaldrive.PDStatusUnassignedGood, nil
+}
+
 func (r *RHEL8) listBlockDevices() ([]BlockDevice, error) {
 	output, err := r.LSBLK.Run([]string{
 		"--list",
 		"--paths",
 		"--bytes",
 		"--nodeps",
-		"--output name,rota,size,type",
+		"--output name,rota,size,type,tran,mountpoint",
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to run lsblk command")
@@ -196,6 +275,10 @@ func ParseLSBLKOutput(output []byte) ([]BlockDevice, error) {
 					device.Rotational = field
 				case "TYPE":
 					device.Type = field
+				case "TRAN":
+					device.Tran = field
+				case "MOUNTPOINT":
+					device.MountPoint = field
 				}
 			}
 		}

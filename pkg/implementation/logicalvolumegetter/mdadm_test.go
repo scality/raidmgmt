@@ -65,6 +65,7 @@ func TestMDADMLogicalVolumesSingle(t *testing.T) {
 
 	// Set up expected behavior of the mock
 	mockRunner.On("Run", []string{"--detail", "--scan", "--export"}).Return([]byte(mdadmExportOutput), nil)
+	mockRunner.On("Run", []string{"--detail", "/dev/md0", "--export"}).Return([]byte(mdadmExportOutput), nil)
 
 	// Use the mock object in your test
 	mdadm := &logicalvolumegetter.MDADM{CommandRunner: mockRunner}
@@ -78,11 +79,25 @@ func TestMDADMLogicalVolumesSingle(t *testing.T) {
 }
 
 func TestMDADMLogicalVolumes(t *testing.T) {
-	// // Create a mock object
+	// Create a mock object
 	mockRunner := &MockCommandRunner{}
 
 	// Set up expected behavior of the mock
 	mockRunner.On("Run", []string{"--detail", "--scan", "--export"}).Return([]byte(mdadmMultipleLogicalVolumesExportOutput), nil)
+	mockRunner.On("Run", []string{"--detail", "/dev/md0", "--export"}).Return([]byte(`MD_LEVEL=raid1
+MD_DEVICES=2
+MD_METADATA=1.2
+MD_UUID=0030d06e:fd0fa07d:0d04737a:dc97e22c
+MD_NAME=0
+MD_DEVICE_dev_nvme1n1_ROLE=1
+MD_DEVICE_dev_nvme1n1_DEV=/dev/nvme1n1`), nil)
+	mockRunner.On("Run", []string{"--detail", "/dev/md1", "--export"}).Return([]byte(`MD_LEVEL=raid1
+MD_DEVICES=2
+MD_METADATA=1.2
+MD_UUID=0030d06e:fd0fa07d:0d04737a:dc97e22c
+MD_NAME=1
+MD_DEVICE_dev_nvme1n1_ROLE=1
+MD_DEVICE_dev_nvme1n1_DEV=/dev/nvme2n1`), nil)
 
 	// Use the mock object in your test
 	mdadm := &logicalvolumegetter.MDADM{CommandRunner: mockRunner}
@@ -91,12 +106,12 @@ func TestMDADMLogicalVolumes(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, 2, len(logicalVolumes))
 
-	assert.Equal(t, "0", logicalVolumes[0].ID)
-	assert.Equal(t, 2, len(logicalVolumes[0].PDrivesMetadata))
+	assert.Equal(t, "0", logicalVolumes[0].Metadata.ID)
+	assert.Equal(t, 1, len(logicalVolumes[0].PDrivesMetadata))
 	assert.Equal(t, logicalvolume.RAIDLevel1, logicalVolumes[0].RAIDLevel)
 
-	assert.Equal(t, "1", logicalVolumes[1].ID)
-	assert.Equal(t, 2, len(logicalVolumes[1].PDrivesMetadata))
+	assert.Equal(t, "1", logicalVolumes[1].Metadata.ID)
+	assert.Equal(t, 1, len(logicalVolumes[1].PDrivesMetadata))
 	assert.Equal(t, logicalvolume.RAIDLevel1, logicalVolumes[1].RAIDLevel)
 }
 

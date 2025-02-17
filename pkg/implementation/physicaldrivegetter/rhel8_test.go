@@ -103,10 +103,10 @@ E: DEVNAME=/dev/nvme1n1`)
 		"--paths",
 		"--bytes",
 		"--nodeps",
-		"--output name,rota,size,type",
-	}).Return([]byte(`NAME         ROTA        SIZE TYPE
-/dev/nvme1n1    0  8589934592 disk
-/dev/nvme2n1    0  8589934592 disk`), nil)
+		"--output name,rota,size,type,tran",
+	}).Return([]byte(`NAME         ROTA        SIZE TYPE TRAN
+/dev/nvme1n1    0  8589934592 disk nvme
+/dev/nvme2n1    0  8589934592 disk nvme`), nil)
 
 	mockUDevADM.On("Run", []string{"info", "--query=all", "--name=/dev/nvme1n1"}).Return(uDevADMOutput, nil)
 	mockUDevADM.On("Run", []string{"info", "--query=all", "--name=/dev/nvme2n1"}).Return(uDevADMOutput, nil)
@@ -121,7 +121,7 @@ E: DEVNAME=/dev/nvme1n1`)
 				DevicePath: "/dev/nvme1n1",
 			},
 			Size: 8589934592,
-			Type: physicaldrive.DiskTypeSSD,
+			Type: physicaldrive.DiskTypeNVMe,
 		},
 		{
 			Model:    "Amazon Elastic Block Store",
@@ -129,7 +129,7 @@ E: DEVNAME=/dev/nvme1n1`)
 			ID:       "nvme.1d0f-766f6c3035656365373436653430666634393266-416d617a6f6e20456c617374696320426c6f636b2053746f7265-00000001",
 			Metadata: &physicaldrive.Metadata{DevicePath: "/dev/nvme2n1"},
 			Size:     8589934592,
-			Type:     physicaldrive.DiskTypeSSD,
+			Type:     physicaldrive.DiskTypeNVMe,
 		},
 	}
 
@@ -147,8 +147,8 @@ func TestPhysicalDrive(t *testing.T) {
 
 	r := physicaldrivegetter.RHEL8{UDevADM: &mockUDevADM, LSBLK: &mockLSBLK}
 
-	lsblkOutput := []byte(`NAME         ROTA        SIZE TYPE
-/dev/nvme1n1    0  8589934592 disk`)
+	lsblkOutput := []byte(`NAME         ROTA        SIZE TYPE TRAN
+/dev/nvme1n1    0  8589934592 disk sata`)
 
 	udevadmOutput := []byte(`E: ID_MODEL=Amazon Elastic Block Store
 E: ID_SERIAL_SHORT=vol05ece746e40ff492f
@@ -160,7 +160,7 @@ E: DEVNAME=/dev/nvme1n1`)
 		"--paths",
 		"--bytes",
 		"--nodeps",
-		"--output name,rota,size,type",
+		"--output name,rota,size,type,tran",
 	}).Return(lsblkOutput, nil)
 	mockUDevADM.On("Run", []string{"info", "--query=all", "--name=/dev/nvme1n1"}).Return(udevadmOutput, nil)
 

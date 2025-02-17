@@ -74,7 +74,7 @@ func NewMDADM(
 
 // LogicalVolumes returns all the logical volumes on the system.
 func (m *MDADM) LogicalVolumes(
-	metadata *raidcontroller.Metadata,
+	_ *raidcontroller.Metadata,
 ) ([]*logicalvolume.LogicalVolume, error) {
 	// List existing logical volumes
 	output, err := m.Run([]string{
@@ -95,24 +95,11 @@ func (m *MDADM) LogicalVolumes(
 	logicalVolumes := make([]*logicalvolume.LogicalVolume, 0, len(details))
 
 	for _, detail := range details {
-		devicePath := deviceNameToDevicePath(detail.Name)
-
-		// Fill the information about the logical volume
-		logicalVolume := &logicalvolume.LogicalVolume{
-			Metadata: &logicalvolume.Metadata{
-				CtrlMetadata: metadata,
-				ID:           detail.Name,
-			},
-			DevicePath:      devicePath,
-			RAIDLevel:       detail.RaidLevel,
-			PDrivesMetadata: make([]*physicaldrive.Metadata, 0, detail.DevicesCount),
-		}
-
-		for _, device := range detail.Devices {
-			logicalVolume.PDrivesMetadata = append(logicalVolume.PDrivesMetadata, &physicaldrive.Metadata{
-				DevicePath:   device.Path,
-				CtrlMetadata: metadata,
-			})
+		logicalVolume, err := m.LogicalVolume(&logicalvolume.Metadata{
+			ID: detail.Name,
+		})
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to get logical volume")
 		}
 
 		logicalVolumes = append(logicalVolumes, logicalVolume)
@@ -128,6 +115,11 @@ func (m *MDADM) LogicalVolume(
 	// It is assumed that the ID is the suffix of the device name
 	// 	md0, md1, md/0_0 should also be supported
 	devicePath := deviceNameToDevicePath(metadata.ID)
+
+	logicalVolumeStatus, err := m.getLogicalVolumeStatus(devicePath)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get logical volume status")
+	}
 
 	// Get the details of the logical volume
 	output, err := m.Run([]string{
@@ -146,6 +138,7 @@ func (m *MDADM) LogicalVolume(
 	}
 
 	logicalVolume := &logicalvolume.LogicalVolume{
+		Status: logicalVolumeStatus,
 		Metadata: &logicalvolume.Metadata{
 			ID:           details[0].Name,
 			CtrlMetadata: metadata.CtrlMetadata,
@@ -164,6 +157,38 @@ func (m *MDADM) LogicalVolume(
 	}
 
 	return logicalVolume, nil
+}
+
+func (m *MDADM) getLogicalVolumeStatus(devicePath string) (
+	logicalvolume.LVStatus,
+	error,
+) {
+	output, err := m.Run([]string{
+		"--detail",
+		devicePath,
+	})
+	if err != nil {
+		return logicalvolume.LVStatusUnknown, errors.Wrap(err, "failed to run mdadm detail command")
+	}
+
+	logicalVolumeStatus := logicalvolume.LVStatusUnknown
+
+	for _, line := range strings.Split(string(output), "\n") {
+		if strings.HasPrefix(line, "State :") {
+			switch strings.TrimSpace(strings.TrimPrefix(line, "State :")) {
+			case "degraded":
+				logicalVolumeStatus = logicalvolume.LVStatusDegraded
+			case "active":
+				logicalVolumeStatus = logicalvolume.LVStatusOptimal
+			case "failed":
+				logicalVolumeStatus = logicalvolume.LVStatusFailed
+			}
+
+			break
+		}
+	}
+
+	return logicalVolumeStatus, nil
 }
 
 //nolint:gocognit,funlen,cyclop // This function is complex by nature
