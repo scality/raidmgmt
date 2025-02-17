@@ -39,8 +39,9 @@ func NewRHEL8(
 	smartCTLCommandRunner *commandrunner.SmartCTL,
 ) *RHEL8 {
 	return &RHEL8{
-		UDevADM: uDevADMCommandRunner,
-		LSBLK:   lsblkCommandRunner,
+		UDevADM:  uDevADMCommandRunner,
+		LSBLK:    lsblkCommandRunner,
+		SmartCTL: smartCTLCommandRunner,
 	}
 }
 
@@ -142,6 +143,7 @@ func (r *RHEL8) physicalDriveStatus(devicePath string) (physicaldrive.PDStatus, 
 	smartCTLLines := strings.Split(string(output), "\n")
 
 	var healthStatus string
+
 	for _, line := range smartCTLLines {
 		if strings.Contains(line, "overall-health") {
 			parts := strings.Split(line, ":")
@@ -166,17 +168,18 @@ func (r *RHEL8) physicalDriveStatus(devicePath string) (physicaldrive.PDStatus, 
 			parts := strings.Fields(line)
 			reallocatedCount, _ = strconv.Atoi(parts[len(parts)-1])
 		}
+
 		re = regexp.MustCompile(`Current Pending Sector:\s+\d+`)
 		if re.MatchString(line) {
 			parts := strings.Fields(line)
 			pendingCount, _ = strconv.Atoi(parts[len(parts)-1])
 		}
+
 		re = regexp.MustCompile(`Offline Uncorrectable:\s+\d+`)
 		if re.MatchString(line) {
 			parts := strings.Fields(line)
 			uncorrectableCount, _ = strconv.Atoi(parts[len(parts)-1])
 		}
-
 	}
 
 	if reallocatedCount > 0 || pendingCount > 0 || uncorrectableCount > 0 {
