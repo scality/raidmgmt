@@ -195,7 +195,8 @@ func (r *RHEL8) listBlockDevices() ([]BlockDevice, error) {
 		"--paths",
 		"--bytes",
 		"--nodeps",
-		"--output name,rota,size,type,tran,mountpoint",
+		"--output",
+		"name,rota,size,type,tran,mountpoint",
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to run lsblk command")

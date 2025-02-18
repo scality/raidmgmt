@@ -27,9 +27,9 @@ func NewMDADM() *MDADM {
 func (m *MDADM) Run(args []string) ([]byte, error) {
 	cmd := MDADMExecCommand(m.cliPath, args...)
 
-	output, err := cmd.Output()
+	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to run mdadm command")
+		return nil, errors.Wrapf(err, "failed to run mdadm command: %s", string(output))
 	}
 
 	return output, nil

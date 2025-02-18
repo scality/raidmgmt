@@ -20,7 +20,7 @@ const (
 type (
 	// LogicalVolume represents a logical volume.
 	LogicalVolume struct {
-		*Metadata `json:"metadata,omitempty"` // Metadata of the logical volume
+		*Metadata // Metadata of the logical volume
 
 		PermanentPath   string                    `json:"permanent_path,omitempty"`           // Permanent path of the array (e.g.: /dev/disk/by-id/...)
 		DevicePath      string                    `json:"device_path,omitempty"`              // Device path of the array (e.g.: /dev/sda)

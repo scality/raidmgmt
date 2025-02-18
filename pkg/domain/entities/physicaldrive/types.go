@@ -17,7 +17,7 @@ const (
 type (
 	// PhysicalDrive represents a physical drive.
 	PhysicalDrive struct {
-		*Metadata `json:"metadata,omitempty"` // Metadata of the disk
+		*Metadata // Metadata of the disk
 
 		ID            string   `json:"id,omitempty"`             // ID
 		Vendor        string   `json:"vendor,omitempty"`         // Vendor

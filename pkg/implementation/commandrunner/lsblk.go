@@ -27,9 +27,9 @@ func NewLSBLK() *LSBLK {
 func (l *LSBLK) Run(args []string) ([]byte, error) {
 	cmd := LSBLKExecCommand(l.cliPath, args...)
 
-	output, err := cmd.Output()
+	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to run lsblk command")
+		return nil, errors.Wrapf(err, "failed to run lsblk command: %s", string(output))
 	}
 
 	return output, nil
