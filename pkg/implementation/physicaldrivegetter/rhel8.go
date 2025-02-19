@@ -1,4 +1,4 @@
-//nolint:cyclop // This package contains parser functions, which are inherently complex.
+//nolint:cyclop,funlen // This package contains parser functions, which are inherently complex.
 package physicaldrivegetter
 
 import (
@@ -81,56 +81,59 @@ func (r *RHEL8) PhysicalDrive(
 	physicalDrive := &physicaldrive.PhysicalDrive{}
 
 	for _, device := range blockDevices {
-		if device.DevicePath == metadata.DevicePath {
-			output, err := r.UDevADM.Run([]string{
-				"info",
-				"--query=all",
-				"--name=" + metadata.DevicePath,
-			})
-			if err != nil {
-				return nil, errors.Wrap(err, "failed to run udevadm physical drive info command")
-			}
-
-			physicalDrive, err = ParseUDevADMOutput(output)
-			if err != nil {
-				return nil, errors.Wrap(err, "failed to parse udevadm physical drive info command output")
-			}
-
-			physicalDrive.Metadata = metadata
-			physicalDrive.Size = device.Size
-
-			if device.MountPoint != "" {
-				physicalDrive.Status = physicaldrive.PDStatusUsed
-			} else {
-				status, err := r.physicalDriveStatus(device.DevicePath)
-				if err != nil {
-					return nil, errors.Wrap(err, "failed to get physical drive status")
-				}
-
-				physicalDrive.Status = status
-			}
-
-			switch device.Rotational {
-			default:
-				physicalDrive.Type = physicaldrive.DiskTypeUnknown
-			case "0": // Not a rotative disk, it's an SSD or NVMe
-				switch device.Tran {
-				case "sata":
-					physicalDrive.Type = physicaldrive.DiskTypeSSD
-				case "nvme":
-					physicalDrive.Type = physicaldrive.DiskTypeNVMe
-				}
-			case "1":
-				physicalDrive.Type = physicaldrive.DiskTypeHDD
-			}
-
-			break
+		if device.DevicePath != metadata.DevicePath {
+			continue
 		}
+
+		output, err := r.UDevADM.Run([]string{
+			"info",
+			"--query=all",
+			"--name=" + metadata.DevicePath,
+		})
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to run udevadm physical drive info command")
+		}
+
+		physicalDrive, err = ParseUDevADMOutput(output)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to parse udevadm physical drive info command output")
+		}
+
+		physicalDrive.Metadata = metadata
+		physicalDrive.Size = device.Size
+
+		if device.MountPoint != "" {
+			physicalDrive.Status = physicaldrive.PDStatusUsed
+		} else {
+			status, err := r.physicalDriveStatus(device.DevicePath)
+			if err != nil {
+				return nil, errors.Wrap(err, "failed to get physical drive status")
+			}
+
+			physicalDrive.Status = status
+		}
+
+		switch device.Rotational {
+		default:
+			physicalDrive.Type = physicaldrive.DiskTypeUnknown
+		case "0": // Not a rotative disk, it's an SSD or NVMe
+			switch device.Tran {
+			case "sata":
+				physicalDrive.Type = physicaldrive.DiskTypeSSD
+			case "nvme":
+				physicalDrive.Type = physicaldrive.DiskTypeNVMe
+			}
+		case "1":
+			physicalDrive.Type = physicaldrive.DiskTypeHDD
+		}
+
+		break
 	}
 
 	return physicalDrive, nil
 }
 
+//nolint:gocognit //
 func (r *RHEL8) physicalDriveStatus(devicePath string) (physicaldrive.PDStatus, error) {
 	output, err := r.SmartCTL.Run([]string{
 		"-a",
@@ -166,19 +169,40 @@ func (r *RHEL8) physicalDriveStatus(devicePath string) (physicaldrive.PDStatus, 
 		re := regexp.MustCompile(`Reallocated Sector Count:\s+\d+`)
 		if re.MatchString(line) {
 			parts := strings.Fields(line)
-			reallocatedCount, _ = strconv.Atoi(parts[len(parts)-1])
+
+			reallocatedCount, err = strconv.Atoi(parts[len(parts)-1])
+			if err != nil {
+				return physicaldrive.PDStatusUnknown, errors.Wrap(
+					err,
+					"failed to parse reallocated sector count",
+				)
+			}
 		}
 
 		re = regexp.MustCompile(`Current Pending Sector:\s+\d+`)
 		if re.MatchString(line) {
 			parts := strings.Fields(line)
-			pendingCount, _ = strconv.Atoi(parts[len(parts)-1])
+
+			pendingCount, err = strconv.Atoi(parts[len(parts)-1])
+			if err != nil {
+				return physicaldrive.PDStatusUnknown, errors.Wrap(
+					err,
+					"failed to parse current pending sector count",
+				)
+			}
 		}
 
 		re = regexp.MustCompile(`Offline Uncorrectable:\s+\d+`)
 		if re.MatchString(line) {
 			parts := strings.Fields(line)
-			uncorrectableCount, _ = strconv.Atoi(parts[len(parts)-1])
+
+			uncorrectableCount, err = strconv.Atoi(parts[len(parts)-1])
+			if err != nil {
+				return physicaldrive.PDStatusUnknown, errors.Wrap(
+					err,
+					"failed to parse offline uncorrectable sector count",
+				)
+			}
 		}
 	}
 

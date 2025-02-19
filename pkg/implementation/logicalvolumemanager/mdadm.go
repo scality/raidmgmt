@@ -13,6 +13,11 @@ import (
 	"github.com/scality/raidmgmt/pkg/implementation/commandrunner"
 )
 
+const (
+	raid1MinimalDriveCount  = 2
+	raid10MinimalDriveCount = 4
+)
+
 type MDADM struct {
 	commandrunner.CommandRunner
 	ports.LogicalVolumesGetter
@@ -112,6 +117,7 @@ func (m *MDADM) DeleteLV(metadata *logicalvolume.Metadata) error {
 	return nil
 }
 
+//nolint:funlen // Lots of stuff to do
 func (m *MDADM) AddPDsToLV(
 	lvMetadata *logicalvolume.Metadata,
 	pdsMetadata ...*physicaldrive.Metadata,
@@ -127,7 +133,6 @@ func (m *MDADM) AddPDsToLV(
 	}
 
 	// RAID level checks
-	// FIXME Implement this in a validation for logicalVolume
 	if logicalVolume.RAIDLevel == logicalvolume.RAIDLevel10 && len(pdsMetadata)%2 != 0 {
 		return errors.New("cannot add an odd number of physical drives to a RAID10")
 	}
@@ -189,14 +194,37 @@ func (m *MDADM) DeletePDsFromLV(
 	}
 
 	// RAID level checks
-	if logicalVolume.RAIDLevel == logicalvolume.RAIDLevel0 {
+	switch logicalVolume.RAIDLevel { //nolint:exhaustive // We only support a subset of RAID levels
+	case logicalvolume.RAIDLevel0:
 		return errors.New("cannot remove physical drives from a RAID0")
-	} else if logicalVolume.RAIDLevel == logicalvolume.RAIDLevel10 && len(pdsMetadata) > 1 {
-		return errors.New("cannot remove more than one physical drive from a RAID10")
+	case logicalvolume.RAIDLevel1:
+		if len(logicalVolume.PDrivesMetadata)-len(pdsMetadata) < raid1MinimalDriveCount {
+			return errors.New("cannot remove physical drives from a RAID1 with less than 2 physical drives")
+		}
+	case logicalvolume.RAIDLevel10:
+		if len(logicalVolume.PDrivesMetadata)-len(pdsMetadata) < raid10MinimalDriveCount {
+			return errors.New("cannot remove physical drives from a RAID10 with less than 4 physical drives")
+		}
+
+		if len(logicalVolume.PDrivesMetadata)-len(pdsMetadata)%2 != 0 {
+			return errors.New("cannot remove an odd number of physical drives from a RAID10")
+		}
+	default:
 	}
 
-	pvsDevicePaths := make([]string, 0, len(pdsMetadata))
-	for _, pdMetadata := range pdsMetadata {
+	// Check that the drives to be removed are in the logical volume
+	actualDrivesInLogicalVolumes := make([]*physicaldrive.Metadata, 0)
+
+	for _, pdMetadata := range logicalVolume.PDrivesMetadata {
+		for _, pd := range pdsMetadata {
+			if pdMetadata.DevicePath == pd.DevicePath {
+				actualDrivesInLogicalVolumes = append(actualDrivesInLogicalVolumes, pdMetadata)
+			}
+		}
+	}
+
+	pvsDevicePaths := make([]string, 0, len(actualDrivesInLogicalVolumes))
+	for _, pdMetadata := range actualDrivesInLogicalVolumes {
 		pvsDevicePaths = append(pvsDevicePaths, pdMetadata.DevicePath)
 	}
 
@@ -237,51 +265,35 @@ func (m *MDADM) DeletePDsFromLV(
 		)
 	}
 
-	// FIXME If raid10 and we have 4 disks, array need to be shrunk
-	// with --grow --array-size <size of the new array>
-	if logicalVolume.RAIDLevel == logicalvolume.RAIDLevel10 {
-		currentSizeOfArray := 0
+	currentSizeOfArray := uint64(0)
 
-		for _, pdMetadata := range logicalVolume.PDrivesMetadata {
-			physicalDrive, err := m.PhysicalDrive(pdMetadata)
-			if err != nil {
-				return errors.Wrap(err, "failed to get physical drive")
-			}
-
-			currentSizeOfArray += int(physicalDrive.Size)
-		}
-
-		newSizeOfArray := currentSizeOfArray
-
-		for _, pdMetadata := range pdsMetadata {
-			physicalDrive, err := m.PhysicalDrive(pdMetadata)
-			if err != nil {
-				return errors.Wrap(err, "failed to get physical drive")
-			}
-
-			newSizeOfArray -= int(physicalDrive.Size)
-		}
-
-		_, err = m.Run([]string{
-			"--grow", logicalVolume.DevicePath,
-			"--array-size", fmt.Sprintf("%d", newSizeOfArray),
-		})
+	for _, pdMetadata := range logicalVolume.PDrivesMetadata {
+		physicalDrive, err := m.PhysicalDrive(pdMetadata)
 		if err != nil {
-			return errors.Wrap(err, "failed to run mdadm grow command")
+			return errors.Wrap(err, "failed to get physical drive")
 		}
+
+		currentSizeOfArray += physicalDrive.Size
 	}
 
-	// Shrink the array to exclude the physical drive
+	newSizeOfArray := currentSizeOfArray
+
+	for _, pdMetadata := range pdsMetadata {
+		physicalDrive, err := m.PhysicalDrive(pdMetadata)
+		if err != nil {
+			return errors.Wrap(err, "failed to get physical drive")
+		}
+
+		newSizeOfArray -= physicalDrive.Size
+	}
+
 	_, err = m.Run([]string{
 		"--grow", logicalVolume.DevicePath,
+		"--array-size", fmt.Sprintf("%d", newSizeOfArray),
 		"--raid-devices", fmt.Sprintf("%d", len(logicalVolume.PDrivesMetadata)-len(pdsMetadata)),
 	})
 	if err != nil {
-		return errors.Wrapf(
-			err,
-			"failed to run mdadm grow command: %s",
-			strings.Join(pvsDevicePaths, ","),
-		)
+		return errors.Wrap(err, "failed to run mdadm grow command")
 	}
 
 	return nil

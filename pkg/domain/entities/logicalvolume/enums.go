@@ -42,7 +42,7 @@ func (r RAIDLevel) String() string {
 	case RAIDLevel10:
 		return "RAID10"
 	default:
-		return "Unknown"
+		return string(RAIDLevelUnknown)
 	}
 }
 
@@ -53,7 +53,7 @@ func (r ReadPolicy) String() string {
 	case ReadPolicyNoReadAhead:
 		return "NoReadAhead"
 	default:
-		return "Unknown"
+		return string(ReadPolicyUnknown)
 	}
 }
 
@@ -66,7 +66,7 @@ func (w WritePolicy) String() string {
 	case WritePolicyAlwaysWriteBack:
 		return "AlwaysWriteBack"
 	default:
-		return "Unknown"
+		return string(WritePolicyUnknown)
 	}
 }
 
@@ -77,7 +77,7 @@ func (i IOPolicy) String() string {
 	case IOPolicyCached:
 		return "Cached"
 	default:
-		return "Unknown"
+		return string(IOPolicyUnknown)
 	}
 }
 
@@ -90,6 +90,6 @@ func (l LVStatus) String() string {
 	case LVStatusFailed:
 		return "Failed"
 	default:
-		return "Unknown"
+		return string(LVStatusUnknown)
 	}
 }
