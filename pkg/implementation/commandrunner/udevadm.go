@@ -29,9 +29,9 @@ func NewUDevADM() *UDevADM {
 func (u *UDevADM) Run(args []string) ([]byte, error) {
 	cmd := UDevADMExecCommand(u.cliPath, args...)
 
-	output, err := cmd.Output()
+	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to run udevadm command")
+		return nil, errors.Wrapf(err, "failed to run udevadm command: %s", string(output))
 	}
 
 	return output, nil

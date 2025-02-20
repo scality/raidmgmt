@@ -219,8 +219,8 @@ func ParseMDADMExportOutput(output []byte) ([]*MDADMExportDetails, error) {
 				currentDetails.Metadata = strings.TrimPrefix(line, "MD_METADATA=")
 			case strings.HasPrefix(line, "MD_UUID="):
 				currentDetails.UUID = strings.TrimPrefix(line, "MD_UUID=")
-			case strings.HasPrefix(line, "MD_NAME="):
-				currentDetails.Name = strings.TrimPrefix(line, "MD_NAME=")
+			case strings.HasPrefix(line, "MD_DEVNAME="):
+				currentDetails.Name = strings.TrimPrefix(line, "MD_DEVNAME=")
 			case strings.HasPrefix(line, "MD_DEVICE_"):
 				if currentDetails.Devices == nil {
 					currentDetails.Devices = make(map[string]MDADMDevices)

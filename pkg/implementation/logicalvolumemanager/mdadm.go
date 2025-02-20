@@ -265,35 +265,22 @@ func (m *MDADM) DeletePDsFromLV(
 		)
 	}
 
-	currentSizeOfArray := uint64(0)
-
-	for _, pdMetadata := range logicalVolume.PDrivesMetadata {
-		physicalDrive, err := m.PhysicalDrive(pdMetadata)
-		if err != nil {
-			return errors.Wrap(err, "failed to get physical drive")
-		}
-
-		currentSizeOfArray += physicalDrive.Size
-	}
-
-	newSizeOfArray := currentSizeOfArray
-
-	for _, pdMetadata := range pdsMetadata {
-		physicalDrive, err := m.PhysicalDrive(pdMetadata)
-		if err != nil {
-			return errors.Wrap(err, "failed to get physical drive")
-		}
-
-		newSizeOfArray -= physicalDrive.Size
-	}
-
+	// Reduce the device count of the array
 	_, err = m.Run([]string{
 		"--grow", logicalVolume.DevicePath,
-		"--array-size", fmt.Sprintf("%d", newSizeOfArray),
 		"--raid-devices", fmt.Sprintf("%d", len(logicalVolume.PDrivesMetadata)-len(pdsMetadata)),
 	})
 	if err != nil {
 		return errors.Wrap(err, "failed to run mdadm grow command")
+	}
+
+	// Reduce the size of the array
+	_, err = m.Run([]string{
+		"--grow", logicalVolume.DevicePath,
+		"--array-size=max",
+	})
+	if err != nil {
+		return errors.Wrap(err, "failed to run mdadm grow command to adapt array size")
 	}
 
 	return nil

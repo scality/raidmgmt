@@ -501,7 +501,7 @@ severity:
   default-severity: warning
 
 run:
-  go: '1.23.5'
+  go: '1.24.0'
   timeout: 10m
   issues-exit-code: 100
   tests: true

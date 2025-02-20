@@ -107,7 +107,7 @@ func (r *RHEL8) PhysicalDrive(
 		} else {
 			status, err := r.physicalDriveStatus(device.DevicePath)
 			if err != nil {
-				return nil, errors.Wrap(err, "failed to get physical drive status")
+				return nil, errors.Wrapf(err, "failed to get physical drive status: %s", device.DevicePath)
 			}
 
 			physicalDrive.Status = status
@@ -140,7 +140,10 @@ func (r *RHEL8) physicalDriveStatus(devicePath string) (physicaldrive.PDStatus, 
 		devicePath,
 	})
 	if err != nil {
-		return physicaldrive.PDStatusUnknown, errors.Wrap(err, "failed to run smartctl command")
+		return physicaldrive.PDStatusUnknown, errors.Wrap(
+			err,
+			"failed to get physical drive status with smartctl",
+		)
 	}
 
 	smartCTLLines := strings.Split(string(output), "\n")
@@ -223,7 +226,7 @@ func (r *RHEL8) listBlockDevices() ([]BlockDevice, error) {
 		"name,rota,size,type,tran,mountpoint",
 	})
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to run lsblk command")
+		return nil, errors.Wrap(err, "failed to run list block devices command")
 	}
 
 	blockDevices, err := ParseLSBLKOutput(output)

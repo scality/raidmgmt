@@ -28,9 +28,9 @@ func NewSmartCTL() *SmartCTL {
 func (s *SmartCTL) Run(args []string) ([]byte, error) {
 	cmd := SmartCTLExecCommand(s.cliPath, args...)
 
-	output, err := cmd.Output()
+	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to run smartctl command")
+		return nil, errors.Wrapf(err, "failed to run smartctl command: %s", err)
 	}
 
 	return output, nil
