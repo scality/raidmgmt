@@ -22,12 +22,14 @@ type (
 	}
 
 	BlockDevice struct {
-		DevicePath string
-		Size       uint64
-		Rotational string
-		Type       string
-		Tran       string
-		MountPoint string
+		DevicePath     string
+		Size           uint64
+		Rotational     string
+		Type           string
+		Tran           string
+		MountPoint     string
+		PartitionType  string
+		FilesystemType string
 	}
 )
 
@@ -73,61 +75,53 @@ func (r *RHEL8) PhysicalDrives(
 func (r *RHEL8) PhysicalDrive(
 	metadata *physicaldrive.Metadata,
 ) (*physicaldrive.PhysicalDrive, error) {
-	blockDevices, err := r.listBlockDevices()
+	device, err := r.getBlockDevice(metadata.DevicePath)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to list block devices")
+		return nil, errors.Wrapf(err, "failed to get block device: %s", metadata.DevicePath)
 	}
 
 	physicalDrive := &physicaldrive.PhysicalDrive{}
 
-	for _, device := range blockDevices {
-		if device.DevicePath != metadata.DevicePath {
-			continue
-		}
+	output, err := r.UDevADM.Run([]string{
+		"info",
+		"--query=all",
+		"--name=" + metadata.DevicePath,
+	})
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to run udevadm physical drive info command")
+	}
 
-		output, err := r.UDevADM.Run([]string{
-			"info",
-			"--query=all",
-			"--name=" + metadata.DevicePath,
-		})
+	physicalDrive, err = ParseUDevADMOutput(output)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to parse udevadm physical drive info command output")
+	}
+
+	physicalDrive.Metadata = metadata
+	physicalDrive.Size = device.Size
+
+	if device.MountPoint != "" || device.FilesystemType != "" || device.PartitionType != "" {
+		physicalDrive.Status = physicaldrive.PDStatusUsed
+	} else {
+		status, err := r.physicalDriveStatus(device.DevicePath)
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to run udevadm physical drive info command")
+			return nil, errors.Wrapf(err, "failed to get physical drive status: %s", device.DevicePath)
 		}
 
-		physicalDrive, err = ParseUDevADMOutput(output)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to parse udevadm physical drive info command output")
+		physicalDrive.Status = status
+	}
+
+	switch device.Rotational {
+	default:
+		physicalDrive.Type = physicaldrive.DiskTypeUnknown
+	case "0": // Not a rotative disk, it's an SSD or NVMe
+		switch device.Tran {
+		case "sata":
+			physicalDrive.Type = physicaldrive.DiskTypeSSD
+		case "nvme":
+			physicalDrive.Type = physicaldrive.DiskTypeNVMe
 		}
-
-		physicalDrive.Metadata = metadata
-		physicalDrive.Size = device.Size
-
-		if device.MountPoint != "" {
-			physicalDrive.Status = physicaldrive.PDStatusUsed
-		} else {
-			status, err := r.physicalDriveStatus(device.DevicePath)
-			if err != nil {
-				return nil, errors.Wrapf(err, "failed to get physical drive status: %s", device.DevicePath)
-			}
-
-			physicalDrive.Status = status
-		}
-
-		switch device.Rotational {
-		default:
-			physicalDrive.Type = physicaldrive.DiskTypeUnknown
-		case "0": // Not a rotative disk, it's an SSD or NVMe
-			switch device.Tran {
-			case "sata":
-				physicalDrive.Type = physicaldrive.DiskTypeSSD
-			case "nvme":
-				physicalDrive.Type = physicaldrive.DiskTypeNVMe
-			}
-		case "1":
-			physicalDrive.Type = physicaldrive.DiskTypeHDD
-		}
-
-		break
+	case "1":
+		physicalDrive.Type = physicaldrive.DiskTypeHDD
 	}
 
 	return physicalDrive, nil
@@ -216,6 +210,31 @@ func (r *RHEL8) physicalDriveStatus(devicePath string) (physicaldrive.PDStatus, 
 	return physicaldrive.PDStatusUnassignedGood, nil
 }
 
+func (r *RHEL8) getBlockDevice(devicePath string) (*BlockDevice, error) {
+	output, err := r.LSBLK.Run([]string{
+		devicePath,
+		"--paths",
+		"--bytes",
+		"--nodeps",
+		"--output",
+		"name,rota,size,type,tran,mountpoint,fstype,parttype",
+	})
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get block device using lsblk")
+	}
+
+	blockDevices, err := ParseLSBLKOutput(output)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to parse lsblk command output")
+	}
+
+	if len(blockDevices) <= 0 {
+		return nil, errors.Errorf("block device not found: %s", devicePath)
+	}
+
+	return &blockDevices[0], errors.Errorf("block device not found: %s", devicePath)
+}
+
 func (r *RHEL8) listBlockDevices() ([]BlockDevice, error) {
 	output, err := r.LSBLK.Run([]string{
 		"--list",
@@ -223,7 +242,7 @@ func (r *RHEL8) listBlockDevices() ([]BlockDevice, error) {
 		"--bytes",
 		"--nodeps",
 		"--output",
-		"name,rota,size,type,tran,mountpoint",
+		"name,rota,size,type,tran,mountpoint,fstype,parttype",
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to run list block devices command")
@@ -310,13 +329,16 @@ func ParseLSBLKOutput(output []byte) ([]BlockDevice, error) {
 					device.Tran = field
 				case "MOUNTPOINT":
 					device.MountPoint = field
+				case "FSTYPE":
+					device.FilesystemType = field
+				case "PARTTYPE":
+					device.PartitionType = field
 				}
 			}
 		}
 
 		// Skip RAID devices, they will be listed later
-		// Also ignore partitions, only interested in physical drives
-		if device.Type == "part" || strings.Contains(device.DevicePath, "md") {
+		if strings.Contains(device.DevicePath, "md") {
 			continue
 		}
 

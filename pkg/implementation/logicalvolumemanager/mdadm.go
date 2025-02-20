@@ -175,6 +175,15 @@ func (m *MDADM) AddPDsToLV(
 		)
 	}
 
+	// Enhance the size of the array
+	_, err = m.Run([]string{
+		"--grow", logicalVolume.DevicePath,
+		"--array-size=max",
+	})
+	if err != nil {
+		return errors.Wrap(err, "failed to run mdadm grow command to adapt array size")
+	}
+
 	return nil
 }
 
