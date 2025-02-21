@@ -73,9 +73,7 @@ func (m *MDADM) CreateLV(request *logicalvolume.Request) (*logicalvolume.Logical
 	}
 
 	// Get the newly created logical volume metadata
-	logicalVolume, err := m.LogicalVolume(&logicalvolume.Metadata{
-		ID: request.ID,
-	})
+	logicalVolume, err := m.LogicalVolume(&logicalvolume.Metadata{})
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to get logical volume: %s", request.ID)
 	}
@@ -132,11 +130,6 @@ func (m *MDADM) AddPDsToLV(
 		return errors.New("cannot add physical drives to a failed logical volume")
 	}
 
-	// RAID level checks
-	if logicalVolume.RAIDLevel == logicalvolume.RAIDLevel10 && len(pdsMetadata)%2 != 0 {
-		return errors.New("cannot add an odd number of physical drives to a RAID10")
-	}
-
 	devicesPaths := make([]string, 0, len(pdsMetadata))
 
 	for _, pdMetadata := range pdsMetadata {
@@ -154,8 +147,33 @@ func (m *MDADM) AddPDsToLV(
 		devicesPaths = append(devicesPaths, pdMetadata.DevicePath)
 	}
 
+	if logicalVolume.RAIDLevel == logicalvolume.RAIDLevel10 {
+		// Add the devices to the array
+		_, err = m.Run(append([]string{
+			logicalVolume.DevicePath,
+			"--add",
+		}, devicesPaths...))
+		if err != nil {
+			return errors.Wrapf(
+				err,
+				"failed to run mdadm add command with %s",
+				strings.Join(devicesPaths, ","),
+			)
+		}
+
+		// Enhance the size of the array
+		_, err = m.Run([]string{
+			"--grow", logicalVolume.DevicePath,
+			"--array-size=max",
+		})
+		if err != nil {
+			return errors.Wrap(err, "failed to run mdadm grow command to adapt array size")
+		}
+	}
+
 	arrayLength := len(logicalVolume.PDrivesMetadata) + len(pdsMetadata)
 
+	// This below is valid for raid0
 	addCmd := []string{
 		"--grow", logicalVolume.DevicePath,
 		"--level", string(logicalVolume.RAIDLevel),
@@ -173,15 +191,6 @@ func (m *MDADM) AddPDsToLV(
 			"failed to run mdadm add / grow command with %s",
 			strings.Join(devicesPaths, ","),
 		)
-	}
-
-	// Enhance the size of the array
-	_, err = m.Run([]string{
-		"--grow", logicalVolume.DevicePath,
-		"--array-size=max",
-	})
-	if err != nil {
-		return errors.Wrap(err, "failed to run mdadm grow command to adapt array size")
 	}
 
 	return nil
@@ -202,34 +211,29 @@ func (m *MDADM) DeletePDsFromLV(
 		return errors.New("cannot remove physical drives from a failed logical volume")
 	}
 
+	// Check that the drives to be removed are in the logical volume
+	actualDrivesInLogicalVolumes := make([]*physicaldrive.Metadata, 0)
+
+	for _, pdMetadata := range logicalVolume.PDrivesMetadata {
+		for _, pd := range pdsMetadata {
+			if pdMetadata.DevicePath != pd.DevicePath {
+				return errors.New("physical drive not found in the logical volume")
+			}
+
+			actualDrivesInLogicalVolumes = append(actualDrivesInLogicalVolumes, pdMetadata)
+		}
+	}
+
 	// RAID level checks
 	switch logicalVolume.RAIDLevel { //nolint:exhaustive // We only support a subset of RAID levels
 	case logicalvolume.RAIDLevel0:
 		return errors.New("cannot remove physical drives from a RAID0")
 	case logicalvolume.RAIDLevel1:
 		if len(logicalVolume.PDrivesMetadata)-len(pdsMetadata) < raid1MinimalDriveCount {
-			return errors.New("cannot remove physical drives from a RAID1 with less than 2 physical drives")
+			return errors.New("cannot remove physical drives from a RAID1 with a single physical drive")
 		}
 	case logicalvolume.RAIDLevel10:
-		if len(logicalVolume.PDrivesMetadata)-len(pdsMetadata) < raid10MinimalDriveCount {
-			return errors.New("cannot remove physical drives from a RAID10 with less than 4 physical drives")
-		}
-
-		if len(logicalVolume.PDrivesMetadata)-len(pdsMetadata)%2 != 0 {
-			return errors.New("cannot remove an odd number of physical drives from a RAID10")
-		}
 	default:
-	}
-
-	// Check that the drives to be removed are in the logical volume
-	actualDrivesInLogicalVolumes := make([]*physicaldrive.Metadata, 0)
-
-	for _, pdMetadata := range logicalVolume.PDrivesMetadata {
-		for _, pd := range pdsMetadata {
-			if pdMetadata.DevicePath == pd.DevicePath {
-				actualDrivesInLogicalVolumes = append(actualDrivesInLogicalVolumes, pdMetadata)
-			}
-		}
 	}
 
 	pvsDevicePaths := make([]string, 0, len(actualDrivesInLogicalVolumes))
@@ -272,6 +276,11 @@ func (m *MDADM) DeletePDsFromLV(
 			"failed to run mdadm remove command: %s",
 			strings.Join(pvsDevicePaths, ","),
 		)
+	}
+
+	// Cannot shrink a RAID10
+	if logicalVolume.RAIDLevel == logicalvolume.RAIDLevel10 {
+		return nil
 	}
 
 	// Reduce the device count of the array
