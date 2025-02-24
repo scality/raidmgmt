@@ -6,7 +6,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-const smartctlBinaryPath = "/usr/sbin/smartctl"
+const SmartCTLBinaryPath = "/usr/sbin/smartctl"
 
 type SmartCTL struct {
 	cliPath string
@@ -21,7 +21,7 @@ var (
 
 func NewSmartCTL() *SmartCTL {
 	return &SmartCTL{
-		cliPath: smartctlBinaryPath,
+		cliPath: SmartCTLBinaryPath,
 	}
 }
 

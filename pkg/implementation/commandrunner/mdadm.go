@@ -6,7 +6,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-const mdadmBinaryPath = "/usr/sbin/mdadm"
+const MDADMBinaryPath = "/usr/sbin/mdadm"
 
 type MDADM struct {
 	cliPath string
@@ -20,7 +20,7 @@ var (
 
 func NewMDADM() *MDADM {
 	return &MDADM{
-		cliPath: mdadmBinaryPath,
+		cliPath: MDADMBinaryPath,
 	}
 }
 

@@ -11,7 +11,7 @@ type UDevADM struct {
 }
 
 const (
-	uDevADMBinaryPath = "/usr/bin/udevadm"
+	UDevADMBinaryPath = "/usr/bin/udevadm"
 )
 
 var (
@@ -22,7 +22,7 @@ var (
 
 func NewUDevADM() *UDevADM {
 	return &UDevADM{
-		cliPath: uDevADMBinaryPath,
+		cliPath: UDevADMBinaryPath,
 	}
 }
 

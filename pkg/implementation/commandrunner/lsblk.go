@@ -6,7 +6,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-const lsblkBinaryPath = "/usr/bin/lsblk"
+const LSBLKBinaryPath = "/usr/bin/lsblk"
 
 type LSBLK struct {
 	cliPath string
@@ -20,7 +20,7 @@ var (
 
 func NewLSBLK() *LSBLK {
 	return &LSBLK{
-		cliPath: lsblkBinaryPath,
+		cliPath: LSBLKBinaryPath,
 	}
 }
 
