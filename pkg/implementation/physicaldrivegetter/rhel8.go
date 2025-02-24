@@ -232,7 +232,7 @@ func (r *RHEL8) getBlockDevice(devicePath string) (*BlockDevice, error) {
 		return nil, errors.Errorf("block device not found: %s", devicePath)
 	}
 
-	return &blockDevices[0], errors.Errorf("block device not found: %s", devicePath)
+	return &blockDevices[0], nil
 }
 
 func (r *RHEL8) listBlockDevices() ([]BlockDevice, error) {

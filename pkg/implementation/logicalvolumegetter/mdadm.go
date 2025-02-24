@@ -282,6 +282,10 @@ func splitOutputOnMDLevel(output []byte) [][]byte {
 }
 
 func deviceNameToDevicePath(deviceName string) string {
+	if strings.HasSuffix(deviceName, "_0") {
+		return fmt.Sprintf("/dev/md/%s", deviceName)
+	}
+
 	if mdadmDeviceNameRegex.MatchString(deviceName) {
 		return fmt.Sprintf("/dev/md/%s", deviceName)
 	}
