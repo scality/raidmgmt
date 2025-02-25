@@ -19,6 +19,7 @@ const (
 )
 
 // mapSize is a map of size units to their respective bytes.
+// nolint: gochecknoglobals // This map is used to convert size units to bytes.
 var mapSize = map[string]uint64{
 	"KB": KB,
 	"MB": MB,

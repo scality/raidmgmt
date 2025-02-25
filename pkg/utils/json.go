@@ -49,7 +49,7 @@ func UnmarshalToPointer[T any](responseData json.RawMessage, key string) (*T, er
 // If the key is found, the value is returned as json.RawMessage.
 // The function recurses if the value is an object.
 // If the key is not found, the function returns false.
-// nolint: gocognit
+// nolint: gocognit // This function is complex by nature
 func searchForKey(data json.RawMessage, targetKey string) (json.RawMessage, bool) {
 	decoder := json.NewDecoder(bytes.NewReader(data))
 
