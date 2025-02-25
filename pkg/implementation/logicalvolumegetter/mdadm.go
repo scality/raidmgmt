@@ -16,8 +16,6 @@ import (
 )
 
 const (
-	mdadmDeviceNameRegexPattern = "^._.$"
-
 	mdadmMatchDeviceRegexpPattern  = `MD_DEVICE_(.*)_(ROLE|DEV)=(.*)`
 	mdadmMatchDeviceRegexpPattern2 = `MD_LEVEL`
 )
@@ -59,7 +57,6 @@ type (
 var (
 	_ ports.LogicalVolumesGetter = &MDADM{}
 
-	mdadmDeviceNameRegex    = regexp.MustCompile(mdadmDeviceNameRegexPattern)
 	mdadmMatchDeviceRegexp  = regexp.MustCompile(mdadmMatchDeviceRegexpPattern)
 	mdadmMatchDeviceRegexp2 = regexp.MustCompile(mdadmMatchDeviceRegexpPattern2)
 )
@@ -283,10 +280,6 @@ func splitOutputOnMDLevel(output []byte) [][]byte {
 
 func deviceNameToDevicePath(deviceName string) string {
 	if strings.HasSuffix(deviceName, "_0") {
-		return fmt.Sprintf("/dev/md/%s", deviceName)
-	}
-
-	if mdadmDeviceNameRegex.MatchString(deviceName) {
 		return fmt.Sprintf("/dev/md/%s", deviceName)
 	}
 
