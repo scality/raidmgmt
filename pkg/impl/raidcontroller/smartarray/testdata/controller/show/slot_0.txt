@@ -1,0 +1,89 @@
+
+HPE Smart Array P816i-a SR Gen10 in Slot 0 (Embedded)
+   Bus Interface: PCI
+   Slot: 0
+   Serial Number: PWXLA0CRHF10FM
+   RAID 6 Status: Enabled
+   Controller Status: OK
+   Hardware Revision: A
+   Firmware Version: 5.00
+   Firmware Supports Online Firmware Activation: False
+   Rebuild Priority: High
+   Expand Priority: Medium
+   Surface Scan Delay: 3 secs
+   Surface Scan Mode: Idle
+   Parallel Surface Scan Supported: Yes
+   Current Parallel Surface Scan Count: 1
+   Max Parallel Surface Scan Count: 16
+   Queue Depth: Automatic
+   Monitor and Performance Delay: 60 min
+   Elevator Sort: Enabled
+   Degraded Performance Optimization: Disabled
+   Inconsistency Repair Policy: Disabled
+   Write Cache Bypass Threshold Size: 1040 KiB
+   Wait for Cache Room: Disabled
+   Surface Analysis Inconsistency Notification: Disabled
+   Post Prompt Timeout: 15 secs
+   Cache Board Present: True
+   Cache Status: OK
+   Cache Ratio: 10% Read / 90% Write
+   Configured Drive Write Cache Policy: Disable
+   Unconfigured Drive Write Cache Policy: Default
+   Total Cache Size: 4.0
+   Total Cache Memory Available: 3.8
+   Battery Backed Cache Size: 3.8
+   No-Battery Write Cache: Disabled
+   SSD Caching RAID5 WriteBack Enabled: True
+   SSD Caching Version: 2
+   Cache Backup Power Source: Batteries
+   Battery/Capacitor Count: 1
+   Battery/Capacitor Status: OK
+   SATA NCQ Supported: True
+   Spare Activation Mode: Activate on physical drive failure (default)
+   Spare Spindown Policy Supported: False
+   Controller Temperature (C): 60
+   Capacitor Temperature  (C): 48
+   Number of Ports: 4 Internal only
+   Encryption: Not Set
+   Express Local Encryption: False
+   SED Based Encryption Supported: False
+   Driver Name: smartpqi
+   Driver Version: Linux 2.1.24-046
+   WWN Port: 51402EC0167C85E0
+   PCI Address (Domain:Bus:Device.Function): 0000:5C:00.0
+   Negotiated PCIe Data Rate: PCIe 3.0 x8 (7880 MB/s)
+   Controller Mode: Mixed
+   Port Max Phy Rate Limiting Supported: False
+   Latency Scheduler Setting: Disabled
+   Current Power Mode: MaxPerformance
+   Survival Mode: Enabled
+   Host Serial Number: 2M21210201
+   Sanitize Erase Supported: True
+   Sanitize Lock: None
+   Sensor ID: 0
+      Location: Capacitor
+      Current Value (C): 48
+      Max Value Since Power On: 52
+   Sensor ID: 1
+      Location: ASIC
+      Current Value (C): 60
+      Max Value Since Power On: 66
+   Sensor ID: 2
+      Location: Unknown
+      Current Value (C): 46
+      Max Value Since Power On: 51
+   Primary Boot Volume: None
+   Secondary Boot Volume: None
+   SPDM Supports Get Slot Certificate Chain: no
+   SPDM Supports Get Controller Info       : no
+   SPDM Supports Get Slot Info             : no
+   SPDM Supports Set Import Certificate    : no
+   SPDM Supports Set Invalidate Slot       : no
+   Surface Scan Completion Supported: False
+   Persistent Event Log Policy Change Supported: False
+   UEFI Health Reporting Mode Supported: False
+   Firmware Supports NVMe Log Pages: False
+   Firmware Supports NAND Field: False
+   Firmware Supports NOR Field: False
+
+

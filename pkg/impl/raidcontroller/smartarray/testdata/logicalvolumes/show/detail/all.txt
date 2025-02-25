@@ -1,0 +1,253 @@
+
+HPE Smart Array P816i-a SR Gen10 in Slot 0 (Embedded)
+
+   Array A
+
+      Logical Drive: 1
+         Size: 745.18 GB
+         Fault Tolerance: 1
+         Heads: 255
+         Sectors Per Track: 32
+         Cylinders: 65535
+         Strip Size: 256 KB
+         Full Stripe Size: 256 KB
+         Status: OK
+         Unrecoverable Media Errors: None
+         MultiDomain Status: OK
+         Caching:  Disabled
+         Last Surface Scan Completed: False
+         Unique Identifier: 600508B1001CF3D41DB2683BA2B29D47
+         Disk Name: /dev/sdc 
+         Mount Points: 1024 MiB Partition   2, 600 MiB Partition   1 /boot, /boot/efi
+         Disk Partition Information
+            Partition   2: Basic, 1024 MiB, /boot
+            Partition   1: Basic, 600 MiB, /boot/efi
+         Logical Drive Label: OS Drive
+         Mirror Group 1:
+            physicaldrive 4I:6:1 (port 4I:box 6:bay 1, SAS SSD, 800 GB, OK)
+         Mirror Group 2:
+            physicaldrive 4I:6:2 (port 4I:box 6:bay 2, SAS SSD, 800 GB, OK)
+         Drive Type: Data
+         LD Acceleration Method: Smart Path
+
+
+   Array B
+
+      Logical Drive: 2
+         Size: 5.46 TB
+         Fault Tolerance: 0
+         Heads: 255
+         Sectors Per Track: 32
+         Cylinders: 65535
+         Strip Size: 256 KB
+         Full Stripe Size: 256 KB
+         Status: OK
+         MultiDomain Status: OK
+         Caching:  Enabled
+         Last Surface Scan Completed: False
+         Unique Identifier: 600508B1001C7FD57A17DFABD4A1E6D9
+         Disk Name: /dev/sdd 
+         Mount Points: None
+         Logical Drive Label: Data 01
+         Drive Type: Data
+         LD Acceleration Method: Controller Cache
+
+
+   Array C
+
+      Logical Drive: 3
+         Size: 5.46 TB
+         Fault Tolerance: 0
+         Heads: 255
+         Sectors Per Track: 32
+         Cylinders: 65535
+         Strip Size: 256 KB
+         Full Stripe Size: 256 KB
+         Status: OK
+         MultiDomain Status: OK
+         Caching:  Enabled
+         Last Surface Scan Completed: False
+         Unique Identifier: 600508B1001C3B89E5AA34EE69C875EF
+         Disk Name: /dev/sde 
+         Mount Points: None
+         Logical Drive Label: Data 02
+         Drive Type: Data
+         LD Acceleration Method: Controller Cache
+
+
+   Array D
+
+      Logical Drive: 4
+         Size: 5.46 TB
+         Fault Tolerance: 0
+         Heads: 255
+         Sectors Per Track: 32
+         Cylinders: 65535
+         Strip Size: 256 KB
+         Full Stripe Size: 256 KB
+         Status: OK
+         MultiDomain Status: OK
+         Caching:  Enabled
+         Last Surface Scan Completed: False
+         Unique Identifier: 600508B1001CF16E1ABE7F6C898859C8
+         Disk Name: /dev/sdf 
+         Mount Points: None
+         Logical Drive Label: Data 03
+         Drive Type: Data
+         LD Acceleration Method: Controller Cache
+
+
+   Array E
+
+      Logical Drive: 5
+         Size: 5.46 TB
+         Fault Tolerance: 0
+         Heads: 255
+         Sectors Per Track: 32
+         Cylinders: 65535
+         Strip Size: 256 KB
+         Full Stripe Size: 256 KB
+         Status: OK
+         MultiDomain Status: OK
+         Caching:  Enabled
+         Last Surface Scan Completed: False
+         Unique Identifier: 600508B1001C813ED7FBDF3E45DC17C7
+         Disk Name: /dev/sdg 
+         Mount Points: None
+         Logical Drive Label: Data 04
+         Drive Type: Data
+         LD Acceleration Method: Controller Cache
+
+
+   Array F
+
+      Logical Drive: 6
+         Size: 5.46 TB
+         Fault Tolerance: 0
+         Heads: 255
+         Sectors Per Track: 32
+         Cylinders: 65535
+         Strip Size: 256 KB
+         Full Stripe Size: 256 KB
+         Status: OK
+         MultiDomain Status: OK
+         Caching:  Enabled
+         Last Surface Scan Completed: False
+         Unique Identifier: 600508B1001CB13B0302F1C621256AD8
+         Disk Name: /dev/sdh 
+         Mount Points: None
+         Logical Drive Label: Data 05
+         Drive Type: Data
+         LD Acceleration Method: Controller Cache
+
+
+   Array G
+
+      Logical Drive: 7
+         Size: 5.46 TB
+         Fault Tolerance: 0
+         Heads: 255
+         Sectors Per Track: 32
+         Cylinders: 65535
+         Strip Size: 256 KB
+         Full Stripe Size: 256 KB
+         Status: OK
+         MultiDomain Status: OK
+         Caching:  Enabled
+         Last Surface Scan Completed: False
+         Unique Identifier: 600508B1001C6BE4ED7555256C8A2E1D
+         Disk Name: /dev/sdi 
+         Mount Points: None
+         Logical Drive Label: Data 06
+         Drive Type: Data
+         LD Acceleration Method: Controller Cache
+
+
+   Array H
+
+      Logical Drive: 8
+         Size: 5.46 TB
+         Fault Tolerance: 0
+         Heads: 255
+         Sectors Per Track: 32
+         Cylinders: 65535
+         Strip Size: 256 KB
+         Full Stripe Size: 256 KB
+         Status: OK
+         MultiDomain Status: OK
+         Caching:  Enabled
+         Last Surface Scan Completed: False
+         Unique Identifier: 600508B1001CE106EAF4D6B7BA94E4BA
+         Disk Name: /dev/sdj 
+         Mount Points: None
+         Logical Drive Label: Data 07
+         Drive Type: Data
+         LD Acceleration Method: Controller Cache
+
+
+   Array I
+
+      Logical Drive: 9
+         Size: 5.46 TB
+         Fault Tolerance: 0
+         Heads: 255
+         Sectors Per Track: 32
+         Cylinders: 65535
+         Strip Size: 256 KB
+         Full Stripe Size: 256 KB
+         Status: OK
+         MultiDomain Status: OK
+         Caching:  Enabled
+         Last Surface Scan Completed: False
+         Unique Identifier: 600508B1001C9B1F1877A9E3DF7CDF6C
+         Disk Name: /dev/sdk 
+         Mount Points: None
+         Logical Drive Label: Data 08
+         Drive Type: Data
+         LD Acceleration Method: Controller Cache
+
+
+   Array J
+
+      Logical Drive: 10
+         Size: 5.46 TB
+         Fault Tolerance: 0
+         Heads: 255
+         Sectors Per Track: 32
+         Cylinders: 65535
+         Strip Size: 256 KB
+         Full Stripe Size: 256 KB
+         Status: OK
+         MultiDomain Status: OK
+         Caching:  Enabled
+         Last Surface Scan Completed: False
+         Unique Identifier: 600508B1001CA7668EC1E6339D3DB914
+         Disk Name: /dev/sdl 
+         Mount Points: None
+         Logical Drive Label: Data 09
+         Drive Type: Data
+         LD Acceleration Method: Controller Cache
+
+
+   Array K
+
+      Logical Drive: 11
+         Size: 5.46 TB
+         Fault Tolerance: 0
+         Heads: 255
+         Sectors Per Track: 32
+         Cylinders: 65535
+         Strip Size: 256 KB
+         Full Stripe Size: 256 KB
+         Status: OK
+         MultiDomain Status: OK
+         Caching:  Enabled
+         Last Surface Scan Completed: False
+         Unique Identifier: 600508B1001C87D2241C10D9F3BA0121
+         Disk Name: /dev/sdm 
+         Mount Points: None
+         Logical Drive Label: Data 10
+         Drive Type: Data
+         LD Acceleration Method: Controller Cache
+
+

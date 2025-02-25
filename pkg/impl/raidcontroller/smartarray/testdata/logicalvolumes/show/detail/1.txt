@@ -1,0 +1,33 @@
+
+HPE Smart Array P816i-a SR Gen10 in Slot 0 (Embedded)
+
+   Array A
+
+      Logical Drive: 1
+         Size: 745.18 GB
+         Fault Tolerance: 1
+         Heads: 255
+         Sectors Per Track: 32
+         Cylinders: 65535
+         Strip Size: 256 KB
+         Full Stripe Size: 256 KB
+         Status: OK
+         Unrecoverable Media Errors: None
+         MultiDomain Status: OK
+         Caching:  Disabled
+         Last Surface Scan Completed: False
+         Unique Identifier: 600508B1001CF3D41DB2683BA2B29D47
+         Disk Name: /dev/sdc 
+         Mount Points: 1024 MiB Partition   2, 600 MiB Partition   1 /boot, /boot/efi
+         Disk Partition Information
+            Partition   2: Basic, 1024 MiB, /boot
+            Partition   1: Basic, 600 MiB, /boot/efi
+         Logical Drive Label: OS Drive
+         Mirror Group 1:
+            physicaldrive 4I:6:1 (port 4I:box 6:bay 1, SAS SSD, 800 GB, OK)
+         Mirror Group 2:
+            physicaldrive 4I:6:2 (port 4I:box 6:bay 2, SAS SSD, 800 GB, OK)
+         Drive Type: Data
+         LD Acceleration Method: Smart Path
+
+

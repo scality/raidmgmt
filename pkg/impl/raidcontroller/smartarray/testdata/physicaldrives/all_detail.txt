@@ -1,0 +1,483 @@
+
+HPE Smart Array P816i-a SR Gen10 in Slot 0 (Embedded)
+
+   Array A
+
+      physicaldrive 4I:6:1
+         Port: 4I
+         Box: 6
+         Bay: 1
+         Status: OK
+         Drive Type: Data Drive
+         Interface Type: Solid State SAS
+         Size: 800 GB
+         Drive exposed to OS: False
+         Logical/Physical Block Size: 512/4096
+         Firmware Revision: HPD1
+         Serial Number: W2X0751Y
+         WWID: 5000CCA0B8712795
+         Model: HPE     MO000800JXBEV
+         Current Temperature (C): 51
+         Maximum Temperature (C): 58
+         Usage remaining: 93.35%
+         Power On Hours: 28293
+         Estimated Life Remaining based on workload to date: 16548 days
+         SSD Smart Trip Wearout: False
+         PHY Count: 2
+         PHY Transfer Rate: 12.0Gbps, Unknown
+         PHY Physical Link Rate: 12.0Gbps, Unknown
+         PHY Maximum Link Rate: 12.0Gbps, 12.0Gbps
+         Drive Authentication Status: OK
+         Carrier Application Version: 11
+         Carrier Bootloader Version: 6
+         Sanitize Erase Supported: True
+         Sanitize Estimated Max Erase Time: 10 minute(s), 0 second(s) 
+         Unrestricted Sanitize Supported: False
+         Shingled Magnetic Recording Support: None
+         Drive Unique ID: 5000CCA0B8712794
+         Multi-Actuator Drive: False
+
+      physicaldrive 4I:6:2
+         Port: 4I
+         Box: 6
+         Bay: 2
+         Status: OK
+         Drive Type: Data Drive
+         Interface Type: Solid State SAS
+         Size: 800 GB
+         Drive exposed to OS: False
+         Logical/Physical Block Size: 512/4096
+         Firmware Revision: HPD1
+         Serial Number: W2X0WTKY
+         WWID: 5000CCA0B8725D59
+         Model: HPE     MO000800JXBEV
+         Current Temperature (C): 51
+         Maximum Temperature (C): 59
+         Usage remaining: 93.32%
+         Power On Hours: 28293
+         Estimated Life Remaining based on workload to date: 16468 days
+         SSD Smart Trip Wearout: False
+         PHY Count: 2
+         PHY Transfer Rate: 12.0Gbps, Unknown
+         PHY Physical Link Rate: 12.0Gbps, Unknown
+         PHY Maximum Link Rate: 12.0Gbps, 12.0Gbps
+         Drive Authentication Status: OK
+         Carrier Application Version: 11
+         Carrier Bootloader Version: 6
+         Sanitize Erase Supported: True
+         Sanitize Estimated Max Erase Time: 10 minute(s), 0 second(s) 
+         Unrestricted Sanitize Supported: False
+         Shingled Magnetic Recording Support: None
+         Drive Unique ID: 5000CCA0B8725D58
+         Multi-Actuator Drive: False
+
+
+   Array B
+
+      physicaldrive 1I:1:3
+         Port: 1I
+         Box: 1
+         Bay: 3
+         Status: OK
+         Drive Type: Data Drive
+         Interface Type: SAS
+         Size: 6 TB
+         Drive exposed to OS: False
+         Logical/Physical Block Size: 512/4096
+         Rotational Speed: 7200
+         Firmware Revision: HPD4
+         Serial Number: ZADBBY88
+         WWID: 5000C500CB7F22AD
+         Model: HP      MB6000JVYZD
+         Current Temperature (C): 33
+         Maximum Temperature (C): 45
+         PHY Count: 2
+         PHY Transfer Rate: 12.0Gbps, Unknown
+         PHY Physical Link Rate: 12.0Gbps, Unknown
+         PHY Maximum Link Rate: 12.0Gbps, 12.0Gbps
+         Drive Authentication Status: OK
+         Carrier Application Version: 11
+         Carrier Bootloader Version: 6
+         Sanitize Erase Supported: True
+         Sanitize Estimated Max Erase Time: 11 hour(s), 40 minute(s) 
+         Unrestricted Sanitize Supported: True
+         Shingled Magnetic Recording Support: None
+         Drive Unique ID: 5000C500CB7F22AF
+         Multi-Actuator Drive: False
+
+
+   Array C
+
+      physicaldrive 1I:1:4
+         Port: 1I
+         Box: 1
+         Bay: 4
+         Status: OK
+         Drive Type: Data Drive
+         Interface Type: SAS
+         Size: 6 TB
+         Drive exposed to OS: False
+         Logical/Physical Block Size: 512/4096
+         Rotational Speed: 7200
+         Firmware Revision: HPD4
+         Serial Number: ZADBC3RL
+         WWID: 5000C500CB800651
+         Model: HP      MB6000JVYZD
+         Current Temperature (C): 34
+         Maximum Temperature (C): 46
+         PHY Count: 2
+         PHY Transfer Rate: 12.0Gbps, Unknown
+         PHY Physical Link Rate: 12.0Gbps, Unknown
+         PHY Maximum Link Rate: 12.0Gbps, 12.0Gbps
+         Drive Authentication Status: OK
+         Carrier Application Version: 11
+         Carrier Bootloader Version: 6
+         Sanitize Erase Supported: True
+         Sanitize Estimated Max Erase Time: 11 hour(s), 40 minute(s) 
+         Unrestricted Sanitize Supported: True
+         Shingled Magnetic Recording Support: None
+         Drive Unique ID: 5000C500CB800653
+         Multi-Actuator Drive: False
+
+
+   Array D
+
+      physicaldrive 2I:2:1
+         Port: 2I
+         Box: 2
+         Bay: 1
+         Status: OK
+         Drive Type: Data Drive
+         Interface Type: SAS
+         Size: 6 TB
+         Drive exposed to OS: False
+         Logical/Physical Block Size: 512/4096
+         Rotational Speed: 7200
+         Firmware Revision: HPD4
+         Serial Number: ZADBC9G0
+         WWID: 5000C500CB8131FD
+         Model: HP      MB6000JVYZD
+         Current Temperature (C): 33
+         Maximum Temperature (C): 44
+         PHY Count: 2
+         PHY Transfer Rate: 12.0Gbps, Unknown
+         PHY Physical Link Rate: 12.0Gbps, Unknown
+         PHY Maximum Link Rate: 12.0Gbps, 12.0Gbps
+         Drive Authentication Status: OK
+         Carrier Application Version: 11
+         Carrier Bootloader Version: 6
+         Sanitize Erase Supported: True
+         Sanitize Estimated Max Erase Time: 11 hour(s), 40 minute(s) 
+         Unrestricted Sanitize Supported: True
+         Shingled Magnetic Recording Support: None
+         Drive Unique ID: 5000C500CB8131FF
+         Multi-Actuator Drive: False
+
+
+   Array E
+
+      physicaldrive 2I:2:2
+         Port: 2I
+         Box: 2
+         Bay: 2
+         Status: OK
+         Drive Type: Data Drive
+         Interface Type: SAS
+         Size: 6 TB
+         Drive exposed to OS: False
+         Logical/Physical Block Size: 512/4096
+         Rotational Speed: 7200
+         Firmware Revision: HPD4
+         Serial Number: ZADBCAF0
+         WWID: 5000C500CB80B755
+         Model: HP      MB6000JVYZD
+         Current Temperature (C): 34
+         Maximum Temperature (C): 45
+         PHY Count: 2
+         PHY Transfer Rate: 12.0Gbps, Unknown
+         PHY Physical Link Rate: 12.0Gbps, Unknown
+         PHY Maximum Link Rate: 12.0Gbps, 12.0Gbps
+         Drive Authentication Status: OK
+         Carrier Application Version: 11
+         Carrier Bootloader Version: 6
+         Sanitize Erase Supported: True
+         Sanitize Estimated Max Erase Time: 11 hour(s), 40 minute(s) 
+         Unrestricted Sanitize Supported: True
+         Shingled Magnetic Recording Support: None
+         Drive Unique ID: 5000C500CB80B757
+         Multi-Actuator Drive: False
+
+
+   Array F
+
+      physicaldrive 2I:2:3
+         Port: 2I
+         Box: 2
+         Bay: 3
+         Status: OK
+         Drive Type: Data Drive
+         Interface Type: SAS
+         Size: 6 TB
+         Drive exposed to OS: False
+         Logical/Physical Block Size: 512/4096
+         Rotational Speed: 7200
+         Firmware Revision: HPD4
+         Serial Number: ZADB9HEN
+         WWID: 5000C500CB4FCB81
+         Model: HP      MB6000JVYZD
+         Current Temperature (C): 34
+         Maximum Temperature (C): 46
+         PHY Count: 2
+         PHY Transfer Rate: 12.0Gbps, Unknown
+         PHY Physical Link Rate: 12.0Gbps, Unknown
+         PHY Maximum Link Rate: 12.0Gbps, 12.0Gbps
+         Drive Authentication Status: OK
+         Carrier Application Version: 11
+         Carrier Bootloader Version: 6
+         Sanitize Erase Supported: True
+         Sanitize Estimated Max Erase Time: 11 hour(s), 40 minute(s) 
+         Unrestricted Sanitize Supported: True
+         Shingled Magnetic Recording Support: None
+         Drive Unique ID: 5000C500CB4FCB83
+         Multi-Actuator Drive: False
+
+
+   Array G
+
+      physicaldrive 2I:2:4
+         Port: 2I
+         Box: 2
+         Bay: 4
+         Status: OK
+         Drive Type: Data Drive
+         Interface Type: SAS
+         Size: 6 TB
+         Drive exposed to OS: False
+         Logical/Physical Block Size: 512/4096
+         Rotational Speed: 7200
+         Firmware Revision: HPD4
+         Serial Number: ZADBC60Z
+         WWID: 5000C500CB7F8709
+         Model: HP      MB6000JVYZD
+         Current Temperature (C): 34
+         Maximum Temperature (C): 46
+         PHY Count: 2
+         PHY Transfer Rate: 12.0Gbps, Unknown
+         PHY Physical Link Rate: 12.0Gbps, Unknown
+         PHY Maximum Link Rate: 12.0Gbps, 12.0Gbps
+         Drive Authentication Status: OK
+         Carrier Application Version: 11
+         Carrier Bootloader Version: 6
+         Sanitize Erase Supported: True
+         Sanitize Estimated Max Erase Time: 11 hour(s), 40 minute(s) 
+         Unrestricted Sanitize Supported: True
+         Shingled Magnetic Recording Support: None
+         Drive Unique ID: 5000C500CB7F870B
+         Multi-Actuator Drive: False
+
+
+   Array H
+
+      physicaldrive 3I:3:1
+         Port: 3I
+         Box: 3
+         Bay: 1
+         Status: OK
+         Drive Type: Data Drive
+         Interface Type: SAS
+         Size: 6 TB
+         Drive exposed to OS: False
+         Logical/Physical Block Size: 512/4096
+         Rotational Speed: 7200
+         Firmware Revision: HPD4
+         Serial Number: ZADBC2HK
+         WWID: 5000C500CB805B25
+         Model: HP      MB6000JVYZD
+         Current Temperature (C): 35
+         Maximum Temperature (C): 44
+         PHY Count: 2
+         PHY Transfer Rate: 12.0Gbps, Unknown
+         PHY Physical Link Rate: 12.0Gbps, Unknown
+         PHY Maximum Link Rate: 12.0Gbps, 12.0Gbps
+         Drive Authentication Status: OK
+         Carrier Application Version: 11
+         Carrier Bootloader Version: 6
+         Sanitize Erase Supported: True
+         Sanitize Estimated Max Erase Time: 11 hour(s), 40 minute(s) 
+         Unrestricted Sanitize Supported: True
+         Shingled Magnetic Recording Support: None
+         Drive Unique ID: 5000C500CB805B27
+         Multi-Actuator Drive: False
+
+
+   Array I
+
+      physicaldrive 3I:3:2
+         Port: 3I
+         Box: 3
+         Bay: 2
+         Status: OK
+         Drive Type: Data Drive
+         Interface Type: SAS
+         Size: 6 TB
+         Drive exposed to OS: False
+         Logical/Physical Block Size: 512/4096
+         Rotational Speed: 7200
+         Firmware Revision: HPD4
+         Serial Number: ZADBBFGH
+         WWID: 5000C500CB811B99
+         Model: HP      MB6000JVYZD
+         Current Temperature (C): 35
+         Maximum Temperature (C): 45
+         PHY Count: 2
+         PHY Transfer Rate: 12.0Gbps, Unknown
+         PHY Physical Link Rate: 12.0Gbps, Unknown
+         PHY Maximum Link Rate: 12.0Gbps, 12.0Gbps
+         Drive Authentication Status: OK
+         Carrier Application Version: 11
+         Carrier Bootloader Version: 6
+         Sanitize Erase Supported: True
+         Sanitize Estimated Max Erase Time: 11 hour(s), 40 minute(s) 
+         Unrestricted Sanitize Supported: True
+         Shingled Magnetic Recording Support: None
+         Drive Unique ID: 5000C500CB811B9B
+         Multi-Actuator Drive: False
+
+
+   Array J
+
+      physicaldrive 3I:3:3
+         Port: 3I
+         Box: 3
+         Bay: 3
+         Status: OK
+         Drive Type: Data Drive
+         Interface Type: SAS
+         Size: 6 TB
+         Drive exposed to OS: False
+         Logical/Physical Block Size: 512/4096
+         Rotational Speed: 7200
+         Firmware Revision: HPD6
+         Serial Number: WSE1F022
+         WWID: 5000C500EF2287B5
+         Model: HPE     MB006000JWWQN
+         Current Temperature (C): 34
+         Maximum Temperature (C): 45
+         PHY Count: 2
+         PHY Transfer Rate: 12.0Gbps, Unknown
+         PHY Physical Link Rate: 12.0Gbps, Unknown
+         PHY Maximum Link Rate: 12.0Gbps, 12.0Gbps
+         Drive Authentication Status: OK
+         Carrier Application Version: 11
+         Carrier Bootloader Version: 6
+         Sanitize Erase Supported: True
+         Sanitize Estimated Max Erase Time: 10 hour(s), 20 minute(s) 
+         Unrestricted Sanitize Supported: True
+         Shingled Magnetic Recording Support: None
+         Drive Unique ID: 5000C500EF2287B7
+         Multi-Actuator Drive: False
+
+
+   Array K
+
+      physicaldrive 3I:3:4
+         Port: 3I
+         Box: 3
+         Bay: 4
+         Status: OK
+         Drive Type: Data Drive
+         Interface Type: SAS
+         Size: 6 TB
+         Drive exposed to OS: False
+         Logical/Physical Block Size: 512/4096
+         Rotational Speed: 7200
+         Firmware Revision: HPD4
+         Serial Number: ZADB9VP5
+         WWID: 5000C500CB817339
+         Model: HP      MB6000JVYZD
+         Current Temperature (C): 36
+         Maximum Temperature (C): 47
+         PHY Count: 2
+         PHY Transfer Rate: 12.0Gbps, Unknown
+         PHY Physical Link Rate: 12.0Gbps, Unknown
+         PHY Maximum Link Rate: 12.0Gbps, 12.0Gbps
+         Drive Authentication Status: OK
+         Carrier Application Version: 11
+         Carrier Bootloader Version: 6
+         Sanitize Erase Supported: True
+         Sanitize Estimated Max Erase Time: 11 hour(s), 40 minute(s) 
+         Unrestricted Sanitize Supported: True
+         Shingled Magnetic Recording Support: None
+         Drive Unique ID: 5000C500CB81733B
+         Multi-Actuator Drive: False
+
+
+   Unassigned
+
+      physicaldrive 1I:1:1
+         Port: 1I
+         Box: 1
+         Bay: 1
+         Status: OK
+         Drive Type: Unassigned Drive
+         Interface Type: SAS
+         Size: 2 TB
+         Drive exposed to OS: True
+         Logical/Physical Block Size: 512/512
+         Rotational Speed: 7200
+         Firmware Revision: HPD4
+         Serial Number: WS1061J3
+         WWID: 5000C500CBD6D241
+         Model: HP      MB002000JWWQA
+         Current Temperature (C): 30
+         Maximum Temperature (C): 43
+         PHY Count: 2
+         PHY Transfer Rate: 12.0Gbps, Unknown
+         PHY Physical Link Rate: 12.0Gbps, Unknown
+         PHY Maximum Link Rate: 12.0Gbps, 12.0Gbps
+         Drive Authentication Status: OK
+         Carrier Application Version: 11
+         Carrier Bootloader Version: 6
+         Disk Name: /dev/sda 
+         Mount Points: None
+         Sanitize Erase Supported: True
+         Sanitize Estimated Max Erase Time: 3 hour(s), 40 minute(s) 
+         Unrestricted Sanitize Supported: True
+         Shingled Magnetic Recording Support: None
+         Drive Unique ID: 5000C500CBD6D243
+         Multi-Actuator Drive: False
+
+      physicaldrive 1I:1:2
+         Port: 1I
+         Box: 1
+         Bay: 2
+         Status: OK
+         Drive Type: Unassigned Drive
+         Interface Type: SAS
+         Size: 2 TB
+         Drive exposed to OS: True
+         Logical/Physical Block Size: 512/512
+         Rotational Speed: 7200
+         Firmware Revision: HPD4
+         Serial Number: WS106260
+         WWID: 5000C500CBD6D175
+         Model: HP      MB002000JWWQA
+         Current Temperature (C): 30
+         Maximum Temperature (C): 44
+         PHY Count: 2
+         PHY Transfer Rate: 12.0Gbps, Unknown
+         PHY Physical Link Rate: 12.0Gbps, Unknown
+         PHY Maximum Link Rate: 12.0Gbps, 12.0Gbps
+         Drive Authentication Status: OK
+         Carrier Application Version: 11
+         Carrier Bootloader Version: 6
+         Disk Name: /dev/sdb 
+         Mount Points: None
+         Sanitize Erase Supported: True
+         Sanitize Estimated Max Erase Time: 3 hour(s), 40 minute(s) 
+         Unrestricted Sanitize Supported: True
+         Shingled Magnetic Recording Support: None
+         Drive Unique ID: 5000C500CBD6D177
+         Multi-Actuator Drive: False
+
+
