@@ -1,4 +1,4 @@
-//nolint:cyclop,funlen // This package contains parser functions, which are inherently complex.
+//nolint:cyclop,funlen,gocognit,lll // This package contains parser functions, which are inherently complex.
 package physicaldrivegetter
 
 import (
@@ -99,16 +99,12 @@ func (r *RHEL8) PhysicalDrive(
 	physicalDrive.Metadata = metadata
 	physicalDrive.Size = device.Size
 
-	if device.MountPoint != "" || device.FilesystemType != "" || device.PartitionType != "" {
-		physicalDrive.Status = physicaldrive.PDStatusUsed
-	} else {
-		status, err := r.physicalDriveStatus(device.DevicePath)
-		if err != nil {
-			return nil, errors.Wrapf(err, "failed to get physical drive status: %s", device.DevicePath)
-		}
-
-		physicalDrive.Status = status
+	status, err := r.physicalDriveStatus(device)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to get physical drive status: %s", device.DevicePath)
 	}
+
+	physicalDrive.Status = status
 
 	switch device.Rotational {
 	default:
@@ -127,11 +123,10 @@ func (r *RHEL8) PhysicalDrive(
 	return physicalDrive, nil
 }
 
-//nolint:gocognit //
-func (r *RHEL8) physicalDriveStatus(devicePath string) (physicaldrive.PDStatus, error) {
+func (r *RHEL8) physicalDriveStatus(device *BlockDevice) (physicaldrive.PDStatus, error) {
 	output, err := r.SmartCTL.Run([]string{
 		"-a",
-		devicePath,
+		device.DevicePath,
 	})
 	if err != nil {
 		return physicaldrive.PDStatusUnknown, errors.Wrap(
@@ -205,6 +200,10 @@ func (r *RHEL8) physicalDriveStatus(devicePath string) (physicaldrive.PDStatus, 
 
 	if reallocatedCount > 0 || pendingCount > 0 || uncorrectableCount > 0 {
 		return physicaldrive.PDStatusFailed, nil
+	}
+
+	if device.MountPoint != "" || device.FilesystemType != "" || device.PartitionType != "" {
+		return physicaldrive.PDStatusUsed, nil
 	}
 
 	return physicaldrive.PDStatusUnassignedGood, nil
@@ -337,8 +336,8 @@ func ParseLSBLKOutput(output []byte) ([]BlockDevice, error) {
 			}
 		}
 
-		// Skip RAID devices, they will be listed later
-		if strings.Contains(device.DevicePath, "md") {
+		// Skip non-disk and non-part devices
+		if device.Type != "disk" && device.Type != "part" {
 			continue
 		}
 

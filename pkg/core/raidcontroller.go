@@ -120,8 +120,13 @@ func addPDsToLV(
 		}
 	}
 
-	if err := iface.AddPDsToLV(lvMetadata, pdsMetadata...); err != nil {
-		return errors.Wrap(err, "failed to add physical drive to logical volume")
+	err := iface.AddPDsToLV(lvMetadata, pdsMetadata...)
+	if err != nil {
+		return errors.Wrapf(
+			err,
+			"failed to add physical drives to logical volume : %s",
+			lvMetadata.ID,
+		)
 	}
 
 	return nil

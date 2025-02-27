@@ -13,10 +13,7 @@ import (
 	"github.com/scality/raidmgmt/pkg/implementation/commandrunner"
 )
 
-const (
-	raid1MinimalDriveCount  = 2
-	raid10MinimalDriveCount = 4
-)
+const baseMDPath = "/dev/md"
 
 type MDADM struct {
 	commandrunner.CommandRunner
@@ -44,7 +41,7 @@ func (m *MDADM) CreateLV(request *logicalvolume.Request) (*logicalvolume.Logical
 	for _, drive := range request.PDrivesMetadata {
 		physicalDrive, err := m.PhysicalDrive(drive)
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to get physical drive")
+			return nil, errors.Wrapf(err, "failed to get physical drive : %s", drive.DevicePath)
 		}
 
 		if physicalDrive.Status == physicaldrive.PDStatusFailed {
@@ -56,11 +53,18 @@ func (m *MDADM) CreateLV(request *logicalvolume.Request) (*logicalvolume.Logical
 		physicalDrivesName = append(physicalDrivesName, drive.DevicePath)
 	}
 
+	devicePath := fmt.Sprintf("%s/%s", baseMDPath, request.Name)
+
 	// Prepare the mdadm create command
 	createCmdArgs := []string{
-		"--create", fmt.Sprintf("/dev/%s", request.Name),
+		"--create", devicePath,
 		"--level", string(request.RAIDLevel),
 		"--raid-devices", fmt.Sprintf("%d", len(physicalDrivesName)),
+	}
+
+	// FIXME This might not be necessary on new disks (not used previously)
+	if request.RAIDLevel == logicalvolume.RAIDLevel1 {
+		createCmdArgs = append(createCmdArgs, "--metadata=0.90")
 	}
 
 	// Add the physical drive names
@@ -73,9 +77,11 @@ func (m *MDADM) CreateLV(request *logicalvolume.Request) (*logicalvolume.Logical
 	}
 
 	// Get the newly created logical volume metadata
-	logicalVolume, err := m.LogicalVolume(&logicalvolume.Metadata{})
+	logicalVolume, err := m.LogicalVolume(&logicalvolume.Metadata{
+		ID: devicePath,
+	})
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to get logical volume: %s", request.ID)
+		return nil, errors.Wrapf(err, "failed to get logical volume: %s", request.Name)
 	}
 
 	return logicalVolume, nil
@@ -139,15 +145,20 @@ func (m *MDADM) AddPDsToLV(
 		}
 
 		if physicalDrive.Status == physicaldrive.PDStatusFailed {
-			return errors.New("cannot add a failed physical drive to a logical volume")
+			return errors.Errorf(
+				"cannot add a failed physical drive to a logical volume : %s ", physicalDrive.DevicePath,
+			)
 		} else if physicalDrive.Status == physicaldrive.PDStatusUsed {
-			return errors.New("cannot add a used physical drive to a logical volume")
+			return errors.Errorf(
+				"cannot add a used physical drive to a logical volume : %s", physicalDrive.DevicePath,
+			)
 		}
 
 		devicesPaths = append(devicesPaths, pdMetadata.DevicePath)
 	}
 
-	if logicalVolume.RAIDLevel == logicalvolume.RAIDLevel10 {
+	if logicalVolume.RAIDLevel == logicalvolume.RAIDLevel10 ||
+		logicalVolume.RAIDLevel == logicalvolume.RAIDLevel1 {
 		// Add the devices to the array
 		_, err = m.Run(append([]string{
 			logicalVolume.DevicePath,
@@ -169,6 +180,8 @@ func (m *MDADM) AddPDsToLV(
 		if err != nil {
 			return errors.Wrap(err, "failed to run mdadm grow command to adapt array size")
 		}
+
+		return nil
 	}
 
 	arrayLength := len(logicalVolume.PDrivesMetadata) + len(pdsMetadata)
@@ -188,10 +201,12 @@ func (m *MDADM) AddPDsToLV(
 	if err != nil {
 		return errors.Wrapf(
 			err,
-			"failed to run mdadm add / grow command with %s",
+			"failed to run mdadm add / grow command on %s",
 			strings.Join(devicesPaths, ","),
 		)
 	}
+
+	// FIXME Might need a loop that wait here
 
 	return nil
 }
@@ -211,52 +226,40 @@ func (m *MDADM) DeletePDsFromLV(
 		return errors.New("cannot remove physical drives from a failed logical volume")
 	}
 
-	// Check that the drives to be removed are in the logical volume
-	actualDrivesInLogicalVolumes := make([]*physicaldrive.Metadata, 0)
-
-	for _, pdMetadata := range logicalVolume.PDrivesMetadata {
-		for _, pd := range pdsMetadata {
-			if pdMetadata.DevicePath != pd.DevicePath {
-				return errors.New("physical drive not found in the logical volume")
-			}
-
-			actualDrivesInLogicalVolumes = append(actualDrivesInLogicalVolumes, pdMetadata)
-		}
-	}
-
 	// RAID level checks
 	switch logicalVolume.RAIDLevel { //nolint:exhaustive // We only support a subset of RAID levels
 	case logicalvolume.RAIDLevel0:
 		return errors.New("cannot remove physical drives from a RAID0")
 	case logicalvolume.RAIDLevel1:
-		if len(logicalVolume.PDrivesMetadata)-len(pdsMetadata) < raid1MinimalDriveCount {
+		if len(logicalVolume.PDrivesMetadata)-len(pdsMetadata) < logicalvolume.RAID1DiskRequirement {
 			return errors.New("cannot remove physical drives from a RAID1 with a single physical drive")
 		}
 	case logicalvolume.RAIDLevel10:
 	default:
 	}
 
-	pvsDevicePaths := make([]string, 0, len(actualDrivesInLogicalVolumes))
-	for _, pdMetadata := range actualDrivesInLogicalVolumes {
-		pvsDevicePaths = append(pvsDevicePaths, pdMetadata.DevicePath)
+	pdsDevicePaths := make([]string, 0, len(pdsMetadata))
+	for _, pdMetadata := range pdsMetadata {
+		pdsDevicePaths = append(pdsDevicePaths, pdMetadata.DevicePath)
 	}
 
 	// Prepare the mdadm fail command
 	// An active device cannot be removed from an array, so it needs to be marked as failed first.
 	failCmd := []string{
-		logicalVolume.DevicePath,
 		"--fail",
+		logicalVolume.DevicePath,
 	}
 
 	// Append the list of physical drive to be set to failed
-	failCmd = append(failCmd, pvsDevicePaths...)
+	failCmd = append(failCmd, pdsDevicePaths...)
 
 	_, err = m.Run(failCmd)
 	if err != nil {
+		// if err != nil && !strings.Contains(err.Error(), "array will be failed") {
 		return errors.Wrapf(
 			err,
 			"failed to run mdadm fail physical drive command: %s",
-			strings.Join(pvsDevicePaths, ","),
+			strings.Join(pdsDevicePaths, ","),
 		)
 	}
 
@@ -267,15 +270,22 @@ func (m *MDADM) DeletePDsFromLV(
 	}
 
 	// Append the list of physical drive to be removed
-	removeCmd = append(removeCmd, pvsDevicePaths...)
+	removeCmd = append(removeCmd, pdsDevicePaths...)
 
 	_, err = m.Run(removeCmd)
 	if err != nil {
-		return errors.Wrapf(
-			err,
-			"failed to run mdadm remove command: %s",
-			strings.Join(pvsDevicePaths, ","),
-		)
+		return errors.Wrap(err, "failed to run mdadm remove command")
+	}
+
+	zeroCmd := []string{
+		"--zero-superblock",
+	}
+
+	zeroCmd = append(zeroCmd, pdsDevicePaths...)
+
+	_, err = m.Run(zeroCmd)
+	if err != nil {
+		return errors.Wrap(err, "failed to run mdadm zero superblock command")
 	}
 
 	// Cannot shrink a RAID10

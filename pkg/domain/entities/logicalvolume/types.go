@@ -29,6 +29,7 @@ type (
 		CacheOptions    *CacheOptions             `json:"cache_options,omitempty"`            // Cache options
 		Status          LVStatus                  `json:"status,omitempty"`                   // State (e.g.: Online, Offline, Degraded)
 		Reason          string                    `json:"reason,omitempty"`                   // Reason for the logical volume state
+		Size            uint64                    `json:"size,omitempty"`                     // Size of the logical volume
 	}
 
 	// Metadata represents the metadata of a logical volume.

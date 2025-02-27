@@ -20,13 +20,13 @@ var _ ports.SoftwareRAIDController = &RHEL8{}
 //	using compatible implementations of the required interfaces
 //	(MDADM for logical volumes, UDevADM and LSBLK for physical drives)
 func NewRHEL8(
-	physicalDriveGetter physicaldrivegetter.RHEL8,
-	logicalVolumesGetter logicalvolumegetter.MDADM,
-	logicalVolumesManager logicalvolumemanager.MDADM,
+	physicalDriveGetter *physicaldrivegetter.RHEL8,
+	logicalVolumesGetter *logicalvolumegetter.MDADM,
+	logicalVolumesManager *logicalvolumemanager.MDADM,
 ) *RHEL8 {
 	return &RHEL8{
-		PhysicalDrivesGetter:  &physicalDriveGetter,
-		LogicalVolumesGetter:  &logicalVolumesGetter,
-		LogicalVolumesManager: &logicalVolumesManager,
+		PhysicalDrivesGetter:  physicalDriveGetter,
+		LogicalVolumesGetter:  logicalVolumesGetter,
+		LogicalVolumesManager: logicalVolumesManager,
 	}
 }

@@ -1,9 +1,10 @@
-//nolint:cyclop // Command parser are generally complex.
+//nolint:cyclop,gocognit // Command parser are generally complex.
 package logicalvolumegetter
 
 import (
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -16,6 +17,8 @@ import (
 )
 
 const (
+	mdadmDeviceNameRegexPattern = "(.*_[0-9])"
+
 	mdadmMatchDeviceRegexpPattern  = `MD_DEVICE_(.*)_(ROLE|DEV)=(.*)`
 	mdadmMatchDeviceRegexpPattern2 = `MD_LEVEL`
 )
@@ -57,15 +60,16 @@ type (
 var (
 	_ ports.LogicalVolumesGetter = &MDADM{}
 
+	mdadmDeviceNameRegex    = regexp.MustCompile(mdadmDeviceNameRegexPattern)
 	mdadmMatchDeviceRegexp  = regexp.MustCompile(mdadmMatchDeviceRegexpPattern)
 	mdadmMatchDeviceRegexp2 = regexp.MustCompile(mdadmMatchDeviceRegexpPattern2)
 )
 
 func NewMDADM(
-	runner commandrunner.MDADM,
+	runner *commandrunner.MDADM,
 ) *MDADM {
 	return &MDADM{
-		CommandRunner: &runner,
+		CommandRunner: runner,
 	}
 }
 
@@ -113,7 +117,7 @@ func (m *MDADM) LogicalVolume(
 	// 	md0, md1, md/0_0 should also be supported
 	devicePath := deviceNameToDevicePath(metadata.ID)
 
-	logicalVolumeStatus, err := m.getLogicalVolumeStatus(devicePath)
+	logicalVolumeStatus, logicalVolumeSize, err := m.getLogicalVolumeStatusAndSize(devicePath)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get logical volume status")
 	}
@@ -143,6 +147,7 @@ func (m *MDADM) LogicalVolume(
 		DevicePath:      devicePath,
 		RAIDLevel:       details[0].RaidLevel,
 		PDrivesMetadata: make([]*physicaldrive.Metadata, 0, details[0].DevicesCount),
+		Size:            logicalVolumeSize,
 	}
 
 	for _, device := range details[0].Devices {
@@ -156,8 +161,9 @@ func (m *MDADM) LogicalVolume(
 	return logicalVolume, nil
 }
 
-func (m *MDADM) getLogicalVolumeStatus(devicePath string) (
+func (m *MDADM) getLogicalVolumeStatusAndSize(devicePath string) (
 	logicalvolume.LVStatus,
+	uint64,
 	error,
 ) {
 	output, err := m.Run([]string{
@@ -165,10 +171,12 @@ func (m *MDADM) getLogicalVolumeStatus(devicePath string) (
 		devicePath,
 	})
 	if err != nil {
-		return logicalvolume.LVStatusUnknown, errors.Wrap(err, "failed to run mdadm detail command")
+		return logicalvolume.LVStatusUnknown, 0, errors.Wrap(err, "failed to run mdadm detail command")
 	}
 
 	logicalVolumeStatus := logicalvolume.LVStatusUnknown
+
+	var arraySize uint64
 
 	for _, line := range strings.Split(string(output), "\n") {
 		if strings.HasPrefix(line, "State :") {
@@ -183,9 +191,26 @@ func (m *MDADM) getLogicalVolumeStatus(devicePath string) (
 
 			break
 		}
+
+		if strings.Contains(line, "Array Size :") {
+			arraySizeLineSplit := strings.Split(
+				strings.TrimSpace(
+					strings.TrimPrefix(line, "Array Size :"),
+				), " ",
+			)
+
+			arraySize, err = strconv.ParseUint(arraySizeLineSplit[3], 10, 64)
+			if err != nil {
+				return logicalVolumeStatus, 0, errors.Wrap(err, "failed to parse array size")
+			}
+		}
 	}
 
-	return logicalVolumeStatus, nil
+	if arraySize == 0 {
+		return logicalVolumeStatus, 0, errors.New("failed to get array size")
+	}
+
+	return logicalVolumeStatus, arraySize, nil
 }
 
 //nolint:gocognit,funlen,cyclop // This function is complex by nature
@@ -279,16 +304,21 @@ func splitOutputOnMDLevel(output []byte) [][]byte {
 }
 
 func deviceNameToDevicePath(deviceName string) string {
-	if strings.HasSuffix(deviceName, "_0") {
-		return fmt.Sprintf("/dev/md/%s", deviceName)
-	}
-
-	if strings.HasPrefix(deviceName, "/dev/") {
+	// User already provided the full path
+	// Could be /dev/md0, /dev/md/0_0, /dev/md/toto_1
+	if strings.HasPrefix(deviceName, "/dev/md") {
 		return deviceName
 	}
 
-	if !strings.HasPrefix(deviceName, "md") {
-		return fmt.Sprintf("/dev/md%s", deviceName)
+	// User provided the device name only, with a slash
+	// Could be md/0_0, md/toto_1
+	if strings.HasPrefix(deviceName, "md/") {
+		return fmt.Sprintf("/dev/%s", deviceName)
+	}
+
+	// Matches md/0_0, md/toto_1
+	if mdadmDeviceNameRegex.MatchString(deviceName) {
+		return fmt.Sprintf("/dev/md/%s", deviceName)
 	}
 
 	return fmt.Sprintf("/dev/%s", deviceName)
