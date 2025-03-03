@@ -1,9 +1,10 @@
 module github.com/scality/raidmgmt
 
-go 1.23
+go 1.24
 
 require (
 	github.com/pkg/errors v0.9.1
+	github.com/rs/zerolog v1.29.0
 	github.com/stretchr/testify v1.10.0
 	github.com/vektra/mockery/v2 v2.51.1
 )
@@ -24,7 +25,6 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.6 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/rs/zerolog v1.29.0 // indirect
 	github.com/spf13/afero v1.9.3 // indirect
 	github.com/spf13/cast v1.5.0 // indirect
 	github.com/spf13/cobra v1.6.1 // indirect
