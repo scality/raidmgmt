@@ -71,8 +71,6 @@ linters-settings:
     ignore-generated-header: true
     severity: warning
     confidence: 0.2
-    warning-code: 101
-    error-code: 102
     enable-all-rules: false
     rules:
       # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#add-constant
@@ -165,7 +163,7 @@ linters-settings:
       - name: defer
         severity: warning
         disabled: false
-        arguments: 
+        arguments:
           - ["call-chain", "loop", "method-call", "recover", "immediate-recover", "return"]
       # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#dot-imports
       - name: dot-imports
@@ -226,7 +224,7 @@ linters-settings:
         disabled: false
         arguments:
           - 5
-      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#function-length
+#      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#function-length
       - name: function-length
         severity: warning
         disabled: true # replace4d by funlen
@@ -256,9 +254,10 @@ linters-settings:
         arguments:
           - preserveScope
       # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#imports-blacklist
-      - name: imports-blacklist
-        severity: warning
-        disabled: true
+      # FIXME This revive setting is not working with latest golangci-lint version
+#      - name: imports-blacklist
+#        severity: warning
+#        disabled: true
         #arguments:
           #- "crypto/md5"
           #- "crypto/sha1"
@@ -435,18 +434,6 @@ linters-settings:
     extra-rules: true
   goimports:
     local-prefixes: github.com/scality/artesca
-  gomnd:
-    checks:
-      - argument
-      - case
-      - condition
-      - operation
-      - return
-      - assign
-    ignored-numbers:
-      - '-1'
-      - '0'
-      - '1'
     #ignored-files:
     #  - 'magic1_.+\.go$'
     #ignored-functions:
