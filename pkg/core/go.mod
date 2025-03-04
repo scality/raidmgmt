@@ -1,6 +1,6 @@
 module github.com/scality/raidmgmt/core
 
-go 1.23
+go 1.24
 
 replace github.com/scality/raidmgmt/domain => ../domain
 
