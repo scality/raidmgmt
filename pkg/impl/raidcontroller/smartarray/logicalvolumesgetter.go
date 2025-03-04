@@ -71,10 +71,6 @@ func parseLogicalVolume(block []byte) (
 func parseLVLine(logicalVolume *logicalvolume.LogicalVolume, line string) error {
 	key, value := parseLineDetail(line)
 
-	if key == "" {
-		return nil
-	}
-
 	switch key {
 	case "Logical Drive":
 		logicalVolume.ID = value

@@ -104,10 +104,6 @@ func parseLineDetail(line string) (key, value string) {
 // to parse the different key-value pairs.
 func parsePDLine(physicalDrive *physicaldrive.PhysicalDrive, line string) error {
 	key, value := parseLineDetail(line)
-	// If the key is empty, skip the line
-	if key == "" {
-		return nil
-	}
 
 	// Parse the key-value pair
 	switch key {
