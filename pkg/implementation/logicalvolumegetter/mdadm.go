@@ -115,7 +115,7 @@ func (m *MDADM) LogicalVolume(
 ) (*logicalvolume.LogicalVolume, error) {
 	// It is assumed that the ID is the suffix of the device name
 	// 	md0, md1, md/0_0 should also be supported
-	devicePath := deviceNameToDevicePath(metadata.ID)
+	devicePath := DeviceNameToDevicePath(metadata.ID)
 
 	logicalVolumeStatus, logicalVolumeSize, err := m.getLogicalVolumeStatusAndSize(devicePath)
 	if err != nil {
@@ -179,8 +179,8 @@ func (m *MDADM) getLogicalVolumeStatusAndSize(devicePath string) (
 	var arraySize uint64
 
 	for _, line := range strings.Split(string(output), "\n") {
-		if strings.HasPrefix(line, "State :") {
-			switch strings.TrimSpace(strings.TrimPrefix(line, "State :")) {
+		if strings.Contains(line, "State :") {
+			switch strings.TrimSpace(line)[len("State : "):] {
 			case "degraded":
 				logicalVolumeStatus = logicalvolume.LVStatusDegraded
 			case "active":
@@ -241,8 +241,12 @@ func ParseMDADMExportOutput(output []byte) ([]*MDADMExportDetails, error) {
 				currentDetails.Metadata = strings.TrimPrefix(line, "MD_METADATA=")
 			case strings.HasPrefix(line, "MD_UUID="):
 				currentDetails.UUID = strings.TrimPrefix(line, "MD_UUID=")
-			case strings.HasPrefix(line, "MD_DEVNAME="):
-				currentDetails.Name = strings.TrimPrefix(line, "MD_DEVNAME=")
+			case strings.HasPrefix(line, "MD_DEVNAME=") || strings.HasPrefix(line, "MD_NAME="):
+				if strings.HasPrefix(line, "MD_DEVNAME=") {
+					currentDetails.DeviceName = strings.TrimPrefix(line, "MD_DEVNAME=")
+				} else {
+					currentDetails.Name = strings.TrimPrefix(line, "MD_NAME=")
+				}
 			case strings.HasPrefix(line, "MD_DEVICE_"):
 				if currentDetails.Devices == nil {
 					currentDetails.Devices = make(map[string]MDADMDevices)
@@ -303,7 +307,7 @@ func splitOutputOnMDLevel(output []byte) [][]byte {
 	return append(block, output[index:])
 }
 
-func deviceNameToDevicePath(deviceName string) string {
+func DeviceNameToDevicePath(deviceName string) string {
 	// User already provided the full path
 	// Could be /dev/md0, /dev/md/0_0, /dev/md/toto_1
 	if strings.HasPrefix(deviceName, "/dev/md") {
@@ -321,5 +325,5 @@ func deviceNameToDevicePath(deviceName string) string {
 		return fmt.Sprintf("/dev/md/%s", deviceName)
 	}
 
-	return fmt.Sprintf("/dev/%s", deviceName)
+	return fmt.Sprintf("/dev/md/%s", deviceName)
 }

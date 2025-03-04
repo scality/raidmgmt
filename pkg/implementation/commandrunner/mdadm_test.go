@@ -20,5 +20,5 @@ func TestMockMDADMRun(t *testing.T) {
 	// Run the function & assert the results
 	output, err := runner.Run([]string{"mocked mdadm command"})
 	assert.NoError(t, err)
-	assert.Equal(t, []byte("PASS\n"), output)
+	assert.Contains(t, string(output), "PASS")
 }

@@ -58,7 +58,7 @@ func (m *MDADM) CreateLV(request *logicalvolume.Request) (*logicalvolume.Logical
 	// Prepare the mdadm create command
 	createCmdArgs := []string{
 		"--create", devicePath,
-		"--level", string(request.RAIDLevel),
+		"--level", fmt.Sprintf("%d", request.RAIDLevel.Level()),
 		"--raid-devices", fmt.Sprintf("%d", len(physicalDrivesName)),
 	}
 
@@ -189,7 +189,7 @@ func (m *MDADM) AddPDsToLV(
 	// This below is valid for raid0
 	addCmd := []string{
 		"--grow", logicalVolume.DevicePath,
-		"--level", string(logicalVolume.RAIDLevel),
+		"--level", fmt.Sprintf("%d", logicalVolume.RAIDLevel.Level()),
 		"--raid-devices", fmt.Sprintf("%d", arrayLength),
 		"--add",
 	}
@@ -255,7 +255,6 @@ func (m *MDADM) DeletePDsFromLV(
 
 	_, err = m.Run(failCmd)
 	if err != nil {
-		// if err != nil && !strings.Contains(err.Error(), "array will be failed") {
 		return errors.Wrapf(
 			err,
 			"failed to run mdadm fail physical drive command: %s",

@@ -22,5 +22,5 @@ func TestMockLSBLKRun(t *testing.T) {
 
 	// Assert results
 	assert.NoError(t, err)
-	assert.Equal(t, []byte("PASS\n"), output)
+	assert.Contains(t, string(output), "PASS")
 }

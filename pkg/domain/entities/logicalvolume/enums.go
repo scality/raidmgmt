@@ -1,19 +1,23 @@
 package logicalvolume
 
 type (
-	RAIDLevel   string
+	// RAIDLevel   string.
 	ReadPolicy  string
 	WritePolicy string
 	IOPolicy    string
 	LVStatus    uint8
+
+	RAIDLevel uint8
 )
 
 const (
-	RAIDLevelUnknown RAIDLevel = "unknown"
-	RAIDLevel0       RAIDLevel = "0"
-	RAIDLevel1       RAIDLevel = "1"
-	RAIDLevel10      RAIDLevel = "10"
+	RAIDLevelUnknown RAIDLevel = iota
+	RAIDLevel0
+	RAIDLevel1
+	RAIDLevel10
+)
 
+const (
 	ReadPolicyUnknown     ReadPolicy = "unknown"
 	ReadPolicyReadAhead   ReadPolicy = "ra"
 	ReadPolicyNoReadAhead ReadPolicy = "nora"
@@ -26,7 +30,9 @@ const (
 	IOPolicyUnknown IOPolicy = "unknown"
 	IOPolicyDirect  IOPolicy = "direct"
 	IOPolicyCached  IOPolicy = "cached"
+)
 
+const (
 	LVStatusUnknown LVStatus = iota
 	LVStatusOptimal
 	LVStatusDegraded
@@ -43,6 +49,19 @@ func (r RAIDLevel) String() string {
 		return "RAID10"
 	default:
 		return string(RAIDLevelUnknown)
+	}
+}
+
+func (r RAIDLevel) Level() uint8 {
+	switch r { //nolint:exhaustive // Not all cases are handled
+	case RAIDLevel0:
+		return 0
+	case RAIDLevel1:
+		return 1
+	case RAIDLevel10:
+		return 10 //nolint:mnd // This is a RAID level
+	default:
+		return 0
 	}
 }
 
@@ -90,6 +109,6 @@ func (l LVStatus) String() string {
 	case LVStatusFailed:
 		return "Failed"
 	default:
-		return string(LVStatusUnknown)
+		return "Unknown"
 	}
 }
