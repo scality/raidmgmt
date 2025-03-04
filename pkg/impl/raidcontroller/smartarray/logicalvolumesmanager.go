@@ -18,19 +18,17 @@ var arrayIDRegexp = regexp.MustCompile(arrayIDRegexpPattern)
 
 // formatDrives formats the physical drives to a string.
 // It returns a string with the physical drives formatted as "slot1,slot2,slot3".
-func formatDrives(metadatas []*physicaldrive.Metadata) string {
+func formatDrives(pdsMetadata []*physicaldrive.Metadata) string {
 	var formattedDrives string
 
-	if len(metadatas) == 0 {
-		return formattedDrives
+	if len(pdsMetadata) == 0 {
+		return ""
 	}
 
-	if len(metadatas) == 1 {
-		return formatSlot(metadatas[0].Slot)
-	}
+	formattedDrives = formatSlot(pdsMetadata[0].Slot)
 
-	for _, drive := range metadatas {
-		formattedDrives += formatSlot(drive.Slot) + ","
+	for _, drive := range pdsMetadata[1:] {
+		formattedDrives += "," + formatSlot(drive.Slot)
 	}
 
 	return formattedDrives
@@ -125,7 +123,7 @@ func (s *SSACLI) getArrayID(metadata *logicalvolume.Metadata) (string, error) {
 func (s *SSACLI) migrateArray(
 	arrayID string,
 	lvMetadata *logicalvolume.Metadata,
-	pdMetadatas []*physicaldrive.Metadata,
+	pdsMetadata []*physicaldrive.Metadata,
 	action string,
 ) error {
 	args := []string{
@@ -134,7 +132,7 @@ func (s *SSACLI) migrateArray(
 		"array",
 		arrayID,
 		action,
-		"drives=" + formatDrives(pdMetadatas),
+		"drives=" + formatDrives(pdsMetadata),
 		"forced", // To bypass the warning
 	}
 

@@ -191,9 +191,9 @@ func (s *SSACLI) LogicalVolumes(metadata *raidcontroller.Metadata) (
 		lv.CtrlMetadata = metadata
 
 		// Extract the RAID level and physical drives metadata
-		raidLevel, pdMetadatas := extractInfoFromConfig(lv, output)
+		raidLevel, pdsMetadata := extractInfoFromConfig(lv, output)
 		lv.RAIDLevel = raidLevel
-		lv.PDrivesMetadata = pdMetadatas
+		lv.PDrivesMetadata = pdsMetadata
 	}
 
 	return logicalVolumes, nil
@@ -239,9 +239,9 @@ func (s *SSACLI) LogicalVolume(metadata *logicalvolume.Metadata) (
 	}
 
 	// Extract the RAID level and physical drives metadata
-	raidLevel, pdMetadatas := extractInfoFromConfig(logicalVolume, output)
+	raidLevel, pdsMetadata := extractInfoFromConfig(logicalVolume, output)
 	logicalVolume.RAIDLevel = raidLevel
-	logicalVolume.PDrivesMetadata = pdMetadatas
+	logicalVolume.PDrivesMetadata = pdsMetadata
 
 	return logicalVolume, nil
 }
@@ -335,14 +335,14 @@ func (s *SSACLI) DeleteLV(metadata *logicalvolume.Metadata) error {
 // AddPDsToLV adds a physical drive to a logical volume.
 func (s *SSACLI) AddPDsToLV(
 	lvMetadata *logicalvolume.Metadata,
-	pdMetadatas ...*physicaldrive.Metadata,
+	pdsMetadata ...*physicaldrive.Metadata,
 ) error {
 	arrayID, err := s.getArrayID(lvMetadata)
 	if err != nil {
 		return errors.Wrapf(err, "failed to get array ID for logical drive %s", lvMetadata.ID)
 	}
 
-	err = s.migrateArray(arrayID, lvMetadata, pdMetadatas, "add")
+	err = s.migrateArray(arrayID, lvMetadata, pdsMetadata, "add")
 	if err != nil {
 		return errors.Wrapf(err, "failed to expand array %s (logical drive %s) with physical drives",
 			arrayID, lvMetadata.ID)
@@ -354,7 +354,7 @@ func (s *SSACLI) AddPDsToLV(
 // DeletePDsFromLV deletes a physical drive from a logical volume.
 func (s *SSACLI) DeletePDsFromLV(
 	lvMetadata *logicalvolume.Metadata,
-	pdMetadatas ...*physicaldrive.Metadata,
+	pdsMetadata ...*physicaldrive.Metadata,
 ) error {
 	arrayID, err := s.getArrayID(lvMetadata)
 	if err != nil {
@@ -365,7 +365,7 @@ func (s *SSACLI) DeletePDsFromLV(
 		)
 	}
 
-	err = s.migrateArray(arrayID, lvMetadata, pdMetadatas, "remove")
+	err = s.migrateArray(arrayID, lvMetadata, pdsMetadata, "remove")
 	if err != nil {
 		return errors.Wrapf(
 			err,
