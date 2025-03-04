@@ -11,10 +11,10 @@ import (
 )
 
 const (
-	arrayIDPattern = `Array\s+(\w+)`
+	arrayIDRegexpPattern = `Array\s+(\w+)`
 )
 
-var arrayIDRegexp = regexp.MustCompile(arrayIDPattern)
+var arrayIDRegexp = regexp.MustCompile(arrayIDRegexpPattern)
 
 // formatDrives formats the physical drives to a string.
 // It returns a string with the physical drives formatted as "slot1,slot2,slot3".

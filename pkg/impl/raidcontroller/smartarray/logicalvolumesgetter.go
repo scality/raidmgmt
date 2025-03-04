@@ -11,19 +11,19 @@ import (
 )
 
 const (
-	logicalVolumePattern           = `\s*Logical Drive:\s+\d+`
-	logicalVolumeIDStatusPattern   = `logicaldrive\s+(\d+)`
-	raidLevelPattern               = `RAID\s+(\d+)`
-	associatedPhysicalDrivePattern = `logicaldrive\s+\d+\s+\(.*?\)\n(\s*physicaldrive.*?\n)*`
+	logicalVolumeRegexpPattern           = `\s*Logical Drive:\s+\d+`
+	logicalVolumeIDStatusRegexpPattern   = `logicaldrive\s+(\d+)`
+	raidLevelRegexpPattern               = `RAID\s+(\d+)`
+	associatedPhysicalDriveRegexpPattern = `logicaldrive\s+\d+\s+\(.*?\)\n(\s*physicaldrive.*?\n)*`
 
 	minMatches = 2
 )
 
 var (
-	logicalVolumeRegexp           = regexp.MustCompile(logicalVolumePattern)
-	logicalVolumeIDStatusRegexp   = regexp.MustCompile(logicalVolumeIDStatusPattern)
-	raidLevelRegexp               = regexp.MustCompile(raidLevelPattern)
-	associatedPhysicalDriveRegexp = regexp.MustCompile(associatedPhysicalDrivePattern)
+	logicalVolumeRegexp           = regexp.MustCompile(logicalVolumeRegexpPattern)
+	logicalVolumeIDStatusRegexp   = regexp.MustCompile(logicalVolumeIDStatusRegexpPattern)
+	raidLevelRegexp               = regexp.MustCompile(raidLevelRegexpPattern)
+	associatedPhysicalDriveRegexp = regexp.MustCompile(associatedPhysicalDriveRegexpPattern)
 )
 
 func parseLogicalVolumes(output []byte) (

@@ -11,15 +11,13 @@ import (
 
 const (
 	// Capture leading whitespace.
-	leadingWhitespacePattern = `^(\s*)`
-	namePattern              = `HPE Smart Array (.*?) in Slot \d+`
-
-	keyValueParts = 2
+	leadingWhitespaceRegexpPattern = `^(\s*)`
+	nameRegexpPattern              = `HPE Smart Array (.*?) in Slot \d+`
 )
 
 var (
-	leadingWhitespaceRegexp = regexp.MustCompile(leadingWhitespacePattern)
-	nameRegexp              = regexp.MustCompile(namePattern)
+	leadingWhitespaceRegexp = regexp.MustCompile(leadingWhitespaceRegexpPattern)
+	nameRegexp              = regexp.MustCompile(nameRegexpPattern)
 )
 
 func parseControllers(output []byte) ([]*raidcontroller.RAIDController, error) {

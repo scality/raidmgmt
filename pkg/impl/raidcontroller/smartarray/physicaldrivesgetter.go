@@ -12,15 +12,17 @@ import (
 )
 
 const (
-	slotPattern                = `Slot (\d+)`
-	physicaldrivePattern       = `physicaldrive\s+(.+)`
-	physicaldriveConfigPattern = `physicaldrive\s+(.+?)\s+\(port\s+(.+?):box\s+(.+?):bay\s+(.+?),.*\)`
+	slotRegexpPattern                = `Slot (\d+)`
+	physicaldriveRegexpPattern       = `physicaldrive\s+(.+)`
+	physicaldriveConfigRegexpPattern = `physicaldrive\s+.+\s+\(port\s+(.+?):box\s+(.+?):bay\s+(.+?),.*\)` //nolint: lll // This is a regexp.
+
+	keyValueParts = 2
 )
 
 var (
-	slotRegexp                = regexp.MustCompile(slotPattern)
-	physicaldriveRegexp       = regexp.MustCompile(physicaldrivePattern)
-	physicaldriveConfigRegexp = regexp.MustCompile(physicaldriveConfigPattern)
+	slotRegexp                = regexp.MustCompile(slotRegexpPattern)
+	physicaldriveRegexp       = regexp.MustCompile(physicaldriveRegexpPattern)
+	physicaldriveConfigRegexp = regexp.MustCompile(physicaldriveConfigRegexpPattern)
 )
 
 // parsePhysicalDrives parses the output of the physicaldrive command and
