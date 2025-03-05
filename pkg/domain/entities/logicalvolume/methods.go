@@ -4,7 +4,8 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	"github.com/scality/raidmgmt/domain/entities/physicaldrive"
+
+	"github.com/scality/raidmgmt/pkg/domain/entities/physicaldrive"
 )
 
 // Validate checks if the CacheOptions instance is valid.

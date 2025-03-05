@@ -1,9 +1,0 @@
-go 1.23
-
-use (
-	./pkg/core
-	./pkg/domain
-	./pkg/impl/raidcontroller/megaraid
-	./pkg/impl/raidcontroller/rhel8
-	./pkg/impl/raidcontroller/smartarray
-)

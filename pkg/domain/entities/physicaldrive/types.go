@@ -1,3 +1,4 @@
+//nolint:lll // Structures with tags are too long for you, lll.
 package physicaldrive
 
 import (
@@ -5,7 +6,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/scality/raidmgmt/domain/entities/raidcontroller"
+	"github.com/scality/raidmgmt/pkg/domain/entities/raidcontroller"
 )
 
 const (
@@ -18,30 +19,30 @@ type (
 	PhysicalDrive struct {
 		*Metadata // Metadata of the disk
 
-		ID            string   // ID
-		Vendor        string   // Vendor
-		Model         string   // Model
-		Serial        string   // Serial number
-		Size          uint64   // Size in bytes
-		Type          DiskType // Type (e.g.: HDD, SSD)
-		JBOD          bool     // Is the disk in JBOD mode
-		Status        PDStatus // State (e.g.: Online, Offline, Failed)
-		Reason        string   // Reason for the disk state
-		PermanentPath string   // Permanent path of the array (e.g.: /dev/disk/by-id/...)
-		DevicePath    string   // Device path of the array (e.g.: /dev/sda)
+		ID            string   `json:"id,omitempty"`             // ID
+		Vendor        string   `json:"vendor,omitempty"`         // Vendor
+		Model         string   `json:"model,omitempty"`          // Model
+		Serial        string   `json:"serial,omitempty"`         // Serial number
+		Size          uint64   `json:"size,omitempty"`           // Size in bytes
+		Type          DiskType `json:"type,omitempty"`           // Type (e.g.: HDD, SSD)
+		JBOD          bool     `json:"jbod,omitempty"`           // Is the disk in JBOD mode
+		Status        PDStatus `json:"status,omitempty"`         // State (e.g.: Online, Offline, Failed)
+		Reason        string   `json:"reason,omitempty"`         // Reason for the disk state
+		PermanentPath string   `json:"permanent_path,omitempty"` // Permanent path of the array (e.g.: /dev/disk/by-id/...)
 	}
 
 	// Slot identifies the slot of a disk.
 	Slot struct {
-		Port      string // Port number (if available)
-		Enclosure string // Enclosure number (if available)
-		Bay       string // Bay number (if available)
+		Port      string `json:"port,omitempty"`      // Port number (if available)
+		Enclosure string `json:"enclosure,omitempty"` // Enclosure number (if available)
+		Bay       string `json:"bay,omitempty"`       // Bay number (if available)
 	}
 
 	// Metadata represents the metadata of a physical drive.
 	Metadata struct {
-		CtrlMetadata *raidcontroller.Metadata // Controller metadata of the disk
-		Slot         *Slot                    // Slot
+		CtrlMetadata *raidcontroller.Metadata `json:"controller_metadata,omitempty"` // Controller metadata of the disk
+		DevicePath   string                   `json:"device_path,omitempty"`         // Device path of the disk
+		Slot         *Slot                    `json:"slot,omitempty"`                // Slot
 	}
 )
 

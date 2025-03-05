@@ -7,15 +7,14 @@ linters:
   - staticcheck
   # format & style
   - asciicheck                # detect non-ASCII characters on identifiers
-  # - dupword                   # detect duplicated words in comments
+  - dupword                   # detect duplicated words in comments
   - gofumpt                   # enhanced formatter
   - godot                     # ensure that commets will end with a period
   #- godox                     # detect FIXME, TODO, etc. comments -> Disable for the moment for dev
   - goimports                 # format and fix imports
   - lll                       # long line length detection
-  - nlreturn                  # checks for a new line before return and branch statements
   - tagalign                  # align struct tags
-  # - tagliatelle               # check struct tags naming -> Disable for because the structs of the CLI commands are poorly tagged
+  #- tagliatelle               # check struct tags naming
   - whitespace                # leading and trailing whitespace detection
   - wsl                       # empty lines guidelines
   # correctness & bug prevention -> error handling
@@ -27,10 +26,8 @@ linters:
   - wrapcheck                 # check errors wrapping
   # correctness & bug prevention -> constants, variables, parameters and assignments
   - asasalint                 # prevent to use `any` as variadic argument
-  - bodyclose                 # checks whether res.Body is correctly closed
-  - decorder                  # checks declaration order and count of types, constants, variables and functions
   - durationcheck             # enforce time.Duration consistent use
-  - forcetypeassert           # force type assertions when using interface{} os `any` variables values
+  - forcetypeassert           # force type assertions when usinmg interface{} os `any` variables values
   - gochecknoglobals          # look for global variables
   - ineffassign               # detect ineffectual assignments
   - nilnil                    # prevent functions to return value = nil, err = nil
@@ -50,9 +47,9 @@ linters:
   - gocheckcompilerdirectives # detect some common compiler directives antipatterns
   - gochecknoinits            # look for init functions
   - gosec                     # check for common security issues
-  - nolintlint               # report abuses of //nolint directives
+  #- nolintlint               # report abuses of //nolint directives # Conflict with gofumpt
   # Performance
-  #- aligncheck               # check for struct misalignment -> readability and maintainability are more important than small performance tweaks
+  #- aligncheck               # check for struct misalignment -> it's a operator so readability and maintainability are more important then small performance twiks
   - makezero                  # detect preallocation mishandles
   - prealloc                  # detect slice declarations that could potentially be preallocated
   # complexity & maintainability
@@ -67,7 +64,6 @@ linters:
   - nestif                    # detect nested ifs and limits their depths
   - unconvert                 # finds unnecessary type conversions
 
-
 linters-settings:
   # ---------- REVIVE METALINTER ---------- #
   revive:
@@ -75,8 +71,6 @@ linters-settings:
     ignore-generated-header: true
     severity: warning
     confidence: 0.2
-    warning-code: 101
-    error-code: 102
     enable-all-rules: false
     rules:
       # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#add-constant
@@ -131,7 +125,7 @@ linters-settings:
           - nolint
           - +kubebuilder
       # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#confusing-naming
-      # Disabled due to a decision on the project to use nested methods with the same names 
+      # Disabled due to a decision on the project to use nested methods with the same names
       - name: confusing-naming
         severity: error
         disabled: true
@@ -169,7 +163,7 @@ linters-settings:
       - name: defer
         severity: warning
         disabled: false
-        arguments: 
+        arguments:
           - ["call-chain", "loop", "method-call", "recover", "immediate-recover", "return"]
       # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#dot-imports
       - name: dot-imports
@@ -230,7 +224,7 @@ linters-settings:
         disabled: false
         arguments:
           - 5
-      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#function-length
+#      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#function-length
       - name: function-length
         severity: warning
         disabled: true # replace4d by funlen
@@ -260,9 +254,10 @@ linters-settings:
         arguments:
           - preserveScope
       # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#imports-blacklist
-      - name: imports-blacklist
-        severity: warning
-        disabled: true
+      # FIXME This revive setting is not working with latest golangci-lint version
+#      - name: imports-blacklist
+#        severity: warning
+#        disabled: true
         #arguments:
           #- "crypto/md5"
           #- "crypto/sha1"
@@ -421,7 +416,7 @@ linters-settings:
   govet:
     enable-all: true
     disable:
-      - fieldalignment # readibility and maintainability are more important than small performance tweaks
+      - fieldalignment # once it is a operator, readability and maintainability are more important then small performance twiks
   # ---------- STATICCHECK METALINTER ---------- #
   staticcheck:
     checks: ["all"]
@@ -431,26 +426,14 @@ linters-settings:
     package-average: 5
     skip-tests: false
   funlen:
-    lines: 75
-    statements: 50
+    lines: 50
+    statements: 25
   gocognit:
     min-complexity: 10 # minimal complexity before fail
   gofumpt:
     extra-rules: true
   goimports:
     local-prefixes: github.com/scality/artesca
-  gomnd:
-    checks:
-      - argument
-      - case
-      - condition
-      - operation
-      - return
-      - assign
-    ignored-numbers:
-      - '-1'
-      - '0'
-      - '1'
     #ignored-files:
     #  - 'magic1_.+\.go$'
     #ignored-functions:
@@ -505,7 +488,7 @@ severity:
   default-severity: warning
 
 run:
-  go: '1.23.5'
+  go: '1.24.0'
   timeout: 10m
   issues-exit-code: 100
   tests: true
