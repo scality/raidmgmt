@@ -190,6 +190,8 @@ func (m *MDADM) getLogicalVolumeStatusAndSize(devicePath string) (
 				logicalVolumeStatus = logicalvolume.LVStatusOptimal
 			case "failed":
 				logicalVolumeStatus = logicalvolume.LVStatusFailed
+			case "clean":
+				logicalVolumeStatus = logicalvolume.LVStatusOptimal
 			}
 
 			break

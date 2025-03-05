@@ -1,4 +1,4 @@
-package rhel8
+package softwareraidcontroller
 
 import (
 	"github.com/scality/raidmgmt/pkg/domain/ports"
