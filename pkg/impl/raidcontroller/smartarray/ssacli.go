@@ -40,7 +40,7 @@ var (
 	}
 )
 
-func New(
+func NewSSACLI(
 	runner commandrunner.CommandRunner,
 ) *SSACLI {
 	return &SSACLI{

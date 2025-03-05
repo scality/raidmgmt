@@ -43,7 +43,7 @@ func (s *UnitTestSuite) SetupTest() {
 	// s.T().Parallel()
 	s.mcr = &MockCommandRunner{}
 
-	s.s = smartarray.New(s.mcr)
+	s.s = smartarray.NewSSACLI(s.mcr)
 }
 
 func mockOutput(filename string) []byte {
