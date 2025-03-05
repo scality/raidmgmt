@@ -151,16 +151,7 @@ func extractRAIDLevel(line string) logicalvolume.RAIDLevel {
 	raidMatch := raidLevelRegexp.FindStringSubmatch(line)
 
 	if len(raidMatch) > 1 {
-		switch raidMatch[1] {
-		case "0":
-			raidLevel = logicalvolume.RAIDLevel0
-		case "1":
-			raidLevel = logicalvolume.RAIDLevel1
-		case "10", "1+0":
-			raidLevel = logicalvolume.RAIDLevel10
-		default:
-			raidLevel = logicalvolume.RAIDLevelUnknown
-		}
+		raidLevel = logicalvolume.RAIDLevelMap(raidMatch[1])
 	}
 
 	return raidLevel
