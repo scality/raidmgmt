@@ -282,7 +282,7 @@ func (a *Adapter) createLV(request *logicalvolume.Request) (
 ) {
 	selector := selectorCtrl(request.CtrlMetadata)
 
-	raidLevel := fmt.Sprintf("type=raid%s", request.RAIDLevel)
+	raidLevel := fmt.Sprintf("type=raid%d", request.RAIDLevel.Level())
 
 	// Get the physical drives from the metadata
 	pds, err := a.fillPhysicalDrives(request.PDrivesMetadata)
@@ -481,7 +481,7 @@ func (a *Adapter) migrate(
 
 	actionArg := fmt.Sprintf("option=%s", action)
 
-	raidLevel := fmt.Sprintf("type=raid%s", lv.RAIDLevel)
+	raidLevel := fmt.Sprintf("type=raid%d", lv.RAIDLevel.Level())
 
 	drives, err := formatDrivesString(pdMetadatas)
 	if err != nil {

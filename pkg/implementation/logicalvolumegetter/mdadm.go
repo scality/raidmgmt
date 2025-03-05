@@ -161,6 +161,7 @@ func (m *MDADM) LogicalVolume(
 	return logicalVolume, nil
 }
 
+//nolint:funlen // Come on, one line too long
 func (m *MDADM) getLogicalVolumeStatusAndSize(devicePath string) (
 	logicalvolume.LVStatus,
 	uint64,
@@ -179,8 +180,10 @@ func (m *MDADM) getLogicalVolumeStatusAndSize(devicePath string) (
 	var arraySize uint64
 
 	for _, line := range strings.Split(string(output), "\n") {
-		if strings.Contains(line, "State :") {
-			switch strings.TrimSpace(line)[len("State : "):] {
+		line = strings.TrimSpace(line)
+
+		if strings.HasPrefix(line, "State : ") {
+			switch strings.TrimPrefix(line, "State : ") {
 			case "degraded":
 				logicalVolumeStatus = logicalvolume.LVStatusDegraded
 			case "active":
@@ -199,7 +202,7 @@ func (m *MDADM) getLogicalVolumeStatusAndSize(devicePath string) (
 				), " ",
 			)
 
-			arraySize, err = strconv.ParseUint(arraySizeLineSplit[3], 10, 64)
+			arraySize, err = strconv.ParseUint(arraySizeLineSplit[0], 10, 64)
 			if err != nil {
 				return logicalVolumeStatus, 0, errors.Wrap(err, "failed to parse array size")
 			}
@@ -241,12 +244,10 @@ func ParseMDADMExportOutput(output []byte) ([]*MDADMExportDetails, error) {
 				currentDetails.Metadata = strings.TrimPrefix(line, "MD_METADATA=")
 			case strings.HasPrefix(line, "MD_UUID="):
 				currentDetails.UUID = strings.TrimPrefix(line, "MD_UUID=")
-			case strings.HasPrefix(line, "MD_DEVNAME=") || strings.HasPrefix(line, "MD_NAME="):
-				if strings.HasPrefix(line, "MD_DEVNAME=") {
-					currentDetails.DeviceName = strings.TrimPrefix(line, "MD_DEVNAME=")
-				} else {
-					currentDetails.Name = strings.TrimPrefix(line, "MD_NAME=")
-				}
+			case strings.HasPrefix(line, "MD_DEVNAME="):
+				currentDetails.DeviceName = strings.TrimPrefix(line, "MD_DEVNAME=")
+			case strings.HasPrefix(line, "MD_NAME="):
+				currentDetails.Name = strings.TrimPrefix(line, "MD_NAME=")
 			case strings.HasPrefix(line, "MD_DEVICE_"):
 				if currentDetails.Devices == nil {
 					currentDetails.Devices = make(map[string]MDADMDevices)

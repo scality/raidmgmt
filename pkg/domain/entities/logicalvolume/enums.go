@@ -1,5 +1,7 @@
 package logicalvolume
 
+import "fmt"
+
 type (
 	// RAIDLevel   string.
 	ReadPolicy  string
@@ -40,16 +42,11 @@ const (
 )
 
 func (r RAIDLevel) String() string {
-	switch r { //nolint:exhaustive // Not all cases are handled
-	case RAIDLevel0:
-		return "RAID0"
-	case RAIDLevel1:
-		return "RAID1"
-	case RAIDLevel10:
-		return "RAID10"
-	default:
-		return string(RAIDLevelUnknown)
+	if r == RAIDLevelUnknown {
+		return "Unknown"
 	}
+
+	return fmt.Sprintf("RAID%d", r.Level())
 }
 
 func (r RAIDLevel) Level() uint8 {
@@ -61,7 +58,7 @@ func (r RAIDLevel) Level() uint8 {
 	case RAIDLevel10:
 		return 10 //nolint:mnd // This is a RAID level
 	default:
-		return 0
+		return 255 //nolint:mnd // Default bad value
 	}
 }
 
