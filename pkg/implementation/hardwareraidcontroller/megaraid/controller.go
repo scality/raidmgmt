@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/pkg/errors"
+
 	"github.com/scality/raidmgmt/pkg/domain/entities/raidcontroller"
 	"github.com/scality/raidmgmt/pkg/utils"
 )
@@ -21,12 +23,16 @@ func (a *Adapter) controllers() ([]*raidcontroller.RAIDController, error) {
 
 	raidControllers := make([]*raidcontroller.RAIDController, 0)
 
+	spew.Dump(string(output.Controllers[0].ResponseData))
+
 	for _, controller := range output.Controllers {
 		// Get the system overview for the controller
 		// This is needed to get the controller ID
 		systemOverview, err := utils.UnmarshalToSlice[SystemOverview](
 			controller.ResponseData, "System Overview",
 		)
+		fmt.Println(systemOverview, err)
+
 		if err != nil {
 			return nil, errors.Wrapf(
 				err,

@@ -2,8 +2,10 @@ package megaraid
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/pkg/errors"
+
 	"github.com/scality/raidmgmt/pkg/utils"
 )
 
@@ -13,6 +15,8 @@ func (a *Adapter) showAll() (*CmdOutput, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, ErrCommandFailed.Error())
 	}
+
+	fmt.Println(string(output.Controllers[0].ResponseData))
 
 	return output, nil
 }

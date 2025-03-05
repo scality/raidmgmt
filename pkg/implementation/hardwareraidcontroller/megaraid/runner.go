@@ -2,6 +2,7 @@ package megaraid
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"os/exec"
 
@@ -84,6 +85,8 @@ func (mrr *MegaRAIDRunner) Run(args []string) (*CmdOutput, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to run command")
 	}
+
+	fmt.Println(string(output))
 
 	// Parse the output
 	parsed, err := parse(output)
