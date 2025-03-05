@@ -43,7 +43,7 @@ func parseController(block []byte) (*raidcontroller.RAIDController, error) {
 		Metadata: &raidcontroller.Metadata{},
 	}
 
-	for _, line := range strings.Split(string(block), "\n") {
+	for line := range strings.SplitSeq(string(block), "\n") {
 		if err := parseControllerLine(controller, line); err != nil {
 			return nil, errors.Wrapf(err, "failed to parse controller line: %s", line)
 		}

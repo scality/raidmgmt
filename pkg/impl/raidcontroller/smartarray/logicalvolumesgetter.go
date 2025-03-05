@@ -58,7 +58,7 @@ func parseLogicalVolume(block []byte) (
 		},
 	}
 
-	for _, line := range strings.Split(string(block), "\n") {
+	for line := range strings.SplitSeq(string(block), "\n") {
 		if err := parseLVLine(logicalVolume, line); err != nil {
 			return nil, errors.Wrap(err, "failed to parse line")
 		}
@@ -117,7 +117,7 @@ func extractInfoFromConfig(
 			continue
 		}
 
-		for _, line := range strings.Split(string(block), "\n") {
+		for line := range strings.SplitSeq(string(block), "\n") {
 			// Get the RAID level
 			if raidLevel == "" {
 				raidLevel = extractRAIDLevel(line)

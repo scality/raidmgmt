@@ -69,7 +69,7 @@ func parsePhysicalDrive(block []byte) (*physicaldrive.PhysicalDrive, error) {
 	}
 
 	// Split the block into lines and parse each line
-	for _, line := range strings.Split(string(block), "\n") {
+	for line := range strings.SplitSeq(string(block), "\n") {
 		if err := parsePDLine(physicalDrive, line); err != nil {
 			return nil, errors.Wrapf(err, "failed to parse line of physical drive: %s",
 				strings.TrimSpace(line),

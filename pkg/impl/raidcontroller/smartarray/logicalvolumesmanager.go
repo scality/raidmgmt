@@ -75,7 +75,7 @@ func getLogicalDriveID(
 	for _, block := range blocks {
 		logicalDriveID = ""
 
-		for _, line := range strings.Split(string(block), "\n") {
+		for line := range strings.SplitSeq(string(block), "\n") {
 			if strings.HasPrefix(strings.TrimSpace(line), "logicaldrive") {
 				// Extract the logical drive ID
 				parts := strings.Fields(line)
