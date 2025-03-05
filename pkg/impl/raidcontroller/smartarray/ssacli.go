@@ -396,38 +396,3 @@ func (s *SSACLI) StopBlink(metadata *physicaldrive.Metadata) error {
 
 	return nil
 }
-
-// splitOutput splits the output of the SSA CLI command into blocks.
-// Each block is separated by a regular expression.
-// The first match is skipped as it is the header of the output.
-// The last block is added if it is not empty.
-// The blocks are trimmed of leading and trailing whitespace.
-func splitOutput(regularExpression *regexp.Regexp, output []byte) [][]byte {
-	indices := regularExpression.FindAllIndex(output, -1)
-	if indices == nil {
-		return nil // No matches found
-	}
-
-	var blocks [][]byte
-
-	start := 0
-
-	for i, match := range indices {
-		if i == 0 {
-			continue // Skip the first match
-		}
-
-		block := output[start:match[0]] // everything before the match
-		if len(block) > 0 {             // avoid empty blocks
-			blocks = append(blocks, bytes.TrimSpace(block)) // trim space here
-		}
-
-		start = match[0] // Start of the next block is the current match
-	}
-	// Add the last block if any
-	if start < len(output) {
-		blocks = append(blocks, bytes.TrimSpace(output[start:]))
-	}
-
-	return blocks
-}
