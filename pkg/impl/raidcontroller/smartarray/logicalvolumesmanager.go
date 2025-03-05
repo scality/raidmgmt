@@ -116,7 +116,7 @@ func (s *SSACLI) getArrayID(metadata *logicalvolume.Metadata) (string, error) {
 		"detail",
 	}
 
-	output, err := s.Run(args)
+	output, err := s.CommandRunner.Run(args)
 	if err != nil {
 		return "", errors.Wrapf(err, "failed to show details for logical drive %s", metadata.ID)
 	}
@@ -148,7 +148,7 @@ func (s *SSACLI) migrateArray(
 		"forced", // To bypass the warning
 	}
 
-	_, err := s.Run(args)
+	_, err := s.CommandRunner.Run(args)
 	if err != nil {
 		return errors.Wrapf(err, "failed to %s drives to array %s", action, arrayID)
 	}

@@ -20,7 +20,7 @@ func (s *SSACLI) blink(metadata *physicaldrive.Metadata, action string) error {
 		"led=" + action,
 	}
 
-	_, err := s.Run(args)
+	_, err := s.CommandRunner.Run(args)
 	if err != nil {
 		return errors.Wrapf(err, "failed to blink physical drive %s", slot)
 	}

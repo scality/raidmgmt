@@ -25,9 +25,45 @@ var (
 	physicaldriveConfigRegexp = regexp.MustCompile(physicaldriveConfigRegexpPattern)
 )
 
+func (s *SSACLI) getBlockDevice(devicePath string) (*BlockDevice, error) {
+	output, err := s.LSBLK.Run([]string{
+		devicePath,
+		"--paths",
+		"--bytes",
+		"--nodeps",
+		"--output",
+		"name,rota,size,type,tran,mountpoint,fstype,parttype",
+	})
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get block device using lsblk")
+	}
+
+	blockDevices, err := ParseLSBLKOutput(output)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to parse lsblk command output")
+	}
+
+	if len(blockDevices) <= 0 {
+		return nil, errors.Errorf("block device not found: %s", devicePath)
+	}
+
+	return &blockDevices[0], nil
+}
+
+// isBlockDeviceUsed checks if a block device is used.
+// If the device is mounted or has a filesystem type, it is considered used.
+// Otherwise, it is considered unassigned good.
+func isBlockDeviceUsed(device *BlockDevice) physicaldrive.PDStatus {
+	if device.MountPoint != "" || device.FilesystemType != "" || device.PartitionType != "" {
+		return physicaldrive.PDStatusUsed
+	}
+
+	return physicaldrive.PDStatusUnassignedGood
+}
+
 // parsePhysicalDrives parses the output of the physicaldrive command and
 // returns a list of PhysicalDrive entities.
-func parsePhysicalDrives(output []byte) ([]*physicaldrive.PhysicalDrive, error) {
+func (s *SSACLI) parsePhysicalDrives(output []byte) ([]*physicaldrive.PhysicalDrive, error) {
 	blocks := splitOutput(physicaldriveRegexp, output)
 
 	physicalDrives := make([]*physicaldrive.PhysicalDrive, 0, len(blocks))
@@ -38,7 +74,7 @@ func parsePhysicalDrives(output []byte) ([]*physicaldrive.PhysicalDrive, error) 
 	}
 
 	for _, block := range blocks {
-		physicalDrive, err := parsePhysicalDrive(block)
+		physicalDrive, err := s.parsePhysicalDrive(block)
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to parse physical drive: %s", block)
 		}
@@ -68,7 +104,7 @@ func parseControllerID(output []byte) (int, error) {
 }
 
 // parsePhysicalDrive parses a physical drive block and returns a PhysicalDrive entity.
-func parsePhysicalDrive(block []byte) (*physicaldrive.PhysicalDrive, error) {
+func (s *SSACLI) parsePhysicalDrive(block []byte) (*physicaldrive.PhysicalDrive, error) {
 	// Create the PhysicalDrive entity
 	physicalDrive := &physicaldrive.PhysicalDrive{
 		Metadata: &physicaldrive.Metadata{
@@ -79,7 +115,7 @@ func parsePhysicalDrive(block []byte) (*physicaldrive.PhysicalDrive, error) {
 
 	// Split the block into lines and parse each line
 	for line := range strings.SplitSeq(string(block), "\n") {
-		if err := parsePDLine(physicalDrive, line); err != nil {
+		if err := s.parsePDLine(physicalDrive, line); err != nil {
 			return nil, errors.Wrapf(err, "failed to parse line of physical drive: %s",
 				strings.TrimSpace(line),
 			)
@@ -109,9 +145,9 @@ func parseLineDetail(line string) (key, value string) {
 
 // parsePDLine parses a line of the physicaldrive command output
 // and updates the PhysicalDrive entity.
-// nolint: cyclop // The switch statement is necessary
+// nolint: cyclop,gocognit // The switch statement is necessary
 // to parse the different key-value pairs.
-func parsePDLine(physicalDrive *physicaldrive.PhysicalDrive, line string) error {
+func (s *SSACLI) parsePDLine(physicalDrive *physicaldrive.PhysicalDrive, line string) error {
 	key, value := parseLineDetail(line)
 
 	// Parse the key-value pair
@@ -136,19 +172,21 @@ func parsePDLine(physicalDrive *physicaldrive.PhysicalDrive, line string) error 
 		physicalDrive.Size = size
 
 	case "Status":
-		// TODO check DriveType : unassigned or assigned in string
-		mapStatus := map[string]physicaldrive.PDStatus{
-			"OK":      physicaldrive.PDStatusUsed,
-			"Failed":  physicaldrive.PDStatusFailed,
-			"Offline": physicaldrive.PDStatusFailed,
-		}
+		if physicalDrive.Status == 0 {
+			// TODO check DriveType : unassigned or assigned in string
+			mapStatus := map[string]physicaldrive.PDStatus{
+				"OK":      physicaldrive.PDStatusUsed,
+				"Failed":  physicaldrive.PDStatusFailed,
+				"Offline": physicaldrive.PDStatusFailed,
+			}
 
-		status, ok := mapStatus[value]
-		if !ok {
-			return errors.Errorf("invalid status: %s", value)
-		}
+			status, ok := mapStatus[value]
+			if !ok {
+				return errors.Errorf("invalid status: %s", value)
+			}
 
-		physicalDrive.Status = status
+			physicalDrive.Status = status
+		}
 
 	case "Drive Type":
 		if strings.Contains(value, "Unassigned") {
@@ -174,6 +212,15 @@ func parsePDLine(physicalDrive *physicaldrive.PhysicalDrive, line string) error 
 
 	case "Disk Name":
 		physicalDrive.DevicePath = value
+
+		blockDevice, err := s.getBlockDevice(value)
+		if err != nil {
+			return errors.Wrapf(err, "failed to get block device for %s", value)
+		}
+
+		if physicalDrive.Status == physicaldrive.PDStatusUsed {
+			physicalDrive.Status = isBlockDeviceUsed(blockDevice)
+		}
 		// TODO miss permanent path
 	}
 

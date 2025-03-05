@@ -1,8 +1,6 @@
 package smartarray
 
 import (
-	"bytes"
-	"regexp"
 	"strconv"
 
 	"github.com/pkg/errors"
@@ -13,9 +11,23 @@ import (
 	"github.com/scality/raidmgmt/domain/ports"
 )
 
-type SSACLI struct {
-	commandrunner.CommandRunner
-}
+type (
+	SSACLI struct {
+		commandrunner.CommandRunner
+		commandrunner.LSBLK
+	}
+
+	BlockDevice struct {
+		DevicePath     string
+		Size           uint64
+		Rotational     string
+		Type           string
+		Tran           string
+		MountPoint     string
+		PartitionType  string
+		FilesystemType string
+	}
+)
 
 type SSACLIRaidController interface {
 	ports.ControllersGetter
@@ -50,7 +62,7 @@ func NewSSACLI(
 
 // Controllers returns a list of RAID controllers.
 func (s *SSACLI) Controllers() ([]*raidcontroller.RAIDController, error) {
-	output, err := s.Run([]string{
+	output, err := s.CommandRunner.Run([]string{
 		"controller",
 		"all",
 		"show",
@@ -80,7 +92,7 @@ func (s *SSACLI) Controller(metadata *raidcontroller.Metadata) (
 		"detail",
 	}
 
-	output, err := s.Run(args)
+	output, err := s.CommandRunner.Run(args)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to show details for controller %d", metadata.ID)
 	}
@@ -107,12 +119,12 @@ func (s *SSACLI) PhysicalDrives(metadata *raidcontroller.Metadata) (
 		"detail",
 	}
 
-	output, err := s.Run(args)
+	output, err := s.CommandRunner.Run(args)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to show all physical drives details")
 	}
 
-	physicalDrives, err := parsePhysicalDrives(output)
+	physicalDrives, err := s.parsePhysicalDrives(output)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse physical drives details")
 	}
@@ -136,7 +148,7 @@ func (s *SSACLI) PhysicalDrive(metadata *physicaldrive.Metadata) (
 		"detail",
 	}
 
-	output, err := s.Run(args)
+	output, err := s.CommandRunner.Run(args)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to show details for physical drive %s", slot)
 	}
@@ -146,7 +158,7 @@ func (s *SSACLI) PhysicalDrive(metadata *physicaldrive.Metadata) (
 		return nil, errors.Wrap(err, "failed to parse controller ID")
 	}
 
-	physicalDrive, err := parsePhysicalDrive(output)
+	physicalDrive, err := s.parsePhysicalDrive(output)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to parse physical drive %s", slot)
 	}
@@ -170,7 +182,7 @@ func (s *SSACLI) LogicalVolumes(metadata *raidcontroller.Metadata) (
 		"detail",
 	}
 
-	output, err := s.Run(args)
+	output, err := s.CommandRunner.Run(args)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to show all logical drives details")
 	}
@@ -188,7 +200,7 @@ func (s *SSACLI) LogicalVolumes(metadata *raidcontroller.Metadata) (
 		"config",
 	}
 
-	output, err = s.Run(args)
+	output, err = s.CommandRunner.Run(args)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to show controller config")
 	}
@@ -220,7 +232,7 @@ func (s *SSACLI) LogicalVolume(metadata *logicalvolume.Metadata) (
 		"detail",
 	}
 
-	output, err := s.Run(args)
+	output, err := s.CommandRunner.Run(args)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to show details for logical drive %s", metadata.ID)
 	}
@@ -240,7 +252,7 @@ func (s *SSACLI) LogicalVolume(metadata *logicalvolume.Metadata) (
 		"config",
 	}
 
-	output, err = s.Run(args)
+	output, err = s.CommandRunner.Run(args)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to show controller config")
 	}
@@ -293,7 +305,7 @@ func (s *SSACLI) CreateLV(request *logicalvolume.Request) (*logicalvolume.Logica
 		"forced", // To bypass the warning and confirmation prompt
 	}
 
-	_, err = s.Run(args)
+	_, err = s.CommandRunner.Run(args)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to run create logical drive command")
 	}
@@ -307,7 +319,7 @@ func (s *SSACLI) CreateLV(request *logicalvolume.Request) (*logicalvolume.Logica
 		"config",
 	}
 
-	output, err := s.Run(args)
+	output, err := s.CommandRunner.Run(args)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to show controller config")
 	}
@@ -331,7 +343,7 @@ func (s *SSACLI) DeleteLV(metadata *logicalvolume.Metadata) error {
 		"forced", // To bypass the warning message
 	}
 
-	_, err := s.Run(args)
+	_, err := s.CommandRunner.Run(args)
 	if err != nil {
 		return errors.Wrapf(err, "failed to delete logical drive %s", metadata.ID)
 	}
