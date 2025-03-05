@@ -10,7 +10,7 @@ import (
 	"github.com/scality/raidmgmt/pkg/implementation/logicalvolumegetter"
 	"github.com/scality/raidmgmt/pkg/implementation/logicalvolumemanager"
 	"github.com/scality/raidmgmt/pkg/implementation/physicaldrivegetter"
-	"github.com/scality/raidmgmt/pkg/implementation/softwareraidcontroller/rhel8"
+	"github.com/scality/raidmgmt/pkg/implementation/softwareraidcontroller"
 )
 
 // Remove the full array.
@@ -39,7 +39,7 @@ func main() {
 	)
 
 	controller := core.NewSoftwareRAIDController(
-		rhel8.NewRHEL8(
+		softwareraidcontroller.NewRHEL8(
 			physicalDriveGetter,
 			logicalVolumeGetter,
 			logicalVolumeManager,
