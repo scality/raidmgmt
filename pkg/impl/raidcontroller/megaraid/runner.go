@@ -50,6 +50,7 @@ func NewMegaRAIDRunner(arg string) (*MegaRAIDRunner, error) {
 	}
 
 	// Check if the path exists
+	// TODO may want to export that in our future library
 	if err := utils.ValidatePath(arg); err != nil {
 		return nil, errors.Wrap(err, "failed to validate path")
 	}

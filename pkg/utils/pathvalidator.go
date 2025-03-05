@@ -6,6 +6,7 @@ import (
 	"github.com/pkg/errors"
 )
 
+// ValidatePath checks if the path is a file and exists.
 func ValidatePath(path string) error {
 	info, err := os.Stat(path)
 	if err != nil {
