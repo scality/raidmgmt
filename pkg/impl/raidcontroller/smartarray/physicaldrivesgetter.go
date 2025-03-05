@@ -14,7 +14,7 @@ import (
 const (
 	slotRegexpPattern                = `Slot (\d+)`
 	physicaldriveRegexpPattern       = `physicaldrive\s+(.+)`
-	physicaldriveConfigRegexpPattern = `physicaldrive\s+.+\s+\(port\s+(.+?):box\s+(.+?):bay\s+(.+?),.*\)` //nolint: lll // This is a regexp.
+	physicaldriveConfigRegexpPattern = `physicaldrive\s+.+?\s+\(port\s+(.+?):box\s+(.+?):bay\s+(.+?),.*\)` //nolint: lll // This is a regexp
 
 	keyValueParts = 2
 )

@@ -68,11 +68,13 @@ func getLogicalDriveID(
 	request *logicalvolume.Request,
 	output []byte,
 ) (string, error) {
-	blocks := splitOutput(associatedPhysicalDriveRegexp, output)
+	blocks := splitOutput(arrayOrUnassignedRegexp, output)
 
 	var logicalDriveID string
 
 	for _, block := range blocks {
+		logicalDriveID = ""
+
 		for _, line := range strings.Split(string(block), "\n") {
 			if strings.HasPrefix(strings.TrimSpace(line), "logicaldrive") {
 				// Extract the logical drive ID
@@ -81,8 +83,18 @@ func getLogicalDriveID(
 					logicalDriveID = parts[1]
 				}
 			} else if strings.Contains(line, formatSlot(request.PDrivesMetadata[0].Slot)) {
-				// Found the physical drive in the logical drive, return the logical drive ID
-				return logicalDriveID, nil
+				// Check if line contains the physical drive slot
+				// If the logical drive ID is empty, return it
+				// If the logical drive ID is not empty, return an error
+				if logicalDriveID == "" {
+					// Found the physical drive in the logical drive, return the logical drive ID
+					return logicalDriveID, nil
+				}
+
+				return "", errors.Errorf(
+					"physical drive %s found in multiple logical drives",
+					formatSlot(request.PDrivesMetadata[0].Slot),
+				)
 			}
 		}
 	}

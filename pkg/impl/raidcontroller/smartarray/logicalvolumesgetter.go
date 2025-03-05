@@ -11,19 +11,19 @@ import (
 )
 
 const (
-	logicalVolumeRegexpPattern           = `\s*Logical Drive:\s+\d+`
-	logicalVolumeIDStatusRegexpPattern   = `logicaldrive\s+(\d+)`
-	raidLevelRegexpPattern               = `RAID\s+(\d+)`
-	associatedPhysicalDriveRegexpPattern = `logicaldrive\s+\d+\s+\(.*?\)\n(\s*physicaldrive.*?\n)*`
+	logicalVolumeRegexpPattern         = `\s*Logical Drive:\s+\d+`
+	logicalVolumeIDStatusRegexpPattern = `logicaldrive\s+(\d+)`
+	raidLevelRegexpPattern             = `RAID\s+(\d+)`
+	arrayOrUnassignedRegexpPattern     = `(Array\s+[A-Z]+\s+\(.*\)|Unassigned)`
 
 	minMatches = 2
 )
 
 var (
-	logicalVolumeRegexp           = regexp.MustCompile(logicalVolumeRegexpPattern)
-	logicalVolumeIDStatusRegexp   = regexp.MustCompile(logicalVolumeIDStatusRegexpPattern)
-	raidLevelRegexp               = regexp.MustCompile(raidLevelRegexpPattern)
-	associatedPhysicalDriveRegexp = regexp.MustCompile(associatedPhysicalDriveRegexpPattern)
+	logicalVolumeRegexp         = regexp.MustCompile(logicalVolumeRegexpPattern)
+	logicalVolumeIDStatusRegexp = regexp.MustCompile(logicalVolumeIDStatusRegexpPattern)
+	raidLevelRegexp             = regexp.MustCompile(raidLevelRegexpPattern)
+	arrayOrUnassignedRegexp     = regexp.MustCompile(arrayOrUnassignedRegexpPattern)
 )
 
 func parseLogicalVolumes(output []byte) (
@@ -104,7 +104,7 @@ func extractInfoFromConfig(
 	logicalVolume *logicalvolume.LogicalVolume,
 	output []byte,
 ) (logicalvolume.RAIDLevel, []*physicaldrive.Metadata) {
-	blocks := splitOutput(associatedPhysicalDriveRegexp, output)
+	blocks := splitOutput(arrayOrUnassignedRegexp, output)
 
 	// Get the physical drives metadata
 	pDrivesMetadata := make([]*physicaldrive.Metadata, 0, len(blocks))
@@ -124,7 +124,8 @@ func extractInfoFromConfig(
 			}
 
 			matches := physicaldriveConfigRegexp.FindStringSubmatch(line)
-			if len(matches) < minMatches {
+			//nolint:mnd // The matches required here are 4
+			if len(matches) < 4 {
 				continue
 			}
 
@@ -132,9 +133,9 @@ func extractInfoFromConfig(
 			pDriveMetadata := &physicaldrive.Metadata{
 				CtrlMetadata: logicalVolume.CtrlMetadata,
 				Slot: &physicaldrive.Slot{
-					Port:      matches[2],
-					Enclosure: matches[3],
-					Bay:       matches[4],
+					Port:      matches[1],
+					Enclosure: matches[2],
+					Bay:       matches[3],
 				},
 			}
 
