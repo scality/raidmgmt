@@ -141,10 +141,17 @@ func (s *SSACLI) PhysicalDrive(metadata *physicaldrive.Metadata) (
 		return nil, errors.Wrapf(err, "failed to show details for physical drive %s", slot)
 	}
 
+	controllerID, err := parseControllerID(output)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to parse controller ID")
+	}
+
 	physicalDrive, err := parsePhysicalDrive(output)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to parse physical drive %s", slot)
 	}
+
+	physicalDrive.CtrlMetadata.ID = controllerID
 
 	return physicalDrive, nil
 }

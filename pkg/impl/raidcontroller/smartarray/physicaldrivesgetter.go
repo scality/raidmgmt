@@ -32,11 +32,18 @@ func parsePhysicalDrives(output []byte) ([]*physicaldrive.PhysicalDrive, error) 
 
 	physicalDrives := make([]*physicaldrive.PhysicalDrive, 0, len(blocks))
 
+	controllerID, err := parseControllerID(output)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to parse controller ID")
+	}
+
 	for _, block := range blocks {
 		physicalDrive, err := parsePhysicalDrive(block)
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to parse physical drive: %s", block)
 		}
+
+		physicalDrive.CtrlMetadata.ID = controllerID
 
 		physicalDrives = append(physicalDrives, physicalDrive)
 	}
@@ -44,27 +51,29 @@ func parsePhysicalDrives(output []byte) ([]*physicaldrive.PhysicalDrive, error) 
 	return physicalDrives, nil
 }
 
+// parseControllerID parses the controller ID from the output of the physicaldrive command.
+func parseControllerID(output []byte) (int, error) {
+	match := slotRegexp.FindSubmatch(output)
+
+	if match == nil {
+		return 0, errors.New("controller ID not found")
+	}
+
+	controllerID, err := strconv.Atoi(string(match[1]))
+	if err != nil {
+		return 0, errors.Wrap(err, "failed to convert controller ID to integer")
+	}
+
+	return controllerID, nil
+}
+
 // parsePhysicalDrive parses a physical drive block and returns a PhysicalDrive entity.
 func parsePhysicalDrive(block []byte) (*physicaldrive.PhysicalDrive, error) {
-	var (
-		err          error
-		controllerID = -1
-	)
-
-	// Extract the controller ID from the block
-	if match := slotRegexp.FindSubmatch(block); match != nil {
-		controllerID, err = strconv.Atoi(string(match[1]))
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to convert controller ID to integer")
-		}
-	}
 	// Create the PhysicalDrive entity
 	physicalDrive := &physicaldrive.PhysicalDrive{
 		Metadata: &physicaldrive.Metadata{
-			CtrlMetadata: &raidcontroller.Metadata{
-				ID: controllerID,
-			},
-			Slot: &physicaldrive.Slot{},
+			CtrlMetadata: &raidcontroller.Metadata{},
+			Slot:         &physicaldrive.Slot{},
 		},
 	}
 
