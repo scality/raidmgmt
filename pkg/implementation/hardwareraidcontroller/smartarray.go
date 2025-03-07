@@ -16,6 +16,7 @@ type SmartArray struct {
 
 var _ ports.HardwareRAIDController = &SmartArray{}
 
+//nolint:revive // This wraps interfaces together.
 func NewSmartArray(
 	controllersGetter ports.ControllersGetter,
 	physicalDrivesGetter ports.PhysicalDrivesGetter,
@@ -32,14 +33,14 @@ func NewSmartArray(
 	}
 }
 
-func (s *SmartArray) EnableJBOD(metadata *physicaldrive.Metadata) error {
+func (*SmartArray) EnableJBOD(_ *physicaldrive.Metadata) error {
 	panic("not implemented for smartarray hardware RAID controller")
 }
 
-func (s *SmartArray) DisableJBOD(metadata *physicaldrive.Metadata) error {
+func (*SmartArray) DisableJBOD(_ *physicaldrive.Metadata) error {
 	panic("not implemented for smartarray hardware RAID controller")
 }
 
-func (s *SmartArray) SetLVCacheOptions(*logicalvolume.Metadata, *logicalvolume.CacheOptions) error {
+func (*SmartArray) SetLVCacheOptions(*logicalvolume.Metadata, *logicalvolume.CacheOptions) error {
 	panic("not implemented for smartarray hardware RAID controller")
 }

@@ -15,9 +15,9 @@ import (
 
 const (
 	// Capture leading whitespace.
-	leadingWhitespaceRegexpPattern = `^(\s*)`
-	nameRegexpPattern              = `HPE Smart Array (.*?) in Slot \d+`
-	keyValueParts                  = 2
+	sscaliLeadingWhitespaceRegexpPattern = `^(\s*)`
+	ssacliNameRegexpPattern              = `HPE Smart Array (.*?) in Slot \d+`
+	ssacliKeyValueParts                  = 2
 )
 
 type SSACLI struct {
@@ -25,9 +25,10 @@ type SSACLI struct {
 }
 
 var (
-	_                       ports.ControllersGetter = &SSACLI{}
-	leadingWhitespaceRegexp                         = regexp.MustCompile(leadingWhitespaceRegexpPattern)
-	nameRegexp                                      = regexp.MustCompile(nameRegexpPattern)
+	_ ports.ControllersGetter = &SSACLI{}
+
+	sscaliLeadingWhitespaceRegexp = regexp.MustCompile(sscaliLeadingWhitespaceRegexpPattern)
+	nameRegexp                    = regexp.MustCompile(ssacliNameRegexpPattern)
 )
 
 func NewSSACLI(commandRunner commandrunner.CommandRunner) *SSACLI {
@@ -82,7 +83,7 @@ func (s *SSACLI) Controller(metadata *raidcontroller.Metadata) (
 }
 
 func parseControllers(output []byte) ([]*raidcontroller.RAIDController, error) {
-	blocks := splitOutput(leadingWhitespaceRegexp, output)
+	blocks := splitOutput(sscaliLeadingWhitespaceRegexp, output)
 
 	controllers := make([]*raidcontroller.RAIDController, 0, len(blocks))
 
@@ -179,7 +180,7 @@ func parseLineDetail(line string) (key, value string) {
 
 	splitParts := strings.Split(line, ":")
 
-	if len(splitParts) != keyValueParts {
+	if len(splitParts) != ssacliKeyValueParts {
 		return "", ""
 	}
 

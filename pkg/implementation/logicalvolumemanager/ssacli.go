@@ -1,3 +1,4 @@
+//nolint:cyclop // Juuuuust above complexity limit
 package logicalvolumemanager
 
 import (
@@ -47,6 +48,8 @@ func NewSSACLI(
 }
 
 // CreateLV creates a logical volume from a request.
+//
+//nolint:funlen // This function is long.
 func (s *SSACLI) CreateLV(request *logicalvolume.Request) (*logicalvolume.LogicalVolume, error) {
 	physicalDrivesToUse := make([]*physicaldrive.PhysicalDrive, 0, len(request.PDrivesMetadata))
 

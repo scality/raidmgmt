@@ -204,7 +204,10 @@ func splitOutput(regularExpression *regexp.Regexp, output []byte) [][]byte {
 // and updates the PhysicalDrive entity.
 // nolint: cyclop,gocognit // The switch statement is necessary
 // to parse the different key-value pairs.
-func (s *SSACLI) parsePDLine(physicalDrive *physicaldrive.PhysicalDrive, line string) error {
+func (s *SSACLI) parsePDLine( //nolint:funlen // This function is long and not compressible
+	physicalDrive *physicaldrive.PhysicalDrive,
+	line string,
+) error {
 	key, value := parseLineDetail(line)
 
 	// Parse the key-value pair
