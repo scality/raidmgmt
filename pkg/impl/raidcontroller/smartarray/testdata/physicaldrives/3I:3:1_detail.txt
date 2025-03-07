@@ -1,0 +1,37 @@
+
+HPE Smart Array P816i-a SR Gen10 in Slot 0 (Embedded)
+
+   Array H
+
+      physicaldrive 3I:3:1
+         Port: 3I
+         Box: 3
+         Bay: 1
+         Status: OK
+         Drive Type: Data Drive
+         Interface Type: SAS
+         Size: 6 TB
+         Drive exposed to OS: False
+         Logical/Physical Block Size: 512/4096
+         Rotational Speed: 7200
+         Firmware Revision: HPD4
+         Serial Number: ZADBC2HK
+         WWID: 5000C500CB805B25
+         Model: HP      MB6000JVYZD
+         Current Temperature (C): 33
+         Maximum Temperature (C): 44
+         PHY Count: 2
+         PHY Transfer Rate: 12.0Gbps, Unknown
+         PHY Physical Link Rate: 12.0Gbps, Unknown
+         PHY Maximum Link Rate: 12.0Gbps, 12.0Gbps
+         Drive Authentication Status: OK
+         Carrier Application Version: 11
+         Carrier Bootloader Version: 6
+         Sanitize Erase Supported: True
+         Sanitize Estimated Max Erase Time: 11 hour(s), 40 minute(s) 
+         Unrestricted Sanitize Supported: True
+         Shingled Magnetic Recording Support: None
+         Drive Unique ID: 5000C500CB805B27
+         Multi-Actuator Drive: False
+
+

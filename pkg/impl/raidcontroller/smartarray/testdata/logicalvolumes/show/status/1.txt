@@ -1,0 +1,3 @@
+
+   logicaldrive 1 (745.18 GB, RAID 1): OK
+
