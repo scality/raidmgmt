@@ -234,7 +234,7 @@ func ParseMDADMExportOutput(output []byte) ([]*MDADMExportDetails, error) {
 		for _, line := range strings.Split(string(block), "\n") {
 			switch {
 			case strings.HasPrefix(line, "MD_LEVEL="):
-				raidLevel := strings.TrimPrefix(line, "MD_LEVEL=")
+				raidLevel := strings.TrimPrefix(line, "MD_LEVEL=raid")
 
 				currentDetails.RaidLevel = logicalvolume.RAIDLevelMap(raidLevel)
 			case strings.HasPrefix(line, "MD_DEVICES="):
