@@ -481,7 +481,6 @@ func (a *Adapter) migrate(
 
 	actionArg := fmt.Sprintf("option=%s", action)
 
-	fmt.Println(lv.RAIDLevel.Level())
 	raidLevel := fmt.Sprintf("type=raid%d", lv.RAIDLevel.Level())
 
 	drives, err := formatDrivesString(pdMetadatas)

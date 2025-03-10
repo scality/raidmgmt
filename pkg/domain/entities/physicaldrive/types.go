@@ -84,28 +84,22 @@ func (s *Slot) Format() string {
 		return emptySlot
 	}
 
-	if s.Port == "" {
-		// Handle when only Port is empty
-		if s.Enclosure == "" {
-			return s.Bay
-		}
-
-		if s.Bay == "" {
-			return s.Enclosure
-		}
-
-		return s.Enclosure + ":" + s.Bay
-	}
-
-	// Handle when Port exists but other fields might be empty
 	result := s.Port
 
-	if s.Enclosure != "" || s.Bay != "" {
-		result += ":" + s.Enclosure
+	if s.Enclosure != "" {
+		if result != "" {
+			result += ":"
+		}
+
+		result += s.Enclosure
 	}
 
 	if s.Bay != "" {
-		result += ":" + s.Bay
+		if result != "" {
+			result += ":"
+		}
+
+		result += s.Bay
 	}
 
 	return result

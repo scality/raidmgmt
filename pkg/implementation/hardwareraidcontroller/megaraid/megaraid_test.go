@@ -256,7 +256,6 @@ func (s *UnitTestSuite) TestControllers() {
 
 	for _, tt := range tests {
 		controllers, err := s.a.Controllers()
-		fmt.Println(controllers, err)
 
 		if tt.errExpected {
 			s.Nil(controllers)

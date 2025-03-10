@@ -198,7 +198,6 @@ func (s *SSACLI) parsePDLine( //nolint:funlen // This function is long and not c
 
 	case "Status":
 		if physicalDrive.Status == physicaldrive.PDStatusUnknown {
-			// TODO check DriveType : unassigned or assigned in string
 			mapStatus := map[string]physicaldrive.PDStatus{
 				"OK":      physicaldrive.PDStatusUsed,
 				"Failed":  physicaldrive.PDStatusFailed,
