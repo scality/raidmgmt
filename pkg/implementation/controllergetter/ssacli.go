@@ -17,7 +17,6 @@ const (
 	// Capture leading whitespace.
 	sscaliLeadingWhitespaceRegexpPattern = `^(\s*)`
 	ssacliNameRegexpPattern              = `HPE Smart Array (.*?) in Slot \d+`
-	ssacliKeyValueParts                  = 2
 )
 
 type SSACLI struct {
