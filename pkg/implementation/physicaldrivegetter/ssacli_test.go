@@ -89,8 +89,6 @@ func TestSSACLIPhysicalDrives(t *testing.T) {
 					} else {
 						seen[pd.Serial] = true
 					}
-
-					t.Logf("Physical Drive %s: %+v", pd.Serial, pd)
 				}
 			}
 		})
@@ -186,8 +184,6 @@ func TestSSCALIPhysicalDrive(t *testing.T) {
 			assert.Equal(t, tt.expected.Model, physicalDrive.Model)
 			assert.Equal(t, tt.expected.Vendor, physicalDrive.Vendor)
 		}
-
-		t.Logf("Physical Drive %s: %+v", physicalDrive.Serial, physicalDrive)
 	}
 }
 
