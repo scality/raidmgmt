@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
+
 	"github.com/scality/raidmgmt/pkg/domain/entities/raidcontroller"
 	"github.com/scality/raidmgmt/pkg/utils"
 )

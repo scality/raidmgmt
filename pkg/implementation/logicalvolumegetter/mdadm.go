@@ -25,7 +25,7 @@ const (
 
 type (
 	MDADM struct {
-		commandrunner.CommandRunner
+		MDADM commandrunner.CommandRunner
 	}
 
 	MDADMExportDetails struct {
@@ -69,7 +69,7 @@ func NewMDADM(
 	runner *commandrunner.MDADM,
 ) *MDADM {
 	return &MDADM{
-		CommandRunner: runner,
+		MDADM: runner,
 	}
 }
 
@@ -78,7 +78,7 @@ func (m *MDADM) LogicalVolumes(
 	_ *raidcontroller.Metadata,
 ) ([]*logicalvolume.LogicalVolume, error) {
 	// List existing logical volumes
-	output, err := m.Run([]string{
+	output, err := m.MDADM.Run([]string{
 		"--detail",
 		"--scan",
 		"--export", // Export to get a key=value format output
@@ -123,7 +123,7 @@ func (m *MDADM) LogicalVolume(
 	}
 
 	// Get the details of the logical volume
-	output, err := m.Run([]string{
+	output, err := m.MDADM.Run([]string{
 		"--detail",
 		devicePath,
 		"--export", // Export to get a key=value format output
@@ -167,7 +167,7 @@ func (m *MDADM) getLogicalVolumeStatusAndSize(devicePath string) (
 	uint64,
 	error,
 ) {
-	output, err := m.Run([]string{
+	output, err := m.MDADM.Run([]string{
 		"--detail",
 		devicePath,
 	})

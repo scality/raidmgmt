@@ -15,31 +15,30 @@ import (
 
 const (
 	// Capture leading whitespace.
-	sscaliLeadingWhitespaceRegexpPattern = `^(\s*)`
+	ssacliLeadingWhitespaceRegexpPattern = `^(\s*)`
 	ssacliNameRegexpPattern              = `HPE Smart Array (.*?) in Slot \d+`
-	ssacliKeyValueParts                  = 2
 )
 
 type SSACLI struct {
-	commandrunner.CommandRunner
+	SSACLI commandrunner.CommandRunner
 }
 
 var (
 	_ ports.ControllersGetter = &SSACLI{}
 
-	sscaliLeadingWhitespaceRegexp = regexp.MustCompile(sscaliLeadingWhitespaceRegexpPattern)
-	nameRegexp                    = regexp.MustCompile(ssacliNameRegexpPattern)
+	ssacliLeadingWhitespaceRegexp = regexp.MustCompile(ssacliLeadingWhitespaceRegexpPattern)
+	ssacliNameRegexp              = regexp.MustCompile(ssacliNameRegexpPattern)
 )
 
-func NewSSACLI(commandRunner commandrunner.CommandRunner) *SSACLI {
+func NewSSACLI(ssacli *commandrunner.SSACLI) *SSACLI {
 	return &SSACLI{
-		CommandRunner: commandRunner,
+		SSACLI: ssacli,
 	}
 }
 
 // Controllers returns a list of RAID controllers.
 func (s *SSACLI) Controllers() ([]*raidcontroller.RAIDController, error) {
-	output, err := s.CommandRunner.Run([]string{
+	output, err := s.SSACLI.Run([]string{
 		"controller",
 		"all",
 		"show",
@@ -69,7 +68,7 @@ func (s *SSACLI) Controller(metadata *raidcontroller.Metadata) (
 		"detail",
 	}
 
-	output, err := s.CommandRunner.Run(args)
+	output, err := s.SSACLI.Run(args)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to show details for controller %d", metadata.ID)
 	}
@@ -83,7 +82,7 @@ func (s *SSACLI) Controller(metadata *raidcontroller.Metadata) (
 }
 
 func parseControllers(output []byte) ([]*raidcontroller.RAIDController, error) {
-	blocks := utils.SplitOutput(sscaliLeadingWhitespaceRegexp, output)
+	blocks := utils.SplitOutput(ssacliLeadingWhitespaceRegexp, output)
 
 	controllers := make([]*raidcontroller.RAIDController, 0, len(blocks))
 
@@ -116,8 +115,8 @@ func parseController(block []byte) (*raidcontroller.RAIDController, error) {
 
 // parseControllerLine parses a line of a controller block and updates the RAIDController entity.
 func parseControllerLine(controller *raidcontroller.RAIDController, line string) error {
-	if nameRegexp.FindStringSubmatch(line) != nil {
-		controller.Name = nameRegexp.FindStringSubmatch(line)[1]
+	if ssacliNameRegexp.FindStringSubmatch(line) != nil {
+		controller.Name = ssacliNameRegexp.FindStringSubmatch(line)[1]
 
 		return nil
 	}

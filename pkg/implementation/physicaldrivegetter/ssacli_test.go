@@ -28,8 +28,8 @@ func TestSSACLIPhysicalDrives(t *testing.T) {
 	mockRunner := new(MockCommandRunner)
 
 	s := &SSACLI{
-		CommandRunner: mockRunner,
-		lsblk:         mockRunner,
+		SSACLI: mockRunner,
+		LSBLK:  mockRunner,
 	}
 
 	tests := []struct {
@@ -99,7 +99,8 @@ func TestSSCALIPhysicalDrive(t *testing.T) {
 	mockRunner := new(MockCommandRunner)
 
 	s := &SSACLI{
-		CommandRunner: mockRunner,
+		SSACLI: mockRunner,
+		LSBLK:  mockRunner,
 	}
 
 	tests := []struct {
@@ -111,7 +112,7 @@ func TestSSCALIPhysicalDrive(t *testing.T) {
 	}{
 		{
 			name:    "nominal case",
-			mocking: mockOutput("physicaldrives/4I:6:1_detail"),
+			mocking: mockOutput("physicaldrives/4I.6.1_detail"),
 			metadata: &physicaldrive.Metadata{
 				CtrlMetadata: &raidcontroller.Metadata{
 					ID: 0,

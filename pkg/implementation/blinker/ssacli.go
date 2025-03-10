@@ -11,13 +11,15 @@ import (
 )
 
 type SSACLI struct {
-	commandrunner.CommandRunner
+	SSACLI commandrunner.CommandRunner
 }
 
 var _ ports.Blinker = &SSACLI{}
 
-func NewSSACLI() *SSACLI {
-	return &SSACLI{}
+func NewSSACLI(ssacli *commandrunner.SSACLI) *SSACLI {
+	return &SSACLI{
+		SSACLI: ssacli,
+	}
 }
 
 // StartBlink starts blinking a physical drive.
@@ -53,7 +55,7 @@ func (s *SSACLI) blink(metadata *physicaldrive.Metadata, action string) error {
 		"led=" + action,
 	}
 
-	_, err := s.CommandRunner.Run(args)
+	_, err := s.SSACLI.Run(args)
 	if err != nil {
 		return errors.Wrapf(err, "failed to blink physical drive %s", slot)
 	}

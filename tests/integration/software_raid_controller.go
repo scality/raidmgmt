@@ -14,12 +14,12 @@ import (
 )
 
 type SoftwareRAIDControllerTester struct {
-	controller core.SoftwareRAIDController
+	controller core.RAIDController
 	logger     *zerolog.Logger
 }
 
 func NewSoftwareRAIDControllerTester(
-	controller core.SoftwareRAIDController,
+	controller core.RAIDController,
 	logger *zerolog.Logger,
 ) *SoftwareRAIDControllerTester {
 	return &SoftwareRAIDControllerTester{

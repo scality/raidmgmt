@@ -16,7 +16,7 @@ import (
 const baseMDPath = "/dev/md"
 
 type MDADM struct {
-	commandrunner.CommandRunner
+	MDADM commandrunner.CommandRunner
 	ports.LogicalVolumesGetter
 	ports.PhysicalDrivesGetter
 }
@@ -24,12 +24,12 @@ type MDADM struct {
 var _ ports.LogicalVolumesManager = &MDADM{}
 
 func NewMDADM(
-	runner commandrunner.CommandRunner,
+	runner *commandrunner.MDADM,
 	getter ports.LogicalVolumesGetter,
 	pdGetter ports.PhysicalDrivesGetter,
 ) *MDADM {
 	return &MDADM{
-		CommandRunner:        runner,
+		MDADM:                runner,
 		LogicalVolumesGetter: getter,
 		PhysicalDrivesGetter: pdGetter,
 	}
@@ -71,7 +71,7 @@ func (m *MDADM) CreateLV(request *logicalvolume.Request) (*logicalvolume.Logical
 	createCmdArgs = append(createCmdArgs, physicalDrivesName...)
 
 	// Ignore the output
-	_, err := m.Run(createCmdArgs)
+	_, err := m.MDADM.Run(createCmdArgs)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to run mdadm create logical volume command")
 	}
@@ -95,7 +95,7 @@ func (m *MDADM) DeleteLV(metadata *logicalvolume.Metadata) error {
 	}
 
 	// Stop the array
-	_, err = m.Run([]string{
+	_, err = m.MDADM.Run([]string{
 		"--stop", logicalVolume.DevicePath,
 	})
 	if err != nil {
@@ -106,7 +106,7 @@ func (m *MDADM) DeleteLV(metadata *logicalvolume.Metadata) error {
 	// 	to make them available for reuse
 	for _, device := range logicalVolume.PDrivesMetadata {
 		// Remove the superblock of the device
-		_, err = m.Run([]string{
+		_, err = m.MDADM.Run([]string{
 			"--zero-superblock", device.DevicePath,
 		})
 		if err != nil {
@@ -160,7 +160,7 @@ func (m *MDADM) AddPDsToLV(
 	if logicalVolume.RAIDLevel == logicalvolume.RAIDLevel10 ||
 		logicalVolume.RAIDLevel == logicalvolume.RAIDLevel1 {
 		// Add the devices to the array
-		_, err = m.Run(append([]string{
+		_, err = m.MDADM.Run(append([]string{
 			logicalVolume.DevicePath,
 			"--add",
 		}, devicesPaths...))
@@ -173,7 +173,7 @@ func (m *MDADM) AddPDsToLV(
 		}
 
 		// Enhance the size of the array
-		_, err = m.Run([]string{
+		_, err = m.MDADM.Run([]string{
 			"--grow", logicalVolume.DevicePath,
 			"--array-size=max",
 		})
@@ -197,7 +197,7 @@ func (m *MDADM) AddPDsToLV(
 	addCmd = append(addCmd, devicesPaths...)
 
 	// Add then grow the array
-	_, err = m.Run(addCmd)
+	_, err = m.MDADM.Run(addCmd)
 	if err != nil {
 		return errors.Wrapf(
 			err,
@@ -253,7 +253,7 @@ func (m *MDADM) DeletePDsFromLV(
 	// Append the list of physical drive to be set to failed
 	failCmd = append(failCmd, pdsDevicePaths...)
 
-	_, err = m.Run(failCmd)
+	_, err = m.MDADM.Run(failCmd)
 	if err != nil {
 		return errors.Wrapf(
 			err,
@@ -271,7 +271,7 @@ func (m *MDADM) DeletePDsFromLV(
 	// Append the list of physical drive to be removed
 	removeCmd = append(removeCmd, pdsDevicePaths...)
 
-	_, err = m.Run(removeCmd)
+	_, err = m.MDADM.Run(removeCmd)
 	if err != nil {
 		return errors.Wrap(err, "failed to run mdadm remove command")
 	}
@@ -282,7 +282,7 @@ func (m *MDADM) DeletePDsFromLV(
 
 	zeroCmd = append(zeroCmd, pdsDevicePaths...)
 
-	_, err = m.Run(zeroCmd)
+	_, err = m.MDADM.Run(zeroCmd)
 	if err != nil {
 		return errors.Wrap(err, "failed to run mdadm zero superblock command")
 	}
@@ -293,7 +293,7 @@ func (m *MDADM) DeletePDsFromLV(
 	}
 
 	// Reduce the device count of the array
-	_, err = m.Run([]string{
+	_, err = m.MDADM.Run([]string{
 		"--grow", logicalVolume.DevicePath,
 		"--raid-devices", fmt.Sprintf("%d", len(logicalVolume.PDrivesMetadata)-len(pdsMetadata)),
 	})
@@ -302,7 +302,7 @@ func (m *MDADM) DeletePDsFromLV(
 	}
 
 	// Reduce the size of the array
-	_, err = m.Run([]string{
+	_, err = m.MDADM.Run([]string{
 		"--grow", logicalVolume.DevicePath,
 		"--array-size=max",
 	})

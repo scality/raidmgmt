@@ -12,8 +12,8 @@ import (
 	"github.com/scality/raidmgmt/pkg/domain/entities/logicalvolume"
 	"github.com/scality/raidmgmt/pkg/domain/entities/physicaldrive"
 	"github.com/scality/raidmgmt/pkg/domain/entities/raidcontroller"
-	"github.com/scality/raidmgmt/pkg/implementation/hardwareraidcontroller/megaraid"
-	"github.com/scality/raidmgmt/pkg/implementation/hardwareraidcontroller/megaraid/mocks"
+	megaraid2 "github.com/scality/raidmgmt/pkg/implementation/raidcontroller/megaraid"
+	mocks2 "github.com/scality/raidmgmt/pkg/implementation/raidcontroller/megaraid/mocks"
 
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
@@ -24,9 +24,9 @@ var pathTestData = "./testdata/"
 type UnitTestSuite struct {
 	suite.Suite
 
-	a                *megaraid.Adapter
-	mockRunner       *mocks.Runner
-	mockPathResolver *mocks.PathResolver
+	a                *megaraid2.Adapter
+	mockRunner       *mocks2.Runner
+	mockPathResolver *mocks2.PathResolver
 
 	wasCreateLVCalledOnce bool
 
@@ -42,21 +42,21 @@ func TestRunSuite(t *testing.T) {
 
 // SetupTest sets up the test suite. It's called before each test.
 func (s *UnitTestSuite) SetupTest() {
-	s.mockRunner = mocks.NewRunner(s.T())
-	s.a = megaraid.New(s.mockRunner)
+	s.mockRunner = mocks2.NewRunner(s.T())
+	s.a = megaraid2.New(s.mockRunner)
 
-	s.mockPathResolver = mocks.NewPathResolver(s.T())
+	s.mockPathResolver = mocks2.NewPathResolver(s.T())
 }
 
 // mockOutput reads the output from a file and returns it.
-func mockOutput(filename string) *megaraid.CmdOutput {
+func mockOutput(filename string) *megaraid2.CmdOutput {
 	file, err := os.Open(pathTestData + filename + ".json")
 	if err != nil {
 		panic(err)
 	}
 	defer file.Close()
 
-	var data megaraid.CmdOutput
+	var data megaraid2.CmdOutput
 
 	err = json.NewDecoder(file).Decode(&data)
 	if err != nil {
@@ -68,7 +68,7 @@ func mockOutput(filename string) *megaraid.CmdOutput {
 
 // parseError parses the error from the command status.
 // It's copied from the megaraid package.
-func parseError(commandStatus megaraid.CommandStatus) error {
+func parseError(commandStatus megaraid2.CommandStatus) error {
 	if len(commandStatus.DetailedStatus) > 0 {
 		for _, ds := range commandStatus.DetailedStatus {
 			if ds.Status != "Success" {
@@ -86,7 +86,7 @@ func parseError(commandStatus megaraid.CommandStatus) error {
 
 // mockError checks if the command was successful.
 // It's copied from the megaraid package.
-func mockError(out *megaraid.CmdOutput) error {
+func mockError(out *megaraid2.CmdOutput) error {
 	// Check if there are any controllers
 	if len(out.Controllers) == 0 {
 		return errors.New("no controllers found")
@@ -105,7 +105,7 @@ func mockError(out *megaraid.CmdOutput) error {
 }
 
 // mockReturn returns the output and the error.
-func mockReturn(filename string) (*megaraid.CmdOutput, error) {
+func mockReturn(filename string) (*megaraid2.CmdOutput, error) {
 	out := mockOutput(filename)
 
 	return out, mockError(out)
@@ -113,7 +113,7 @@ func mockReturn(filename string) (*megaraid.CmdOutput, error) {
 
 // createLVMockCalls mocks the calls for the createLV function.
 // It's used to test the createLV function.
-func (s *UnitTestSuite) createLVMockCalls(args []string) (*megaraid.CmdOutput, error) {
+func (s *UnitTestSuite) createLVMockCalls(args []string) (*megaraid2.CmdOutput, error) {
 	// controllers calls
 	if args[0] == "show" {
 		return mockReturn("controllers/all")
@@ -158,7 +158,7 @@ func (s *UnitTestSuite) createLVMockCalls(args []string) (*megaraid.CmdOutput, e
 }
 
 // generalMockCalls mocks the calls for the all the other functions.
-func (s *UnitTestSuite) generalMockCalls(args []string) (*megaraid.CmdOutput, error) {
+func (s *UnitTestSuite) generalMockCalls(args []string) (*megaraid2.CmdOutput, error) {
 	switch args[0] {
 	case "show":
 		return mockReturn("controllers/all")
@@ -217,15 +217,15 @@ func (s *UnitTestSuite) setupMockCallsEvalSymlinksList() {
 // to the original one.
 // It's used to mock the EvalSymlinks function.
 func (s *UnitTestSuite) restoreCustomEvalSymlinks() {
-	megaraid.CustomEvalSymlinks = s.evalSymlinksFunc
+	megaraid2.CustomEvalSymlinks = s.evalSymlinksFunc
 }
 
 // setupCustomEvalSymlinks sets up the custom EvalSymlinks function
 // to be used in the tests.
 // It's used to mock the EvalSymlinks function.
 func (s *UnitTestSuite) setupCustomEvalSymlinks() {
-	s.evalSymlinksFunc = megaraid.CustomEvalSymlinks
-	megaraid.CustomEvalSymlinks = s.mockPathResolver.EvalSymlinks
+	s.evalSymlinksFunc = megaraid2.CustomEvalSymlinks
+	megaraid2.CustomEvalSymlinks = s.mockPathResolver.EvalSymlinks
 }
 
 // setupMockCallsCreateLV sets up the mock calls for the createLV function.

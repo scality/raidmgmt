@@ -1,3 +1,4 @@
+//nolint:cyclop // Right above the accepted ratio
 package logicalvolumegetter
 
 import (
@@ -27,8 +28,8 @@ const (
 )
 
 type SSACLI struct {
-	ssacli commandrunner.CommandRunner
-	lsblk  commandrunner.LSBLK
+	SSACLI commandrunner.CommandRunner
+	LSBLK  commandrunner.CommandRunner
 }
 
 var (
@@ -42,12 +43,12 @@ var (
 )
 
 func NewSSACLI(
-	ssacli commandrunner.CommandRunner,
-	lsblk commandrunner.LSBLK,
+	ssacli *commandrunner.SSACLI,
+	lsblk *commandrunner.LSBLK,
 ) *SSACLI {
 	return &SSACLI{
-		ssacli: ssacli,
-		lsblk:  lsblk,
+		SSACLI: ssacli,
+		LSBLK:  lsblk,
 	}
 }
 
@@ -65,7 +66,7 @@ func (s *SSACLI) LogicalVolumes(metadata *raidcontroller.Metadata) (
 		"detail",
 	}
 
-	output, err := s.ssacli.Run(args)
+	output, err := s.SSACLI.Run(args)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to show all logical drives details")
 	}
@@ -83,7 +84,7 @@ func (s *SSACLI) LogicalVolumes(metadata *raidcontroller.Metadata) (
 		"config",
 	}
 
-	output, err = s.ssacli.Run(args)
+	output, err = s.SSACLI.Run(args)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to show controller config")
 	}
@@ -115,7 +116,7 @@ func (s *SSACLI) LogicalVolume(metadata *logicalvolume.Metadata) (
 		"detail",
 	}
 
-	output, err := s.ssacli.Run(args)
+	output, err := s.SSACLI.Run(args)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to show details for logical drive %s", metadata.ID)
 	}
@@ -135,7 +136,7 @@ func (s *SSACLI) LogicalVolume(metadata *logicalvolume.Metadata) (
 		"config",
 	}
 
-	output, err = s.ssacli.Run(args)
+	output, err = s.SSACLI.Run(args)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to show controller config")
 	}

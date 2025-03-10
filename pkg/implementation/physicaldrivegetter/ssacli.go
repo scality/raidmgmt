@@ -20,8 +20,8 @@ const (
 )
 
 type SSACLI struct {
-	commandrunner.CommandRunner
-	lsblk commandrunner.CommandRunner
+	SSACLI commandrunner.CommandRunner
+	LSBLK  commandrunner.CommandRunner
 }
 
 var (
@@ -32,9 +32,13 @@ var (
 )
 
 // NewSSACLI creates a new SSACLI instance.
-func NewSSACLI(commandRunner commandrunner.CommandRunner) *SSACLI {
+func NewSSACLI(
+	ssacli *commandrunner.SSACLI,
+	lsblk *commandrunner.LSBLK,
+) *SSACLI {
 	return &SSACLI{
-		CommandRunner: commandRunner,
+		SSACLI: ssacli,
+		LSBLK:  lsblk,
 	}
 }
 
@@ -52,7 +56,7 @@ func (s *SSACLI) PhysicalDrives(metadata *raidcontroller.Metadata) (
 		"detail",
 	}
 
-	output, err := s.CommandRunner.Run(args)
+	output, err := s.SSACLI.Run(args)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to show all physical drives details")
 	}
@@ -81,7 +85,7 @@ func (s *SSACLI) PhysicalDrive(metadata *physicaldrive.Metadata) (
 		"detail",
 	}
 
-	output, err := s.CommandRunner.Run(args)
+	output, err := s.SSACLI.Run(args)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to show details for physical drive %s", slot)
 	}
@@ -253,7 +257,7 @@ func (s *SSACLI) parsePDLine( //nolint:funlen // This function is long and not c
 }
 
 func (s *SSACLI) getBlockDevice(devicePath string) (*BlockDevice, error) {
-	output, err := s.lsblk.Run([]string{
+	output, err := s.LSBLK.Run([]string{
 		devicePath,
 		"--paths",
 		"--bytes",

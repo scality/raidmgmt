@@ -5,7 +5,6 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 
 	"github.com/scality/raidmgmt/pkg/domain/entities/logicalvolume"
 	"github.com/scality/raidmgmt/pkg/implementation/logicalvolumegetter"
@@ -95,15 +94,6 @@ MD_DEVICE_dev_nvme1n1_ROLE=1
 MD_DEVICE_dev_nvme1n1_DEV=/dev/nvme1n1`
 )
 
-type MockCommandRunner struct {
-	mock.Mock
-}
-
-func (m *MockCommandRunner) Run(args []string) ([]byte, error) {
-	arguments := m.Called(args)
-	return arguments.Get(0).([]byte), arguments.Error(1)
-}
-
 func TestMDADMLogicalVolumes(t *testing.T) {
 	// Create a mock object
 	mockRunner := new(MockCommandRunner)
@@ -116,7 +106,7 @@ func TestMDADMLogicalVolumes(t *testing.T) {
 	mockRunner.On("Run", []string{"--detail", "/dev/md/1", "--export"}).Return([]byte(mdadmSingleLogicalVolumeExportOutput), nil)
 
 	// Use the mock object in your test
-	mdadm := &logicalvolumegetter.MDADM{CommandRunner: mockRunner}
+	mdadm := &logicalvolumegetter.MDADM{MDADM: mockRunner}
 
 	logicalVolumes, err := mdadm.LogicalVolumes(nil)
 
@@ -133,7 +123,7 @@ func TestMDADMLogicalVolumes_ScanError(t *testing.T) {
 	mockRunner := new(MockCommandRunner)
 	mockRunner.On("Run", []string{"--detail", "--scan", "--export"}).Return([]byte{}, errors.New("command failed"))
 
-	mdadm := &logicalvolumegetter.MDADM{CommandRunner: mockRunner}
+	mdadm := &logicalvolumegetter.MDADM{MDADM: mockRunner}
 
 	logicalVolumes, err := mdadm.LogicalVolumes(nil)
 
@@ -158,7 +148,7 @@ MD_DEVICE_dev_nvme2n1_DEV=/dev/nvme2n1
 MD_DEVICE_dev_nvme1n1_ROLE=0
 MD_DEVICE_dev_nvme1n1_DEV=/dev/nvme1n1`), nil)
 
-	mdadm := &logicalvolumegetter.MDADM{CommandRunner: mockRunner}
+	mdadm := &logicalvolumegetter.MDADM{MDADM: mockRunner}
 
 	logicalVolume, err := mdadm.LogicalVolume(&logicalvolume.Metadata{
 		ID: "test_raid1",
@@ -186,7 +176,7 @@ MD_NAME=0
 MD_DEVICE_dev_nvme1n1_ROLE=0
 MD_DEVICE_dev_nvme1n1_DEV=/dev/nvme1n1`), nil)
 
-	mdadm := &logicalvolumegetter.MDADM{CommandRunner: mockRunner}
+	mdadm := &logicalvolumegetter.MDADM{MDADM: mockRunner}
 
 	logicalVolume, err := mdadm.LogicalVolume(&logicalvolume.Metadata{
 		ID: "degraded_raid",
@@ -203,7 +193,7 @@ func TestMDADMLogicalVolume_DetailError(t *testing.T) {
 	mockRunner := new(MockCommandRunner)
 	mockRunner.On("Run", []string{"--detail", "/dev/md/test_raid1"}).Return([]byte{}, errors.New("command failed"))
 
-	mdadm := &logicalvolumegetter.MDADM{CommandRunner: mockRunner}
+	mdadm := &logicalvolumegetter.MDADM{MDADM: mockRunner}
 
 	logicalVolume, err := mdadm.LogicalVolume(&logicalvolume.Metadata{
 		ID: "test_raid1",
@@ -221,7 +211,7 @@ func TestMDADMLogicalVolume_ExportError(t *testing.T) {
 	mockRunner.On("Run", []string{"--detail", "/dev/md/test_raid1"}).Return([]byte(mdadmDetailOutput), nil)
 	mockRunner.On("Run", []string{"--detail", "/dev/md/test_raid1", "--export"}).Return([]byte{}, errors.New("command failed"))
 
-	mdadm := &logicalvolumegetter.MDADM{CommandRunner: mockRunner}
+	mdadm := &logicalvolumegetter.MDADM{MDADM: mockRunner}
 
 	logicalVolume, err := mdadm.LogicalVolume(&logicalvolume.Metadata{
 		ID: "test_raid1",

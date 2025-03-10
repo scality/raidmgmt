@@ -1,4 +1,4 @@
-package logicalvolumegetter
+package logicalvolumegetter_test
 
 import (
 	"os"
@@ -6,29 +6,19 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 
 	"github.com/scality/raidmgmt/pkg/domain/entities/logicalvolume"
 	"github.com/scality/raidmgmt/pkg/domain/entities/raidcontroller"
+	"github.com/scality/raidmgmt/pkg/implementation/logicalvolumegetter"
 )
 
-type MockCommandRunner struct {
-	mock.Mock
-}
-
 var testDataPath = "./"
-
-func (m *MockCommandRunner) Run(args []string) ([]byte, error) {
-	arguments := m.Called(args)
-
-	return arguments.Get(0).([]byte), arguments.Error(1)
-}
 
 func TestLogicalVolumes(t *testing.T) {
 	mockRunner := new(MockCommandRunner)
 
-	s := &SSACLI{
-		ssacli: mockRunner,
+	s := &logicalvolumegetter.SSACLI{
+		SSACLI: mockRunner,
 	}
 
 	mapMockingStatusNominal := map[string][]byte{
@@ -113,8 +103,8 @@ func TestLogicalVolumes(t *testing.T) {
 func TestLogicalVolume(t *testing.T) {
 	mockRunner := new(MockCommandRunner)
 
-	s := &SSACLI{
-		ssacli: mockRunner,
+	s := logicalvolumegetter.SSACLI{
+		SSACLI: mockRunner,
 	}
 
 	tests := []struct {

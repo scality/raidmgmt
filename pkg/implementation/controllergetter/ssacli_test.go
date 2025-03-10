@@ -1,4 +1,4 @@
-package controllergetter
+package controllergetter_test
 
 import (
 	"os"
@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/mock"
 
 	"github.com/scality/raidmgmt/pkg/domain/entities/raidcontroller"
+	"github.com/scality/raidmgmt/pkg/implementation/controllergetter"
 )
 
 type MockCommandRunner struct {
@@ -36,8 +37,8 @@ func mockOutput(filename string) []byte {
 func TestControllers(t *testing.T) {
 	mockRunner := new(MockCommandRunner)
 
-	s := &SSACLI{
-		CommandRunner: mockRunner,
+	s := &controllergetter.SSACLI{
+		SSACLI: mockRunner,
 	}
 
 	tests := []struct {
@@ -79,8 +80,8 @@ func TestControllers(t *testing.T) {
 func TestController(t *testing.T) {
 	mockRunner := new(MockCommandRunner)
 
-	s := &SSACLI{
-		CommandRunner: mockRunner,
+	s := &controllergetter.SSACLI{
+		SSACLI: mockRunner,
 	}
 
 	tests := []struct {

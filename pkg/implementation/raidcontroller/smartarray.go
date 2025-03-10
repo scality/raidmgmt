@@ -1,4 +1,4 @@
-package hardwareraidcontroller
+package raidcontroller
 
 import (
 	"github.com/pkg/errors"
@@ -16,7 +16,7 @@ type SmartArray struct {
 	ports.Blinker
 }
 
-var _ ports.HardwareRAIDController = &SmartArray{}
+var _ ports.RAIDController = &SmartArray{}
 
 //nolint:revive // This wraps interfaces together.
 func NewSmartArray(
