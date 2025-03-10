@@ -4,19 +4,9 @@ import (
 	"bytes"
 	"regexp"
 	"strings"
-
-	"github.com/scality/raidmgmt/pkg/domain/entities/physicaldrive"
 )
 
 const keyValueParts = 2
-
-func FormatSlot(slot *physicaldrive.Slot) string {
-	if slot.Port == "" {
-		return slot.Enclosure + ":" + slot.Bay
-	}
-
-	return slot.Port + ":" + slot.Enclosure + ":" + slot.Bay
-}
 
 // splitOutput splits the output into blocks based on the regular expression.
 // TODO add tests.

@@ -1,6 +1,8 @@
 package hardwareraidcontroller
 
 import (
+	"github.com/pkg/errors"
+
 	"github.com/scality/raidmgmt/pkg/domain/entities/logicalvolume"
 	"github.com/scality/raidmgmt/pkg/domain/entities/physicaldrive"
 	"github.com/scality/raidmgmt/pkg/domain/ports"
@@ -34,13 +36,22 @@ func NewSmartArray(
 }
 
 func (*SmartArray) EnableJBOD(_ *physicaldrive.Metadata) error {
-	panic("not implemented for smartarray hardware RAID controller")
+	return errors.Wrap(
+		ports.ErrFunctionNotSupportedByImplementation,
+		"cannot enable JBOD on SmartArray",
+	)
 }
 
 func (*SmartArray) DisableJBOD(_ *physicaldrive.Metadata) error {
-	panic("not implemented for smartarray hardware RAID controller")
+	return errors.Wrap(
+		ports.ErrFunctionNotSupportedByImplementation,
+		"cant disable JBOD on SmartArray",
+	)
 }
 
 func (*SmartArray) SetLVCacheOptions(*logicalvolume.Metadata, *logicalvolume.CacheOptions) error {
-	panic("not implemented for smartarray hardware RAID controller")
+	return errors.Wrap(
+		ports.ErrFunctionNotSupportedByImplementation,
+		"cannot set cache options on SmartArray",
+	)
 }

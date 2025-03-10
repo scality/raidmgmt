@@ -57,7 +57,7 @@ func (s *SSACLI) CreateLV(request *logicalvolume.Request) (*logicalvolume.Logica
 		pd, err := s.PhysicalDrive(pdMetadata)
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to get physical drive %s",
-				utils.FormatSlot(pdMetadata.Slot))
+				pdMetadata.Slot.Format())
 		}
 
 		physicalDrivesToUse = append(physicalDrivesToUse, pd)
@@ -267,10 +267,10 @@ func formatDrives(pdsMetadata []*physicaldrive.Metadata) string {
 		return ""
 	}
 
-	formattedDrives = utils.FormatSlot(pdsMetadata[0].Slot)
+	formattedDrives = pdsMetadata[0].Slot.Format()
 
 	for _, drive := range pdsMetadata[1:] {
-		formattedDrives += "," + utils.FormatSlot(drive.Slot)
+		formattedDrives += "," + drive.Slot.Format()
 	}
 
 	return formattedDrives
@@ -297,7 +297,7 @@ func getLogicalDriveID(
 				if len(parts) > 1 {
 					logicalDriveID = parts[1]
 				}
-			} else if strings.Contains(line, utils.FormatSlot(request.PDrivesMetadata[0].Slot)) {
+			} else if strings.Contains(line, request.PDrivesMetadata[0].Slot.Format()) {
 				// Check if line contains the physical drive slot
 				// If the logical drive ID is empty, return it
 				// If the logical drive ID is not empty, return an error
@@ -308,7 +308,7 @@ func getLogicalDriveID(
 
 				return "", errors.Errorf(
 					"physical drive %s found in multiple logical drives",
-					utils.FormatSlot(request.PDrivesMetadata[0].Slot),
+					request.PDrivesMetadata[0].Slot.Format(),
 				)
 			}
 		}
@@ -316,6 +316,6 @@ func getLogicalDriveID(
 
 	return "", errors.Errorf(
 		"physical drive %s not found in any logical drive",
-		utils.FormatSlot(request.PDrivesMetadata[0].Slot),
+		request.PDrivesMetadata[0].Slot.Format(),
 	)
 }

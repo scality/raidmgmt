@@ -1,7 +1,6 @@
 package physicaldrivegetter
 
 import (
-	"bytes"
 	"regexp"
 	"strconv"
 	"strings"
@@ -18,8 +17,6 @@ import (
 const (
 	ssacliSlotRegexpPattern          = `Slot (\d+)`
 	ssacliPhysicalDriveRegexpPattern = `physicaldrive\s+(.+)`
-
-	ssacliKeyValueParts = 2
 )
 
 type SSACLI struct {
@@ -30,8 +27,8 @@ type SSACLI struct {
 var (
 	_ ports.PhysicalDrivesGetter = &SSACLI{}
 
-	slotRegexp          = regexp.MustCompile(ssacliSlotRegexpPattern)
-	physicalDriveRegexp = regexp.MustCompile(ssacliPhysicalDriveRegexpPattern)
+	ssacliSlotRegexp          = regexp.MustCompile(ssacliSlotRegexpPattern)
+	ssacliPhysicalDriveRegexp = regexp.MustCompile(ssacliPhysicalDriveRegexpPattern)
 )
 
 // NewSSACLI creates a new SSACLI instance.
@@ -73,7 +70,7 @@ func (s *SSACLI) PhysicalDrive(metadata *physicaldrive.Metadata) (
 	*physicaldrive.PhysicalDrive,
 	error,
 ) {
-	slot := utils.FormatSlot(metadata.Slot)
+	slot := metadata.Slot.Format()
 
 	args := []string{
 		"controller",
@@ -107,7 +104,7 @@ func (s *SSACLI) PhysicalDrive(metadata *physicaldrive.Metadata) (
 // parsePhysicalDrives parses the output of the physicaldrive command and
 // returns a list of PhysicalDrive entities.
 func (s *SSACLI) parsePhysicalDrives(output []byte) ([]*physicaldrive.PhysicalDrive, error) {
-	blocks := splitOutput(physicalDriveRegexp, output)
+	blocks := utils.SplitOutput(ssacliPhysicalDriveRegexp, output)
 
 	physicalDrives := make([]*physicaldrive.PhysicalDrive, 0, len(blocks))
 
@@ -132,7 +129,7 @@ func (s *SSACLI) parsePhysicalDrives(output []byte) ([]*physicaldrive.PhysicalDr
 
 // parseControllerID parses the controller ID from the output of the physicaldrive command.
 func parseControllerID(output []byte) (int, error) {
-	match := slotRegexp.FindSubmatch(output)
+	match := ssacliSlotRegexp.FindSubmatch(output)
 
 	if match == nil {
 		return 0, errors.New("controller ID not found")
@@ -168,38 +165,6 @@ func (s *SSACLI) parsePhysicalDrive(block []byte) (*physicaldrive.PhysicalDrive,
 	return physicalDrive, nil
 }
 
-// splitOutput splits the output into blocks based on the regular expression.
-// TODO add tests.
-func splitOutput(regularExpression *regexp.Regexp, output []byte) [][]byte {
-	indices := regularExpression.FindAllIndex(output, -1)
-	if indices == nil {
-		return nil // No matches found
-	}
-
-	var blocks [][]byte
-
-	start := 0
-
-	for i, match := range indices {
-		if i == 0 {
-			continue // Skip the first match
-		}
-
-		block := output[start:match[0]] // everything before the match
-		if len(block) > 0 {             // avoid empty blocks
-			blocks = append(blocks, bytes.TrimSpace(block)) // trim space here
-		}
-
-		start = match[0] // Start of the next block is the current match
-	}
-	// Add the last block if any
-	if start < len(output) {
-		blocks = append(blocks, bytes.TrimSpace(output[start:]))
-	}
-
-	return blocks
-}
-
 // parsePDLine parses a line of the physicaldrive command output
 // and updates the PhysicalDrive entity.
 // nolint: cyclop,gocognit // The switch statement is necessary
@@ -208,7 +173,7 @@ func (s *SSACLI) parsePDLine( //nolint:funlen // This function is long and not c
 	physicalDrive *physicaldrive.PhysicalDrive,
 	line string,
 ) error {
-	key, value := parseLineDetail(line)
+	key, value := utils.ParseLineDetail(line)
 
 	// Parse the key-value pair
 	switch key {
@@ -232,7 +197,7 @@ func (s *SSACLI) parsePDLine( //nolint:funlen // This function is long and not c
 		physicalDrive.Size = size
 
 	case "Status":
-		if physicalDrive.Status == 0 {
+		if physicalDrive.Status == physicaldrive.PDStatusUnknown {
 			// TODO check DriveType : unassigned or assigned in string
 			mapStatus := map[string]physicaldrive.PDStatus{
 				"OK":      physicaldrive.PDStatusUsed,
@@ -249,7 +214,8 @@ func (s *SSACLI) parsePDLine( //nolint:funlen // This function is long and not c
 		}
 
 	case "Drive Type":
-		if strings.Contains(value, "Unassigned") {
+		if physicalDrive.Status != physicaldrive.PDStatusUsed &&
+			strings.Contains(value, "Unassigned") {
 			physicalDrive.Status = physicaldrive.PDStatusUnassignedGood
 		}
 
@@ -278,8 +244,8 @@ func (s *SSACLI) parsePDLine( //nolint:funlen // This function is long and not c
 			return errors.Wrapf(err, "failed to get block device for %s", value)
 		}
 
-		if physicalDrive.Status == physicaldrive.PDStatusUsed {
-			physicalDrive.Status = isBlockDeviceUsed(blockDevice)
+		if isBlockDeviceUsed(blockDevice) {
+			physicalDrive.Status = physicaldrive.PDStatusUsed
 		}
 		// TODO miss permanent path
 	}
@@ -324,31 +290,13 @@ func parseSlotInfo(pd *physicaldrive.PhysicalDrive, key, value string) {
 	}
 }
 
-// parseLineDetail parses a line of the show detail command and returns the key and value.
-func parseLineDetail(line string) (key, value string) {
-	if line == "" {
-		return "", ""
-	}
-
-	splitParts := strings.Split(line, ":")
-
-	if len(splitParts) != ssacliKeyValueParts {
-		return "", ""
-	}
-
-	key = strings.TrimSpace(splitParts[0])
-	value = strings.TrimSpace(splitParts[1])
-
-	return key, value
-}
-
 // isBlockDeviceUsed checks if a block device is used.
 // If the device is mounted or has a filesystem type, it is considered used.
 // Otherwise, it is considered unassigned good.
-func isBlockDeviceUsed(device *BlockDevice) physicaldrive.PDStatus {
+func isBlockDeviceUsed(device *BlockDevice) bool {
 	if device.MountPoint != "" || device.FilesystemType != "" || device.PartitionType != "" {
-		return physicaldrive.PDStatusUsed
+		return true
 	}
 
-	return physicaldrive.PDStatusUnassignedGood
+	return false
 }

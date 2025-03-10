@@ -14,21 +14,7 @@ type SSACLI struct {
 	commandrunner.CommandRunner
 }
 
-var (
-	_ ports.Blinker = &SSACLI{}
-
-	// formatSlot formats a physical drive slot for SSA CLI.
-	// The format is "port:enclosure:bay".
-	//
-	//nolint:gochecknoglobals // This is necessary since SSA CLI requires this format.
-	formatSlot = func(slot *physicaldrive.Slot) string {
-		if slot.Port == "" {
-			return slot.Enclosure + ":" + slot.Bay
-		}
-
-		return slot.Port + ":" + slot.Enclosure + ":" + slot.Bay
-	}
-)
+var _ ports.Blinker = &SSACLI{}
 
 func NewSSACLI() *SSACLI {
 	return &SSACLI{}
@@ -56,7 +42,7 @@ func (s *SSACLI) StopBlink(metadata *physicaldrive.Metadata) error {
 
 // blink makes a physical drive blink.
 func (s *SSACLI) blink(metadata *physicaldrive.Metadata, action string) error {
-	slot := formatSlot(metadata.Slot)
+	slot := metadata.Slot.Format()
 
 	args := []string{
 		"controller",
