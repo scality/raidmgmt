@@ -28,7 +28,7 @@ const (
 
 type SSACLI struct {
 	ssacli commandrunner.CommandRunner
-	lsblk  commandrunner.LSBLK
+	lsblk  commandrunner.CommandRunner
 }
 
 var (
@@ -42,8 +42,8 @@ var (
 )
 
 func NewSSACLI(
-	ssacli commandrunner.CommandRunner,
-	lsblk commandrunner.LSBLK,
+	ssacli *commandrunner.SSACLI,
+	lsblk *commandrunner.LSBLK,
 ) *SSACLI {
 	return &SSACLI{
 		ssacli: ssacli,

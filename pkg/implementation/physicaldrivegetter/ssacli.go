@@ -20,8 +20,8 @@ const (
 )
 
 type SSACLI struct {
-	commandrunner.CommandRunner
-	lsblk commandrunner.CommandRunner
+	ssacli commandrunner.CommandRunner
+	lsblk  commandrunner.CommandRunner
 }
 
 var (
@@ -32,9 +32,13 @@ var (
 )
 
 // NewSSACLI creates a new SSACLI instance.
-func NewSSACLI(commandRunner commandrunner.CommandRunner) *SSACLI {
+func NewSSACLI(
+	ssacli *commandrunner.SSACLI,
+	lsblk *commandrunner.LSBLK,
+) *SSACLI {
 	return &SSACLI{
-		CommandRunner: commandRunner,
+		ssacli: ssacli,
+		lsblk:  lsblk,
 	}
 }
 
@@ -52,7 +56,7 @@ func (s *SSACLI) PhysicalDrives(metadata *raidcontroller.Metadata) (
 		"detail",
 	}
 
-	output, err := s.CommandRunner.Run(args)
+	output, err := s.ssacli.Run(args)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to show all physical drives details")
 	}
@@ -81,7 +85,7 @@ func (s *SSACLI) PhysicalDrive(metadata *physicaldrive.Metadata) (
 		"detail",
 	}
 
-	output, err := s.CommandRunner.Run(args)
+	output, err := s.ssacli.Run(args)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to show details for physical drive %s", slot)
 	}
