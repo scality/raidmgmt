@@ -10,7 +10,9 @@ const (
 	DiskTypeHDD
 	DiskTypeSSD
 	DiskTypeNVMe
+)
 
+const (
 	PDStatusUnknown PDStatus = iota
 	PDStatusUsed
 	PDStatusUnassignedGood

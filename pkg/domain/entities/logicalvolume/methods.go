@@ -122,7 +122,7 @@ func ValidateRAIDCreation(
 	}
 
 	// Check if there are unavailable drives
-	unavailableDrives := unavailablesDrives(pds)
+	unavailableDrives := unavailableDrives(pds)
 
 	// If there are unavailable drives, return an error
 	if len(unavailableDrives) > 0 {
@@ -148,8 +148,8 @@ func ValidateRAIDCreation(
 	return nil
 }
 
-// unavailablesDrives returns the IDs of the unavailable physical drives.
-func unavailablesDrives(pds []*physicaldrive.PhysicalDrive) []string {
+// unavailableDrives returns the IDs of the unavailable physical drives.
+func unavailableDrives(pds []*physicaldrive.PhysicalDrive) []string {
 	var unavailableDrives []string
 
 	for _, pd := range pds {
@@ -203,14 +203,17 @@ func findMostFrequentSize(pds []*physicaldrive.PhysicalDrive) uint64 {
 
 // RAIDLevelMap maps the RAID level string to the RAID level type.
 func RAIDLevelMap(str string) RAIDLevel {
+	// Remove the "RAID" prefix from the string if it exists
+	raidLevelString := strings.TrimPrefix(str, "RAID")
+
 	// raidLevelMap maps the RAID level string to the RAID level type.
 	raidLevelMap := map[string]RAIDLevel{
-		"RAID0":  RAIDLevel0,
-		"RAID1":  RAIDLevel1,
-		"RAID10": RAIDLevel10,
+		"0":  RAIDLevel0,
+		"1":  RAIDLevel1,
+		"10": RAIDLevel10,
 	}
 
-	if raidLevel, ok := raidLevelMap[strings.ToUpper(str)]; ok {
+	if raidLevel, ok := raidLevelMap[raidLevelString]; ok {
 		return raidLevel
 	}
 

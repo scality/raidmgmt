@@ -1,0 +1,25 @@
+
+HPE Smart Array P816i-a SR Gen10 in Slot 0 (Embedded)
+
+   Array B
+
+      Logical Drive: 2
+         Size: 5.46 TB
+         Fault Tolerance: 0
+         Heads: 255
+         Sectors Per Track: 32
+         Cylinders: 65535
+         Strip Size: 256 KB
+         Full Stripe Size: 256 KB
+         Status: OK
+         MultiDomain Status: OK
+         Caching:  Enabled
+         Last Surface Scan Completed: False
+         Unique Identifier: 600508B1001C7FD57A17DFABD4A1E6D9
+         Disk Name: /dev/sdd 
+         Mount Points: None
+         Logical Drive Label: Data 01
+         Drive Type: Data
+         LD Acceleration Method: Controller Cache
+
+

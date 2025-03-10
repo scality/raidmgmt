@@ -1,0 +1,12 @@
+
+   logicaldrive 1 (745.18 GB, RAID 1): OK
+   logicaldrive 2 (5.46 TB, RAID 0): OK
+   logicaldrive 3 (5.46 TB, RAID 0): OK
+   logicaldrive 4 (5.46 TB, RAID 0): OK
+   logicaldrive 5 (5.46 TB, RAID 0): OK
+   logicaldrive 6 (5.46 TB, RAID 0): OK
+   logicaldrive 7 (5.46 TB, RAID 0): OK
+   logicaldrive 8 (5.46 TB, RAID 0): OK
+   logicaldrive 9 (5.46 TB, RAID 0): OK
+   logicaldrive 10 (5.46 TB, RAID 0): OK
+   logicaldrive 11 (5.46 TB, RAID 0): OK

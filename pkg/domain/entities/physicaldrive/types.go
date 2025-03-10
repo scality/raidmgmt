@@ -1,4 +1,4 @@
-//nolint:lll // Structures with tags are too long for you, lll.
+//nolint:lll,cyclop,gocognit // Structures with tags are too long for you, lll.
 package physicaldrive
 
 import (
@@ -72,6 +72,37 @@ func (s *Slot) String() string {
 	}
 
 	return str
+}
+
+func (s *Slot) Format() string {
+	if s == nil {
+		return nilSlot
+	}
+
+	// Handle empty cases for all fields
+	if s.Port == "" && s.Enclosure == "" && s.Bay == "" {
+		return emptySlot
+	}
+
+	result := s.Port
+
+	if s.Enclosure != "" {
+		if result != "" {
+			result += ":"
+		}
+
+		result += s.Enclosure
+	}
+
+	if s.Bay != "" {
+		if result != "" {
+			result += ":"
+		}
+
+		result += s.Bay
+	}
+
+	return result
 }
 
 // Available checks if the PhysicalDrive Status is PDStatusUnassignedGood.

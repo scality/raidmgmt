@@ -1,10 +1,16 @@
 package ports
 
 import (
+	"github.com/pkg/errors"
+
 	"github.com/scality/raidmgmt/pkg/domain/entities/logicalvolume"
 	"github.com/scality/raidmgmt/pkg/domain/entities/physicaldrive"
 	"github.com/scality/raidmgmt/pkg/domain/entities/raidcontroller"
 )
+
+const functionNotSupportedByImplementation = "function not supported by implementation"
+
+var ErrFunctionNotSupportedByImplementation = errors.New(functionNotSupportedByImplementation)
 
 type (
 	ControllersGetter interface {

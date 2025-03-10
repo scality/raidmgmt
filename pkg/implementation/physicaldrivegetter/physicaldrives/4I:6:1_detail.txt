@@ -1,0 +1,40 @@
+
+HPE Smart Array P816i-a SR Gen10 in Slot 0 (Embedded)
+
+   Array A
+
+      physicaldrive 4I:6:1
+         Port: 4I
+         Box: 6
+         Bay: 1
+         Status: OK
+         Drive Type: Data Drive
+         Interface Type: Solid State SAS
+         Size: 800 GB
+         Drive exposed to OS: False
+         Logical/Physical Block Size: 512/4096
+         Firmware Revision: HPD1
+         Serial Number: W2X0751Y
+         WWID: 5000CCA0B8712795
+         Model: HPE     MO000800JXBEV
+         Current Temperature (C): 51
+         Maximum Temperature (C): 58
+         Usage remaining: 93.35%
+         Power On Hours: 28384
+         Estimated Life Remaining based on workload to date: 16601 days
+         SSD Smart Trip Wearout: False
+         PHY Count: 2
+         PHY Transfer Rate: 12.0Gbps, Unknown
+         PHY Physical Link Rate: 12.0Gbps, Unknown
+         PHY Maximum Link Rate: 12.0Gbps, 12.0Gbps
+         Drive Authentication Status: OK
+         Carrier Application Version: 11
+         Carrier Bootloader Version: 6
+         Sanitize Erase Supported: True
+         Sanitize Estimated Max Erase Time: 10 minute(s), 0 second(s) 
+         Unrestricted Sanitize Supported: False
+         Shingled Magnetic Recording Support: None
+         Drive Unique ID: 5000CCA0B8712794
+         Multi-Actuator Drive: False
+
+
