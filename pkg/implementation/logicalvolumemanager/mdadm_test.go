@@ -63,7 +63,11 @@ func TestMDADM_CreateLV_RAID1(t *testing.T) {
 	mockLogicalVolumeGetter := new(MockLogicalVolumesGetter)
 	mockPhysicalDrivesGetter := new(MockPhysicalDrivesGetter)
 
-	mdadm := logicalvolumemanager.NewMDADM(mockCommandRunner, mockLogicalVolumeGetter, mockPhysicalDrivesGetter)
+	mdadm := logicalvolumemanager.MDADM{
+		MDADM:                mockCommandRunner,
+		LogicalVolumesGetter: mockLogicalVolumeGetter,
+		PhysicalDrivesGetter: mockPhysicalDrivesGetter,
+	}
 
 	request := &logicalvolume.Request{
 		Name:      "testlv1",
@@ -121,7 +125,11 @@ func TestMDADM_CreateLV_RAID0(t *testing.T) {
 	mockLogicalVolumeGetter := new(MockLogicalVolumesGetter)
 	mockPhysicalDrivesGetter := new(MockPhysicalDrivesGetter)
 
-	mdadm := logicalvolumemanager.NewMDADM(mockCommandRunner, mockLogicalVolumeGetter, mockPhysicalDrivesGetter)
+	mdadm := logicalvolumemanager.MDADM{
+		MDADM:                mockCommandRunner,
+		LogicalVolumesGetter: mockLogicalVolumeGetter,
+		PhysicalDrivesGetter: mockPhysicalDrivesGetter,
+	}
 
 	request := &logicalvolume.Request{
 		Name:      "testlv0",
@@ -177,7 +185,11 @@ func TestMDADM_CreateLV_RAID10(t *testing.T) {
 	mockLogicalVolumeGetter := new(MockLogicalVolumesGetter)
 	mockPhysicalDrivesGetter := new(MockPhysicalDrivesGetter)
 
-	mdadm := logicalvolumemanager.NewMDADM(mockCommandRunner, mockLogicalVolumeGetter, mockPhysicalDrivesGetter)
+	mdadm := logicalvolumemanager.MDADM{
+		MDADM:                mockCommandRunner,
+		LogicalVolumesGetter: mockLogicalVolumeGetter,
+		PhysicalDrivesGetter: mockPhysicalDrivesGetter,
+	}
 
 	request := &logicalvolume.Request{
 		Name:      "testlv10",
@@ -236,7 +248,11 @@ func TestMDADM_CreateLV_FailedDrive(t *testing.T) {
 	mockLogicalVolumeGetter := new(MockLogicalVolumesGetter)
 	mockPhysicalDrivesGetter := new(MockPhysicalDrivesGetter)
 
-	mdadm := logicalvolumemanager.NewMDADM(mockCommandRunner, mockLogicalVolumeGetter, mockPhysicalDrivesGetter)
+	mdadm := logicalvolumemanager.MDADM{
+		MDADM:                mockCommandRunner,
+		LogicalVolumesGetter: mockLogicalVolumeGetter,
+		PhysicalDrivesGetter: mockPhysicalDrivesGetter,
+	}
 
 	request := &logicalvolume.Request{
 		Name:      "testlv",
@@ -270,7 +286,11 @@ func TestMDADM_CreateLV_UsedDrive(t *testing.T) {
 	mockLogicalVolumeGetter := new(MockLogicalVolumesGetter)
 	mockPhysicalDrivesGetter := new(MockPhysicalDrivesGetter)
 
-	mdadm := logicalvolumemanager.NewMDADM(mockCommandRunner, mockLogicalVolumeGetter, mockPhysicalDrivesGetter)
+	mdadm := logicalvolumemanager.MDADM{
+		MDADM:                mockCommandRunner,
+		LogicalVolumesGetter: mockLogicalVolumeGetter,
+		PhysicalDrivesGetter: mockPhysicalDrivesGetter,
+	}
 
 	request := &logicalvolume.Request{
 		Name:      "testlv",
@@ -304,7 +324,11 @@ func TestMDADM_CreateLV_CommandError(t *testing.T) {
 	mockLogicalVolumeGetter := new(MockLogicalVolumesGetter)
 	mockPhysicalDrivesGetter := new(MockPhysicalDrivesGetter)
 
-	mdadm := logicalvolumemanager.NewMDADM(mockCommandRunner, mockLogicalVolumeGetter, mockPhysicalDrivesGetter)
+	mdadm := logicalvolumemanager.MDADM{
+		MDADM:                mockCommandRunner,
+		LogicalVolumesGetter: mockLogicalVolumeGetter,
+		PhysicalDrivesGetter: mockPhysicalDrivesGetter,
+	}
 
 	request := &logicalvolume.Request{
 		Name:      "testlv",
@@ -348,7 +372,11 @@ func TestMDADM_DeleteLV_Success(t *testing.T) {
 	mockLogicalVolumeGetter := new(MockLogicalVolumesGetter)
 	mockPhysicalDrivesGetter := new(MockPhysicalDrivesGetter)
 
-	mdadm := logicalvolumemanager.NewMDADM(mockCommandRunner, mockLogicalVolumeGetter, mockPhysicalDrivesGetter)
+	mdadm := logicalvolumemanager.MDADM{
+		MDADM:                mockCommandRunner,
+		LogicalVolumesGetter: mockLogicalVolumeGetter,
+		PhysicalDrivesGetter: mockPhysicalDrivesGetter,
+	}
 
 	// Mock logical volume retrieval
 	mockLogicalVolumeGetter.On("LogicalVolume", &logicalvolume.Metadata{ID: "/dev/md/testlv"}).Return(&logicalvolume.LogicalVolume{
@@ -386,7 +414,11 @@ func TestMDADM_DeleteLV_GetLVError(t *testing.T) {
 	mockLogicalVolumeGetter := new(MockLogicalVolumesGetter)
 	mockPhysicalDrivesGetter := new(MockPhysicalDrivesGetter)
 
-	mdadm := logicalvolumemanager.NewMDADM(mockCommandRunner, mockLogicalVolumeGetter, mockPhysicalDrivesGetter)
+	mdadm := logicalvolumemanager.MDADM{
+		MDADM:                mockCommandRunner,
+		LogicalVolumesGetter: mockLogicalVolumeGetter,
+		PhysicalDrivesGetter: mockPhysicalDrivesGetter,
+	}
 
 	// Mock logical volume retrieval with error
 	mockLogicalVolumeGetter.On("LogicalVolume", &logicalvolume.Metadata{ID: "/dev/md/testlv"}).Return(
@@ -404,7 +436,11 @@ func TestMDADM_DeleteLV_StopError(t *testing.T) {
 	mockLogicalVolumeGetter := new(MockLogicalVolumesGetter)
 	mockPhysicalDrivesGetter := new(MockPhysicalDrivesGetter)
 
-	mdadm := logicalvolumemanager.NewMDADM(mockCommandRunner, mockLogicalVolumeGetter, mockPhysicalDrivesGetter)
+	mdadm := logicalvolumemanager.MDADM{
+		MDADM:                mockCommandRunner,
+		LogicalVolumesGetter: mockLogicalVolumeGetter,
+		PhysicalDrivesGetter: mockPhysicalDrivesGetter,
+	}
 
 	// Mock logical volume retrieval
 	mockLogicalVolumeGetter.On("LogicalVolume", &logicalvolume.Metadata{ID: "/dev/md/testlv"}).Return(&logicalvolume.LogicalVolume{
@@ -434,7 +470,11 @@ func TestMDADM_DeleteLV_ZeroSuperblockError(t *testing.T) {
 	mockLogicalVolumeGetter := new(MockLogicalVolumesGetter)
 	mockPhysicalDrivesGetter := new(MockPhysicalDrivesGetter)
 
-	mdadm := logicalvolumemanager.NewMDADM(mockCommandRunner, mockLogicalVolumeGetter, mockPhysicalDrivesGetter)
+	mdadm := logicalvolumemanager.MDADM{
+		MDADM:                mockCommandRunner,
+		LogicalVolumesGetter: mockLogicalVolumeGetter,
+		PhysicalDrivesGetter: mockPhysicalDrivesGetter,
+	}
 
 	// Mock logical volume retrieval
 	mockLogicalVolumeGetter.On("LogicalVolume", &logicalvolume.Metadata{ID: "/dev/md/testlv"}).Return(&logicalvolume.LogicalVolume{
@@ -474,7 +514,11 @@ func TestMDADM_DeleteLV_FailedLogicalVolume(t *testing.T) {
 	mockLogicalVolumeGetter := new(MockLogicalVolumesGetter)
 	mockPhysicalDrivesGetter := new(MockPhysicalDrivesGetter)
 
-	mdadm := logicalvolumemanager.NewMDADM(mockCommandRunner, mockLogicalVolumeGetter, mockPhysicalDrivesGetter)
+	mdadm := logicalvolumemanager.MDADM{
+		MDADM:                mockCommandRunner,
+		LogicalVolumesGetter: mockLogicalVolumeGetter,
+		PhysicalDrivesGetter: mockPhysicalDrivesGetter,
+	}
 
 	// Mock logical volume retrieval with failed status
 	mockLogicalVolumeGetter.On("LogicalVolume", &logicalvolume.Metadata{ID: "/dev/md/testlv"}).Return(&logicalvolume.LogicalVolume{
@@ -513,7 +557,11 @@ func TestMDADM_AddPDsToLV_RAID0_Success(t *testing.T) {
 	mockLogicalVolumeGetter := new(MockLogicalVolumesGetter)
 	mockPhysicalDrivesGetter := new(MockPhysicalDrivesGetter)
 
-	mdadm := logicalvolumemanager.NewMDADM(mockCommandRunner, mockLogicalVolumeGetter, mockPhysicalDrivesGetter)
+	mdadm := logicalvolumemanager.MDADM{
+		MDADM:                mockCommandRunner,
+		LogicalVolumesGetter: mockLogicalVolumeGetter,
+		PhysicalDrivesGetter: mockPhysicalDrivesGetter,
+	}
 
 	lvMetadata := &logicalvolume.Metadata{ID: "/dev/md/testlv0"}
 	pdMetadata := &physicaldrive.Metadata{DevicePath: "/dev/nvme3n1"}
@@ -557,7 +605,11 @@ func TestMDADM_AddPDsToLV_RAID1_Success(t *testing.T) {
 	mockLogicalVolumeGetter := new(MockLogicalVolumesGetter)
 	mockPhysicalDrivesGetter := new(MockPhysicalDrivesGetter)
 
-	mdadm := logicalvolumemanager.NewMDADM(mockCommandRunner, mockLogicalVolumeGetter, mockPhysicalDrivesGetter)
+	mdadm := logicalvolumemanager.MDADM{
+		MDADM:                mockCommandRunner,
+		LogicalVolumesGetter: mockLogicalVolumeGetter,
+		PhysicalDrivesGetter: mockPhysicalDrivesGetter,
+	}
 
 	lvMetadata := &logicalvolume.Metadata{ID: "/dev/md/testlv1"}
 	pdMetadata := &physicaldrive.Metadata{DevicePath: "/dev/nvme3n1"}
@@ -605,7 +657,11 @@ func TestMDADM_AddPDsToLV_RAID10_Success(t *testing.T) {
 	mockLogicalVolumeGetter := new(MockLogicalVolumesGetter)
 	mockPhysicalDrivesGetter := new(MockPhysicalDrivesGetter)
 
-	mdadm := logicalvolumemanager.NewMDADM(mockCommandRunner, mockLogicalVolumeGetter, mockPhysicalDrivesGetter)
+	mdadm := logicalvolumemanager.MDADM{
+		MDADM:                mockCommandRunner,
+		LogicalVolumesGetter: mockLogicalVolumeGetter,
+		PhysicalDrivesGetter: mockPhysicalDrivesGetter,
+	}
 
 	lvMetadata := &logicalvolume.Metadata{ID: "/dev/md/testlv10"}
 	pdMetadata1 := &physicaldrive.Metadata{DevicePath: "/dev/nvme5n1"}
@@ -660,7 +716,11 @@ func TestMDADM_AddPDsToLV_FailedLV(t *testing.T) {
 	mockLogicalVolumeGetter := new(MockLogicalVolumesGetter)
 	mockPhysicalDrivesGetter := new(MockPhysicalDrivesGetter)
 
-	mdadm := logicalvolumemanager.NewMDADM(mockCommandRunner, mockLogicalVolumeGetter, mockPhysicalDrivesGetter)
+	mdadm := logicalvolumemanager.MDADM{
+		MDADM:                mockCommandRunner,
+		LogicalVolumesGetter: mockLogicalVolumeGetter,
+		PhysicalDrivesGetter: mockPhysicalDrivesGetter,
+	}
 
 	lvMetadata := &logicalvolume.Metadata{ID: "/dev/md/testlv1"}
 	pdMetadata := &physicaldrive.Metadata{DevicePath: "/dev/nvme3n1"}
@@ -689,7 +749,11 @@ func TestMDADM_AddPDsToLV_FailedDrive(t *testing.T) {
 	mockLogicalVolumeGetter := new(MockLogicalVolumesGetter)
 	mockPhysicalDrivesGetter := new(MockPhysicalDrivesGetter)
 
-	mdadm := logicalvolumemanager.NewMDADM(mockCommandRunner, mockLogicalVolumeGetter, mockPhysicalDrivesGetter)
+	mdadm := logicalvolumemanager.MDADM{
+		MDADM:                mockCommandRunner,
+		LogicalVolumesGetter: mockLogicalVolumeGetter,
+		PhysicalDrivesGetter: mockPhysicalDrivesGetter,
+	}
 
 	lvMetadata := &logicalvolume.Metadata{ID: "/dev/md/testlv1"}
 	pdMetadata := &physicaldrive.Metadata{DevicePath: "/dev/nvme3n1"}
@@ -724,7 +788,11 @@ func TestMDADM_AddPDsToLV_UsedDrive(t *testing.T) {
 	mockLogicalVolumeGetter := new(MockLogicalVolumesGetter)
 	mockPhysicalDrivesGetter := new(MockPhysicalDrivesGetter)
 
-	mdadm := logicalvolumemanager.NewMDADM(mockCommandRunner, mockLogicalVolumeGetter, mockPhysicalDrivesGetter)
+	mdadm := logicalvolumemanager.MDADM{
+		MDADM:                mockCommandRunner,
+		LogicalVolumesGetter: mockLogicalVolumeGetter,
+		PhysicalDrivesGetter: mockPhysicalDrivesGetter,
+	}
 
 	lvMetadata := &logicalvolume.Metadata{ID: "/dev/md/testlv1"}
 	pdMetadata := &physicaldrive.Metadata{DevicePath: "/dev/nvme3n1"}
@@ -759,7 +827,11 @@ func TestMDADM_DeletePDsFromLV_RAID1_Success(t *testing.T) {
 	mockLogicalVolumeGetter := new(MockLogicalVolumesGetter)
 	mockPhysicalDrivesGetter := new(MockPhysicalDrivesGetter)
 
-	mdadm := logicalvolumemanager.NewMDADM(mockCommandRunner, mockLogicalVolumeGetter, mockPhysicalDrivesGetter)
+	mdadm := logicalvolumemanager.MDADM{
+		MDADM:                mockCommandRunner,
+		LogicalVolumesGetter: mockLogicalVolumeGetter,
+		PhysicalDrivesGetter: mockPhysicalDrivesGetter,
+	}
 
 	lvMetadata := &logicalvolume.Metadata{ID: "/dev/md/testlv1"}
 	pdMetadata := &physicaldrive.Metadata{DevicePath: "/dev/nvme2n1"}
@@ -820,7 +892,11 @@ func TestMDADM_DeletePDsFromLV_RAID10_Success(t *testing.T) {
 	mockLogicalVolumeGetter := new(MockLogicalVolumesGetter)
 	mockPhysicalDrivesGetter := new(MockPhysicalDrivesGetter)
 
-	mdadm := logicalvolumemanager.NewMDADM(mockCommandRunner, mockLogicalVolumeGetter, mockPhysicalDrivesGetter)
+	mdadm := logicalvolumemanager.MDADM{
+		MDADM:                mockCommandRunner,
+		LogicalVolumesGetter: mockLogicalVolumeGetter,
+		PhysicalDrivesGetter: mockPhysicalDrivesGetter,
+	}
 
 	lvMetadata := &logicalvolume.Metadata{ID: "/dev/md/testlv10"}
 	pdMetadata1 := &physicaldrive.Metadata{DevicePath: "/dev/nvme3n1"}
@@ -871,7 +947,11 @@ func TestMDADM_DeletePDsFromLV_RAID0_Fail(t *testing.T) {
 	mockLogicalVolumeGetter := new(MockLogicalVolumesGetter)
 	mockPhysicalDrivesGetter := new(MockPhysicalDrivesGetter)
 
-	mdadm := logicalvolumemanager.NewMDADM(mockCommandRunner, mockLogicalVolumeGetter, mockPhysicalDrivesGetter)
+	mdadm := logicalvolumemanager.MDADM{
+		MDADM:                mockCommandRunner,
+		LogicalVolumesGetter: mockLogicalVolumeGetter,
+		PhysicalDrivesGetter: mockPhysicalDrivesGetter,
+	}
 
 	lvMetadata := &logicalvolume.Metadata{ID: "/dev/md/testlv0"}
 	pdMetadata := &physicaldrive.Metadata{DevicePath: "/dev/nvme2n1"}
@@ -899,7 +979,11 @@ func TestMDADM_DeletePDsFromLV_RAID1_MinimumDisksFail(t *testing.T) {
 	mockLogicalVolumeGetter := new(MockLogicalVolumesGetter)
 	mockPhysicalDrivesGetter := new(MockPhysicalDrivesGetter)
 
-	mdadm := logicalvolumemanager.NewMDADM(mockCommandRunner, mockLogicalVolumeGetter, mockPhysicalDrivesGetter)
+	mdadm := logicalvolumemanager.MDADM{
+		MDADM:                mockCommandRunner,
+		LogicalVolumesGetter: mockLogicalVolumeGetter,
+		PhysicalDrivesGetter: mockPhysicalDrivesGetter,
+	}
 
 	lvMetadata := &logicalvolume.Metadata{ID: "/dev/md/testlv1"}
 	pdMetadata := &physicaldrive.Metadata{DevicePath: "/dev/nvme2n1"}
@@ -927,7 +1011,11 @@ func TestMDADM_DeletePDsFromLV_FailedLV(t *testing.T) {
 	mockLogicalVolumeGetter := new(MockLogicalVolumesGetter)
 	mockPhysicalDrivesGetter := new(MockPhysicalDrivesGetter)
 
-	mdadm := logicalvolumemanager.NewMDADM(mockCommandRunner, mockLogicalVolumeGetter, mockPhysicalDrivesGetter)
+	mdadm := logicalvolumemanager.MDADM{
+		MDADM:                mockCommandRunner,
+		LogicalVolumesGetter: mockLogicalVolumeGetter,
+		PhysicalDrivesGetter: mockPhysicalDrivesGetter,
+	}
 
 	lvMetadata := &logicalvolume.Metadata{ID: "/dev/md/testlv1"}
 	pdMetadata := &physicaldrive.Metadata{DevicePath: "/dev/nvme2n1"}
@@ -957,7 +1045,11 @@ func TestMDADM_DeletePDsFromLV_FailCommandError(t *testing.T) {
 	mockLogicalVolumeGetter := new(MockLogicalVolumesGetter)
 	mockPhysicalDrivesGetter := new(MockPhysicalDrivesGetter)
 
-	mdadm := logicalvolumemanager.NewMDADM(mockCommandRunner, mockLogicalVolumeGetter, mockPhysicalDrivesGetter)
+	mdadm := logicalvolumemanager.MDADM{
+		MDADM:                mockCommandRunner,
+		LogicalVolumesGetter: mockLogicalVolumeGetter,
+		PhysicalDrivesGetter: mockPhysicalDrivesGetter,
+	}
 
 	lvMetadata := &logicalvolume.Metadata{ID: "/dev/md/testlv1"}
 	pdMetadata := &physicaldrive.Metadata{DevicePath: "/dev/nvme2n1"}
@@ -994,7 +1086,11 @@ func TestMDADM_DeletePDsFromLV_RemoveCommandError(t *testing.T) {
 	mockLogicalVolumeGetter := new(MockLogicalVolumesGetter)
 	mockPhysicalDrivesGetter := new(MockPhysicalDrivesGetter)
 
-	mdadm := logicalvolumemanager.NewMDADM(mockCommandRunner, mockLogicalVolumeGetter, mockPhysicalDrivesGetter)
+	mdadm := logicalvolumemanager.MDADM{
+		MDADM:                mockCommandRunner,
+		LogicalVolumesGetter: mockLogicalVolumeGetter,
+		PhysicalDrivesGetter: mockPhysicalDrivesGetter,
+	}
 
 	lvMetadata := &logicalvolume.Metadata{ID: "/dev/md/testlv1"}
 	pdMetadata := &physicaldrive.Metadata{DevicePath: "/dev/nvme2n1"}
@@ -1038,7 +1134,11 @@ func TestMDADM_DeletePDsFromLV_ZeroSuperblockError(t *testing.T) {
 	mockLogicalVolumeGetter := new(MockLogicalVolumesGetter)
 	mockPhysicalDrivesGetter := new(MockPhysicalDrivesGetter)
 
-	mdadm := logicalvolumemanager.NewMDADM(mockCommandRunner, mockLogicalVolumeGetter, mockPhysicalDrivesGetter)
+	mdadm := logicalvolumemanager.MDADM{
+		MDADM:                mockCommandRunner,
+		LogicalVolumesGetter: mockLogicalVolumeGetter,
+		PhysicalDrivesGetter: mockPhysicalDrivesGetter,
+	}
 
 	lvMetadata := &logicalvolume.Metadata{ID: "/dev/md/testlv1"}
 	pdMetadata := &physicaldrive.Metadata{DevicePath: "/dev/nvme2n1"}
@@ -1088,7 +1188,11 @@ func TestMDADM_DeletePDsFromLV_GrowDevicesError(t *testing.T) {
 	mockLogicalVolumeGetter := new(MockLogicalVolumesGetter)
 	mockPhysicalDrivesGetter := new(MockPhysicalDrivesGetter)
 
-	mdadm := logicalvolumemanager.NewMDADM(mockCommandRunner, mockLogicalVolumeGetter, mockPhysicalDrivesGetter)
+	mdadm := logicalvolumemanager.MDADM{
+		MDADM:                mockCommandRunner,
+		LogicalVolumesGetter: mockLogicalVolumeGetter,
+		PhysicalDrivesGetter: mockPhysicalDrivesGetter,
+	}
 
 	lvMetadata := &logicalvolume.Metadata{ID: "/dev/md/testlv1"}
 	pdMetadata := &physicaldrive.Metadata{DevicePath: "/dev/nvme2n1"}
@@ -1142,7 +1246,11 @@ func TestMDADM_DeletePDsFromLV_GrowArraySizeError(t *testing.T) {
 	mockLogicalVolumeGetter := new(MockLogicalVolumesGetter)
 	mockPhysicalDrivesGetter := new(MockPhysicalDrivesGetter)
 
-	mdadm := logicalvolumemanager.NewMDADM(mockCommandRunner, mockLogicalVolumeGetter, mockPhysicalDrivesGetter)
+	mdadm := logicalvolumemanager.MDADM{
+		MDADM:                mockCommandRunner,
+		LogicalVolumesGetter: mockLogicalVolumeGetter,
+		PhysicalDrivesGetter: mockPhysicalDrivesGetter,
+	}
 
 	lvMetadata := &logicalvolume.Metadata{ID: "/dev/md/testlv1"}
 	pdMetadata := &physicaldrive.Metadata{DevicePath: "/dev/nvme2n1"}

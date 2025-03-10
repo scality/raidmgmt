@@ -20,7 +20,7 @@ const (
 )
 
 type SSACLI struct {
-	ssacli commandrunner.CommandRunner
+	SSACLI commandrunner.CommandRunner
 }
 
 var (
@@ -32,13 +32,13 @@ var (
 
 func NewSSACLI(ssacli *commandrunner.SSACLI) *SSACLI {
 	return &SSACLI{
-		ssacli: ssacli,
+		SSACLI: ssacli,
 	}
 }
 
 // Controllers returns a list of RAID controllers.
 func (s *SSACLI) Controllers() ([]*raidcontroller.RAIDController, error) {
-	output, err := s.ssacli.Run([]string{
+	output, err := s.SSACLI.Run([]string{
 		"controller",
 		"all",
 		"show",
@@ -68,7 +68,7 @@ func (s *SSACLI) Controller(metadata *raidcontroller.Metadata) (
 		"detail",
 	}
 
-	output, err := s.ssacli.Run(args)
+	output, err := s.SSACLI.Run(args)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to show details for controller %d", metadata.ID)
 	}

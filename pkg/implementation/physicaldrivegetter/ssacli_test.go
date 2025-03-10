@@ -28,8 +28,8 @@ func TestSSACLIPhysicalDrives(t *testing.T) {
 	mockRunner := new(MockCommandRunner)
 
 	s := &SSACLI{
-		CommandRunner: mockRunner,
-		lsblk:         mockRunner,
+		SSACLI: mockRunner,
+		LSBLK:  mockRunner,
 	}
 
 	tests := []struct {
@@ -99,7 +99,8 @@ func TestSSCALIPhysicalDrive(t *testing.T) {
 	mockRunner := new(MockCommandRunner)
 
 	s := &SSACLI{
-		CommandRunner: mockRunner,
+		SSACLI: mockRunner,
+		LSBLK:  mockRunner,
 	}
 
 	tests := []struct {

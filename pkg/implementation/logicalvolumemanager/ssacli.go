@@ -25,7 +25,7 @@ const (
 type SSACLI struct {
 	ports.PhysicalDrivesGetter
 	ports.LogicalVolumesGetter
-	ssacli commandrunner.CommandRunner
+	SSACLI commandrunner.CommandRunner
 }
 
 var (
@@ -41,7 +41,7 @@ func NewSSACLI(
 	logicalVolumesGetter ports.LogicalVolumesGetter,
 ) *SSACLI {
 	return &SSACLI{
-		ssacli:               ssacli,
+		SSACLI:               ssacli,
 		PhysicalDrivesGetter: physicalDrivesGetter,
 		LogicalVolumesGetter: logicalVolumesGetter,
 	}
@@ -89,7 +89,7 @@ func (s *SSACLI) CreateLV(request *logicalvolume.Request) (*logicalvolume.Logica
 		"forced", // To bypass the warning and confirmation prompt
 	}
 
-	_, err = s.ssacli.Run(args)
+	_, err = s.SSACLI.Run(args)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to run create logical drive command")
 	}
@@ -103,7 +103,7 @@ func (s *SSACLI) CreateLV(request *logicalvolume.Request) (*logicalvolume.Logica
 		"config",
 	}
 
-	output, err := s.ssacli.Run(args)
+	output, err := s.SSACLI.Run(args)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to show controller config")
 	}
@@ -127,7 +127,7 @@ func (s *SSACLI) DeleteLV(metadata *logicalvolume.Metadata) error {
 		"forced", // To bypass the warning message
 	}
 
-	_, err := s.ssacli.Run(args)
+	_, err := s.SSACLI.Run(args)
 	if err != nil {
 		return errors.Wrapf(err, "failed to delete logical drive %s", metadata.ID)
 	}
@@ -218,7 +218,7 @@ func (s *SSACLI) getArrayID(metadata *logicalvolume.Metadata) (string, error) {
 		"detail",
 	}
 
-	output, err := s.ssacli.Run(args)
+	output, err := s.SSACLI.Run(args)
 	if err != nil {
 		return "", errors.Wrapf(err, "failed to show details for logical drive %s", metadata.ID)
 	}
@@ -250,7 +250,7 @@ func (s *SSACLI) migrateArray(
 		"forced", // To bypass the warning
 	}
 
-	_, err := s.ssacli.Run(args)
+	_, err := s.SSACLI.Run(args)
 	if err != nil {
 		return errors.Wrapf(err, "failed to %s drives to array %s", action, arrayID)
 	}
