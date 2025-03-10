@@ -9,7 +9,7 @@ import (
 	"github.com/scality/raidmgmt/pkg/domain/ports"
 )
 
-var _ ports.HardwareRAIDController = &Adapter{}
+var _ ports.RAIDController = &Adapter{}
 
 type Adapter struct {
 	runner Runner

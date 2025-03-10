@@ -13,6 +13,19 @@ const functionNotSupportedByImplementation = "function not supported by implemen
 var ErrFunctionNotSupportedByImplementation = errors.New(functionNotSupportedByImplementation)
 
 type (
+	// RAIDController interface for RAID controller operations
+	// This interface is implemented by both hardware and software RAID controllers.
+	// Some functions may not be supported by all implementations.
+	RAIDController interface {
+		ControllersGetter
+		PhysicalDrivesGetter
+		LogicalVolumesGetter
+		LogicalVolumesManager
+		LVCacheSetter
+		JBODSetter
+		Blinker
+	}
+
 	ControllersGetter interface {
 		// Controllers returns a list of RAID controllers
 		Controllers() ([]*raidcontroller.RAIDController, error)
