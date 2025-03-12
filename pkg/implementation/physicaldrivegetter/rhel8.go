@@ -104,10 +104,7 @@ func (r *RHEL8) PhysicalDrive(
 		return nil, errors.Wrapf(err, "failed to get physical drive status: %s", device.DevicePath)
 	}
 
-	if reason != "" {
-		physicalDrive.Reason = reason
-	}
-
+	physicalDrive.Reason = reason
 	physicalDrive.Status = status
 
 	switch device.Rotational {
@@ -128,11 +125,16 @@ func (r *RHEL8) PhysicalDrive(
 }
 
 func (r *RHEL8) physicalDriveStatus(device *BlockDevice) (physicaldrive.PDStatus, string, error) {
+	var reason string
+
 	// FIXME Ignore errors for now
 	output, err := r.SmartCTL.Run([]string{
 		"-a",
 		device.DevicePath,
 	})
+	if err != nil {
+		reason = "smartctl command failed to get physical drive status"
+	}
 
 	smartCTLLines := strings.Split(string(output), "\n")
 
@@ -204,14 +206,10 @@ func (r *RHEL8) physicalDriveStatus(device *BlockDevice) (physicaldrive.PDStatus
 	}
 
 	if device.MountPoint != "" || device.FilesystemType != "" || device.PartitionType != "" {
-		return physicaldrive.PDStatusUsed, "", nil
+		return physicaldrive.PDStatusUsed, reason, nil
 	}
 
-	if err != nil {
-		return physicaldrive.PDStatusUnassignedGood, "SMARTCTL command failed to get physical drive status", nil
-	}
-
-	return physicaldrive.PDStatusUnassignedGood, "", nil
+	return physicaldrive.PDStatusUnassignedGood, reason, nil
 }
 
 func (r *RHEL8) getBlockDevice(devicePath string) (*BlockDevice, error) {
