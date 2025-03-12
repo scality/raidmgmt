@@ -99,11 +99,12 @@ func (r *RHEL8) PhysicalDrive(
 	physicalDrive.Metadata = metadata
 	physicalDrive.Size = device.Size
 
-	status, err := r.physicalDriveStatus(device)
+	status, reason, err := r.physicalDriveStatus(device)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to get physical drive status: %s", device.DevicePath)
 	}
 
+	physicalDrive.Reason = reason
 	physicalDrive.Status = status
 
 	switch device.Rotational {
@@ -123,16 +124,16 @@ func (r *RHEL8) PhysicalDrive(
 	return physicalDrive, nil
 }
 
-func (r *RHEL8) physicalDriveStatus(device *BlockDevice) (physicaldrive.PDStatus, error) {
+func (r *RHEL8) physicalDriveStatus(device *BlockDevice) (physicaldrive.PDStatus, string, error) {
+	var reason string
+
+	// FIXME Ignore errors for now
 	output, err := r.SmartCTL.Run([]string{
 		"-a",
 		device.DevicePath,
 	})
 	if err != nil {
-		return physicaldrive.PDStatusUnknown, errors.Wrap(
-			err,
-			"failed to get physical drive status with smartctl",
-		)
+		reason = "smartctl command failed to get physical drive status"
 	}
 
 	smartCTLLines := strings.Split(string(output), "\n")
@@ -149,8 +150,10 @@ func (r *RHEL8) physicalDriveStatus(device *BlockDevice) (physicaldrive.PDStatus
 		}
 	}
 
-	if healthStatus != "PASSED" {
-		return physicaldrive.PDStatusFailed, nil
+	// If err is not nil, it means smartctl failed to run
+	// so we ignore this case for now.
+	if healthStatus != "PASSED" && err == nil {
+		return physicaldrive.PDStatusFailed, "", nil
 	}
 
 	reallocatedCount := 0
@@ -164,7 +167,7 @@ func (r *RHEL8) physicalDriveStatus(device *BlockDevice) (physicaldrive.PDStatus
 
 			reallocatedCount, err = strconv.Atoi(parts[len(parts)-1])
 			if err != nil {
-				return physicaldrive.PDStatusUnknown, errors.Wrap(
+				return physicaldrive.PDStatusUnknown, "", errors.Wrap(
 					err,
 					"failed to parse reallocated sector count",
 				)
@@ -177,7 +180,7 @@ func (r *RHEL8) physicalDriveStatus(device *BlockDevice) (physicaldrive.PDStatus
 
 			pendingCount, err = strconv.Atoi(parts[len(parts)-1])
 			if err != nil {
-				return physicaldrive.PDStatusUnknown, errors.Wrap(
+				return physicaldrive.PDStatusUnknown, "", errors.Wrap(
 					err,
 					"failed to parse current pending sector count",
 				)
@@ -190,7 +193,7 @@ func (r *RHEL8) physicalDriveStatus(device *BlockDevice) (physicaldrive.PDStatus
 
 			uncorrectableCount, err = strconv.Atoi(parts[len(parts)-1])
 			if err != nil {
-				return physicaldrive.PDStatusUnknown, errors.Wrap(
+				return physicaldrive.PDStatusUnknown, "", errors.Wrap(
 					err,
 					"failed to parse offline uncorrectable sector count",
 				)
@@ -199,14 +202,14 @@ func (r *RHEL8) physicalDriveStatus(device *BlockDevice) (physicaldrive.PDStatus
 	}
 
 	if reallocatedCount > 0 || pendingCount > 0 || uncorrectableCount > 0 {
-		return physicaldrive.PDStatusFailed, nil
+		return physicaldrive.PDStatusFailed, "", nil
 	}
 
 	if device.MountPoint != "" || device.FilesystemType != "" || device.PartitionType != "" {
-		return physicaldrive.PDStatusUsed, nil
+		return physicaldrive.PDStatusUsed, reason, nil
 	}
 
-	return physicaldrive.PDStatusUnassignedGood, nil
+	return physicaldrive.PDStatusUnassignedGood, reason, nil
 }
 
 func (r *RHEL8) getBlockDevice(devicePath string) (*BlockDevice, error) {

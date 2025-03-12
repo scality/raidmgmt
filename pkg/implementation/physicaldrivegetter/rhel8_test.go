@@ -263,10 +263,42 @@ E: DEVNAME=/dev/nvme1n1`), nil)
 	mockSmartCTL.On("Run", mock.AnythingOfType("[]string")).Return([]byte{}, errors.New("smartctl command failed"))
 
 	metadata := &physicaldrive.Metadata{DevicePath: "/dev/nvme1n1"}
-	_, err := r.PhysicalDrive(metadata)
+	physicalDrive, err := r.PhysicalDrive(metadata)
 
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "failed to get physical drive status")
+	// FIXME Ignore errors for now
+	assert.NoError(t, err)
+	assert.Equal(t, physicalDrive.Status, physicaldrive.PDStatusUnassignedGood)
+	assert.Equal(t, physicalDrive.Reason, "smartctl command failed to get physical drive status")
+}
+
+func TestRHEL8_PhysicalDrive_SmartCTLErrorDeviceUsed(t *testing.T) {
+	mockUDevADM := new(MockCommandRunner)
+	mockLSBLK := new(MockCommandRunner)
+	mockSmartCTL := new(MockCommandRunner)
+
+	r := physicaldrivegetter.RHEL8{
+		UDevADM:  mockUDevADM,
+		LSBLK:    mockLSBLK,
+		SmartCTL: mockSmartCTL,
+	}
+
+	mockLSBLK.On("Run", mock.AnythingOfType("[]string")).Return([]byte(`NAME   MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT
+vda1 253:1    0  4000000  0 part /`), nil)
+
+	mockUDevADM.On("Run", mock.AnythingOfType("[]string")).Return([]byte(`E: ID_MODEL=Test Model
+E: ID_SERIAL_SHORT=123456
+E: ID_WWN=wwn.123
+E: DEVNAME=/dev/nvme1n1`), nil)
+
+	// Simulate error from smartctl
+	mockSmartCTL.On("Run", mock.AnythingOfType("[]string")).Return([]byte{}, errors.New("smartctl command failed"))
+
+	metadata := &physicaldrive.Metadata{DevicePath: "/dev/nvme1n1"}
+	physicalDrive, err := r.PhysicalDrive(metadata)
+
+	// FIXME Ignore errors for now
+	assert.NoError(t, err)
+	assert.Equal(t, physicalDrive.Status, physicaldrive.PDStatusUsed)
 }
 
 func TestRHEL8_PhysicalDrive_UnknownDiskType(t *testing.T) {
