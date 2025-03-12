@@ -268,6 +268,7 @@ E: DEVNAME=/dev/nvme1n1`), nil)
 	// FIXME Ignore errors for now
 	assert.NoError(t, err)
 	assert.Equal(t, physicalDrive.Status, physicaldrive.PDStatusUnassignedGood)
+	assert.Equal(t, physicalDrive.Reason, "SMARTCTL command failed to get physical drive status")
 }
 
 func TestRHEL8_PhysicalDrive_SmartCTLErrorDeviceUsed(t *testing.T) {
