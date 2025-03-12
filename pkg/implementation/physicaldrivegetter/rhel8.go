@@ -100,8 +100,7 @@ func (r *RHEL8) PhysicalDrive(
 	physicalDrive.Size = device.Size
 
 	status, err := r.physicalDriveStatus(device)
-	// FIXME Ignore errors of smartctl for now
-	if err != nil && status != physicaldrive.PDStatusUnassignedGood {
+	if err != nil {
 		return nil, errors.Wrapf(err, "failed to get physical drive status: %s", device.DevicePath)
 	}
 
@@ -125,18 +124,11 @@ func (r *RHEL8) PhysicalDrive(
 }
 
 func (r *RHEL8) physicalDriveStatus(device *BlockDevice) (physicaldrive.PDStatus, error) {
+	// FIXME Ignore errors for now
 	output, err := r.SmartCTL.Run([]string{
 		"-a",
 		device.DevicePath,
 	})
-	if err != nil {
-		// FIXME Ignore errors for now
-		// Assume the drive is healthy if smartctl fails
-		return physicaldrive.PDStatusUnassignedGood, errors.Wrap(
-			err,
-			"failed to get physical drive status with smartctl",
-		)
-	}
 
 	smartCTLLines := strings.Split(string(output), "\n")
 
@@ -152,7 +144,9 @@ func (r *RHEL8) physicalDriveStatus(device *BlockDevice) (physicaldrive.PDStatus
 		}
 	}
 
-	if healthStatus != "PASSED" {
+	// If err is not nil, it means smartctl failed to run
+	// so we ignore this case for now.
+	if healthStatus != "PASSED" && err == nil {
 		return physicaldrive.PDStatusFailed, nil
 	}
 
