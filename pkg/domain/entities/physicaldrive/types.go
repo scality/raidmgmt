@@ -43,6 +43,7 @@ type (
 		CtrlMetadata *raidcontroller.Metadata `json:"controller_metadata,omitempty"` // Controller metadata of the disk
 		DevicePath   string                   `json:"device_path,omitempty"`         // Device path of the disk
 		Slot         *Slot                    `json:"slot,omitempty"`                // Slot
+		ID           string                   `json:"id,omitempty"`                  // ID
 	}
 )
 

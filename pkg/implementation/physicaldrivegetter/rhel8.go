@@ -152,6 +152,8 @@ func (r *RHEL8) physicalDriveStatus(device *BlockDevice) (physicaldrive.PDStatus
 
 	// If err is not nil, it means smartctl failed to run
 	// so we ignore this case for now.
+	// Sometimes health status can be empty, because some older drives
+	// doesn't support the associated SMART instruction
 	if healthStatus != "PASSED" && healthStatus != "" && err == nil {
 		return physicaldrive.PDStatusFailed, "", nil
 	}
