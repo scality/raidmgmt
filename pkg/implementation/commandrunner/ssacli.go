@@ -6,7 +6,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-const SSACLIPath = "/opt/smartstorageadmin/ssacli/bin/ssacli"
+const SSACLIPath = "ssacli"
 
 type SSACLI struct {
 	cliPath string
