@@ -208,14 +208,9 @@ func (a *Adapter) logicalVolume(
 	pdsMetadata := make([]*physicaldrive.Metadata, len(pDrives))
 
 	for i := range pDrives {
-		enclosure, slot := pDrives[i].EnclosureSlot()
-
 		pdMetadata := &physicaldrive.Metadata{
 			CtrlMetadata: metadata.CtrlMetadata,
-			Slot: &physicaldrive.Slot{
-				Enclosure: enclosure,
-				Bay:       slot,
-			},
+			ID:           pDrives[i].EIDSlot,
 		}
 
 		pdsMetadata[i] = pdMetadata
@@ -349,7 +344,7 @@ func (a *Adapter) fillPhysicalDrives(pdMetadatas []*physicaldrive.Metadata) (
 		pd, err := a.physicalDrive(pdMeta)
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to get physical drive %s",
-				pdMeta.Slot.String())
+				pdMeta.ID)
 		}
 
 		pds[i] = pd
@@ -363,7 +358,7 @@ func (a *Adapter) fillPhysicalDrives(pdMetadatas []*physicaldrive.Metadata) (
 // The function is not too complex, and the complexity is due to the
 // multiple checks and conversions.
 //
-//nolint:gocognit // The function is actually not too complex
+//nolint:gocognit,funlen // The function is actually not too complex
 func enclosureSlots(pdsMetadatas []*physicaldrive.Metadata) (
 	enclosure int,
 	slots []string,
@@ -377,7 +372,11 @@ func enclosureSlots(pdsMetadatas []*physicaldrive.Metadata) (
 	slots = make([]string, len(pdsMetadatas))
 
 	for i, pd := range pdsMetadatas {
-		enclosure, bay := pd.Slot.Enclosure, pd.Slot.Bay
+		slot, err := physicaldrive.ParseSlot(pd.ID)
+		if err != nil {
+			return defaultEnclosure, nil, errors.Wrapf(err, "failed to parse slot %s", pd.ID)
+		}
+		enclosure, bay := slot.Enclosure, slot.Bay
 
 		enclosureInt, err := strconv.Atoi(enclosure)
 		if err != nil {
@@ -516,9 +515,9 @@ func (a *Adapter) findNewLogicalVolume(pds []*physicaldrive.Metadata) (
 	}
 
 	// Create a map of physical drive slots for efficient lookup
-	pdSlots := make(map[physicaldrive.Slot]struct{})
+	pdSlots := make(map[string]struct{})
 	for _, pd := range pds {
-		pdSlots[*pd.Slot] = struct{}{}
+		pdSlots[pd.ID] = struct{}{}
 	}
 
 	// Find the new logical volume
@@ -532,9 +531,9 @@ func (a *Adapter) findNewLogicalVolume(pds []*physicaldrive.Metadata) (
 }
 
 // hasMatchingPDs checks if the logical volume has the same physical drives.
-func hasMatchingPDs(lvPDs []*physicaldrive.Metadata, pdSlots map[physicaldrive.Slot]struct{}) bool {
+func hasMatchingPDs(lvPDs []*physicaldrive.Metadata, pdSlots map[string]struct{}) bool {
 	for _, lvPD := range lvPDs {
-		if _, found := pdSlots[*lvPD.Slot]; found {
+		if _, found := pdSlots[lvPD.ID]; found {
 			return true
 		}
 	}

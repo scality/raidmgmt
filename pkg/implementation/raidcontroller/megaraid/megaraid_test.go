@@ -355,10 +355,7 @@ func (s *UnitTestSuite) TestPhysicalDrive() {
 				CtrlMetadata: &raidcontroller.Metadata{
 					ID: 0,
 				},
-				Slot: &physicaldrive.Slot{
-					Enclosure: "251",
-					Bay:       "6",
-				},
+				ID: "251:6",
 			},
 			errExpected: false,
 			err:         "",
@@ -368,10 +365,7 @@ func (s *UnitTestSuite) TestPhysicalDrive() {
 				CtrlMetadata: &raidcontroller.Metadata{
 					ID: 0,
 				},
-				Slot: &physicaldrive.Slot{
-					Enclosure: "251",
-					Bay:       "99",
-				},
+				ID: "251:99",
 			},
 			errExpected: true,
 			err:         "Drive not found",
@@ -388,7 +382,7 @@ func (s *UnitTestSuite) TestPhysicalDrive() {
 			s.ErrorContains(err, tt.err)
 		} else {
 			s.NoError(err)
-			s.Equal("7", pDrive.ID)
+			s.Equal("251:6", pDrive.ID)
 			s.Equal("ZVT2DBEW0000C24112G0", pDrive.Serial)
 			s.Equal(uint64(17999005346693), pDrive.Size)
 			s.Equal(physicaldrive.PDStatusUsed, pDrive.Status)
@@ -525,10 +519,7 @@ func (s *UnitTestSuite) TestEnableJBOD() {
 				CtrlMetadata: &raidcontroller.Metadata{
 					ID: 0,
 				},
-				Slot: &physicaldrive.Slot{
-					Enclosure: "251",
-					Bay:       "6",
-				},
+				ID: "251:6",
 			},
 			errExpected: true,
 			err:         "device state doesn't support requested command",
@@ -556,10 +547,7 @@ func (s *UnitTestSuite) TestDisableJBOD() {
 		CtrlMetadata: &raidcontroller.Metadata{
 			ID: 0,
 		},
-		Slot: &physicaldrive.Slot{
-			Enclosure: "251",
-			Bay:       "6",
-		},
+		ID: "251:6",
 	}
 
 	err := s.a.DisableJBOD(metadata)
@@ -647,10 +635,7 @@ func (s *UnitTestSuite) TestCreateLV() {
 						CtrlMetadata: &raidcontroller.Metadata{
 							ID: 0,
 						},
-						Slot: &physicaldrive.Slot{
-							Enclosure: "251",
-							Bay:       "12",
-						},
+						ID: "251:12",
 					},
 				},
 				CacheOptions: &logicalvolume.CacheOptions{
@@ -673,10 +658,7 @@ func (s *UnitTestSuite) TestCreateLV() {
 						CtrlMetadata: &raidcontroller.Metadata{
 							ID: 0,
 						},
-						Slot: &physicaldrive.Slot{
-							Enclosure: "251",
-							Bay:       "12",
-						},
+						ID: "251:12",
 					},
 				},
 				CacheOptions: &logicalvolume.CacheOptions{
@@ -705,8 +687,7 @@ func (s *UnitTestSuite) TestCreateLV() {
 			s.Equal(logicalvolume.RAIDLevel0, newLv.RAIDLevel)
 			s.Equal(logicalvolume.LVStatusOptimal, newLv.Status)
 			s.Len(newLv.PDrivesMetadata, 1)
-			s.Equal("251", newLv.PDrivesMetadata[0].Slot.Enclosure)
-			s.Equal("12", newLv.PDrivesMetadata[0].Slot.Bay)
+			s.Equal("251:12", newLv.PDrivesMetadata[0].ID)
 			s.Equal(logicalvolume.ReadPolicyReadAhead, newLv.CacheOptions.ReadPolicy)
 			s.Equal(logicalvolume.WritePolicyWriteThrough, newLv.CacheOptions.WritePolicy)
 			s.Equal(logicalvolume.IOPolicyDirect, newLv.CacheOptions.IOPolicy)
@@ -770,10 +751,7 @@ func (s *UnitTestSuite) TestStartBlink() {
 		CtrlMetadata: &raidcontroller.Metadata{
 			ID: 0,
 		},
-		Slot: &physicaldrive.Slot{
-			Enclosure: "251",
-			Bay:       "9",
-		},
+		ID: "251:9",
 	}
 
 	err := s.a.StartBlink(metadata)
@@ -789,10 +767,7 @@ func (s *UnitTestSuite) TestStopBlink() {
 		CtrlMetadata: &raidcontroller.Metadata{
 			ID: 0,
 		},
-		Slot: &physicaldrive.Slot{
-			Enclosure: "251",
-			Bay:       "9",
-		},
+		ID: "251:9",
 	}
 
 	err := s.a.StopBlink(metadata)

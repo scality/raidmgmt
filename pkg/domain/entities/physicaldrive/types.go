@@ -19,7 +19,7 @@ type (
 	PhysicalDrive struct {
 		*Metadata // Metadata of the disk
 
-		ID            string   `json:"id,omitempty"`             // ID
+		Slot          *Slot    `json:"slot,omitempty"`           // Slot
 		Vendor        string   `json:"vendor,omitempty"`         // Vendor
 		Model         string   `json:"model,omitempty"`          // Model
 		Serial        string   `json:"serial,omitempty"`         // Serial number
@@ -28,6 +28,7 @@ type (
 		JBOD          bool     `json:"jbod,omitempty"`           // Is the disk in JBOD mode
 		Status        PDStatus `json:"status,omitempty"`         // State (e.g.: Online, Offline, Failed)
 		Reason        string   `json:"reason,omitempty"`         // Reason for the disk state
+		DevicePath    string   `json:"device_path,omitempty"`    // Device path of the disk
 		PermanentPath string   `json:"permanent_path,omitempty"` // Permanent path of the array (e.g.: /dev/disk/by-id/...)
 	}
 
@@ -41,8 +42,6 @@ type (
 	// Metadata represents the metadata of a physical drive.
 	Metadata struct {
 		CtrlMetadata *raidcontroller.Metadata `json:"controller_metadata,omitempty"` // Controller metadata of the disk
-		DevicePath   string                   `json:"device_path,omitempty"`         // Device path of the disk
-		Slot         *Slot                    `json:"slot,omitempty"`                // Slot
 		ID           string                   `json:"id,omitempty"`                  // ID
 	}
 )
@@ -134,16 +133,33 @@ func (m *Metadata) Validate() error {
 		return errors.Wrap(err, "controller metadata is invalid")
 	}
 
-	// Detailed validation of the slot is done in each adapter
-	// as the validation rules may vary between different adapters
-	// Some fields may be optional or mandatory depending on the adapter
-	if m.Slot == nil {
-		return errors.New("slot is nil")
-	}
-
-	if m.Slot.String() == emptySlot {
-		return errors.New("slot is empty")
+	if m.ID == "" {
+		return errors.New("ID is empty")
 	}
 
 	return nil
+}
+
+// ParseSlot parses a string into a Slot instance.
+func ParseSlot(slot string) (*Slot, error) {
+	if slot == "" {
+		return nil, errors.New("slot is empty")
+	}
+
+	res := &Slot{}
+
+	parts := strings.Split(slot, ":")
+	if len(parts) > 3 { //nolint:mnd // just the number of parts
+		return nil, errors.New("invalid slot format (too many parts)")
+	}
+
+	if len(parts) > 2 { //nolint:mnd // just the number of parts
+		res.Port, parts = parts[0], parts[1:]
+	}
+	if len(parts) > 1 {
+		res.Enclosure, parts = parts[0], parts[1:]
+	}
+	res.Bay = parts[0]
+
+	return res, nil
 }

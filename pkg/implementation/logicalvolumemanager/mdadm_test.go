@@ -73,18 +73,18 @@ func TestMDADM_CreateLV_RAID1(t *testing.T) {
 		Name:      "testlv1",
 		RAIDLevel: logicalvolume.RAIDLevel1,
 		PDrivesMetadata: []*physicaldrive.Metadata{
-			{DevicePath: "/dev/nvme1n1"},
-			{DevicePath: "/dev/nvme2n1"},
+			{ID: "/dev/nvme1n1"},
+			{ID: "/dev/nvme2n1"},
 		},
 	}
 
 	// Mock physical drive checks
-	mockPhysicalDrivesGetter.On("PhysicalDrive", &physicaldrive.Metadata{DevicePath: "/dev/nvme1n1"}).Return(&physicaldrive.PhysicalDrive{
-		Metadata: &physicaldrive.Metadata{DevicePath: "/dev/nvme1n1"},
+	mockPhysicalDrivesGetter.On("PhysicalDrive", &physicaldrive.Metadata{ID: "/dev/nvme1n1"}).Return(&physicaldrive.PhysicalDrive{
+		Metadata: &physicaldrive.Metadata{ID: "/dev/nvme1n1"},
 		Status:   physicaldrive.PDStatusUnassignedGood,
 	}, nil)
-	mockPhysicalDrivesGetter.On("PhysicalDrive", &physicaldrive.Metadata{DevicePath: "/dev/nvme2n1"}).Return(&physicaldrive.PhysicalDrive{
-		Metadata: &physicaldrive.Metadata{DevicePath: "/dev/nvme2n1"},
+	mockPhysicalDrivesGetter.On("PhysicalDrive", &physicaldrive.Metadata{ID: "/dev/nvme2n1"}).Return(&physicaldrive.PhysicalDrive{
+		Metadata: &physicaldrive.Metadata{ID: "/dev/nvme2n1"},
 		Status:   physicaldrive.PDStatusUnassignedGood,
 	}, nil)
 
@@ -103,8 +103,8 @@ func TestMDADM_CreateLV_RAID1(t *testing.T) {
 		DevicePath: "/dev/md/testlv1",
 		RAIDLevel:  logicalvolume.RAIDLevel1,
 		PDrivesMetadata: []*physicaldrive.Metadata{
-			{DevicePath: "/dev/nvme1n1"},
-			{DevicePath: "/dev/nvme2n1"},
+			{ID: "/dev/nvme1n1"},
+			{ID: "/dev/nvme2n1"},
 		},
 	}, nil)
 
@@ -135,18 +135,18 @@ func TestMDADM_CreateLV_RAID0(t *testing.T) {
 		Name:      "testlv0",
 		RAIDLevel: logicalvolume.RAIDLevel0,
 		PDrivesMetadata: []*physicaldrive.Metadata{
-			{DevicePath: "/dev/nvme1n1"},
-			{DevicePath: "/dev/nvme2n1"},
+			{ID: "/dev/nvme1n1"},
+			{ID: "/dev/nvme2n1"},
 		},
 	}
 
 	// Mock physical drive checks
-	mockPhysicalDrivesGetter.On("PhysicalDrive", &physicaldrive.Metadata{DevicePath: "/dev/nvme1n1"}).Return(&physicaldrive.PhysicalDrive{
-		Metadata: &physicaldrive.Metadata{DevicePath: "/dev/nvme1n1"},
+	mockPhysicalDrivesGetter.On("PhysicalDrive", &physicaldrive.Metadata{ID: "/dev/nvme1n1"}).Return(&physicaldrive.PhysicalDrive{
+		Metadata: &physicaldrive.Metadata{ID: "/dev/nvme1n1"},
 		Status:   physicaldrive.PDStatusUnassignedGood,
 	}, nil)
-	mockPhysicalDrivesGetter.On("PhysicalDrive", &physicaldrive.Metadata{DevicePath: "/dev/nvme2n1"}).Return(&physicaldrive.PhysicalDrive{
-		Metadata: &physicaldrive.Metadata{DevicePath: "/dev/nvme2n1"},
+	mockPhysicalDrivesGetter.On("PhysicalDrive", &physicaldrive.Metadata{ID: "/dev/nvme2n1"}).Return(&physicaldrive.PhysicalDrive{
+		Metadata: &physicaldrive.Metadata{ID: "/dev/nvme2n1"},
 		Status:   physicaldrive.PDStatusUnassignedGood,
 	}, nil)
 
@@ -164,8 +164,8 @@ func TestMDADM_CreateLV_RAID0(t *testing.T) {
 		DevicePath: "/dev/md/testlv0",
 		RAIDLevel:  logicalvolume.RAIDLevel0,
 		PDrivesMetadata: []*physicaldrive.Metadata{
-			{DevicePath: "/dev/nvme1n1"},
-			{DevicePath: "/dev/nvme2n1"},
+			{ID: "/dev/nvme1n1"},
+			{ID: "/dev/nvme2n1"},
 		},
 	}, nil)
 
@@ -195,17 +195,17 @@ func TestMDADM_CreateLV_RAID10(t *testing.T) {
 		Name:      "testlv10",
 		RAIDLevel: logicalvolume.RAIDLevel10,
 		PDrivesMetadata: []*physicaldrive.Metadata{
-			{DevicePath: "/dev/nvme1n1"},
-			{DevicePath: "/dev/nvme2n1"},
-			{DevicePath: "/dev/nvme3n1"},
-			{DevicePath: "/dev/nvme4n1"},
+			{ID: "/dev/nvme1n1"},
+			{ID: "/dev/nvme2n1"},
+			{ID: "/dev/nvme3n1"},
+			{ID: "/dev/nvme4n1"},
 		},
 	}
 
 	// Mock physical drive checks for all drives
 	for _, path := range []string{"/dev/nvme1n1", "/dev/nvme2n1", "/dev/nvme3n1", "/dev/nvme4n1"} {
-		mockPhysicalDrivesGetter.On("PhysicalDrive", &physicaldrive.Metadata{DevicePath: path}).Return(&physicaldrive.PhysicalDrive{
-			Metadata: &physicaldrive.Metadata{DevicePath: path},
+		mockPhysicalDrivesGetter.On("PhysicalDrive", &physicaldrive.Metadata{ID: path}).Return(&physicaldrive.PhysicalDrive{
+			Metadata: &physicaldrive.Metadata{ID: path},
 			Status:   physicaldrive.PDStatusUnassignedGood,
 		}, nil)
 	}
@@ -224,10 +224,10 @@ func TestMDADM_CreateLV_RAID10(t *testing.T) {
 		DevicePath: "/dev/md/testlv10",
 		RAIDLevel:  logicalvolume.RAIDLevel10,
 		PDrivesMetadata: []*physicaldrive.Metadata{
-			{DevicePath: "/dev/nvme1n1"},
-			{DevicePath: "/dev/nvme2n1"},
-			{DevicePath: "/dev/nvme3n1"},
-			{DevicePath: "/dev/nvme4n1"},
+			{ID: "/dev/nvme1n1"},
+			{ID: "/dev/nvme2n1"},
+			{ID: "/dev/nvme3n1"},
+			{ID: "/dev/nvme4n1"},
 		},
 	}, nil)
 
@@ -258,18 +258,18 @@ func TestMDADM_CreateLV_FailedDrive(t *testing.T) {
 		Name:      "testlv",
 		RAIDLevel: logicalvolume.RAIDLevel1,
 		PDrivesMetadata: []*physicaldrive.Metadata{
-			{DevicePath: "/dev/nvme1n1"},
-			{DevicePath: "/dev/nvme2n1"},
+			{ID: "/dev/nvme1n1"},
+			{ID: "/dev/nvme2n1"},
 		},
 	}
 
 	// Mock physical drive checks - one drive is failed
-	mockPhysicalDrivesGetter.On("PhysicalDrive", &physicaldrive.Metadata{DevicePath: "/dev/nvme1n1"}).Return(&physicaldrive.PhysicalDrive{
-		Metadata: &physicaldrive.Metadata{DevicePath: "/dev/nvme1n1"},
+	mockPhysicalDrivesGetter.On("PhysicalDrive", &physicaldrive.Metadata{ID: "/dev/nvme1n1"}).Return(&physicaldrive.PhysicalDrive{
+		Metadata: &physicaldrive.Metadata{ID: "/dev/nvme1n1"},
 		Status:   physicaldrive.PDStatusUnassignedGood,
 	}, nil)
-	mockPhysicalDrivesGetter.On("PhysicalDrive", &physicaldrive.Metadata{DevicePath: "/dev/nvme2n1"}).Return(&physicaldrive.PhysicalDrive{
-		Metadata: &physicaldrive.Metadata{DevicePath: "/dev/nvme2n1"},
+	mockPhysicalDrivesGetter.On("PhysicalDrive", &physicaldrive.Metadata{ID: "/dev/nvme2n1"}).Return(&physicaldrive.PhysicalDrive{
+		Metadata: &physicaldrive.Metadata{ID: "/dev/nvme2n1"},
 		Status:   physicaldrive.PDStatusFailed,
 	}, nil)
 
@@ -296,18 +296,18 @@ func TestMDADM_CreateLV_UsedDrive(t *testing.T) {
 		Name:      "testlv",
 		RAIDLevel: logicalvolume.RAIDLevel1,
 		PDrivesMetadata: []*physicaldrive.Metadata{
-			{DevicePath: "/dev/nvme1n1"},
-			{DevicePath: "/dev/nvme2n1"},
+			{ID: "/dev/nvme1n1"},
+			{ID: "/dev/nvme2n1"},
 		},
 	}
 
 	// Mock physical drive checks - one drive is already used
-	mockPhysicalDrivesGetter.On("PhysicalDrive", &physicaldrive.Metadata{DevicePath: "/dev/nvme1n1"}).Return(&physicaldrive.PhysicalDrive{
-		Metadata: &physicaldrive.Metadata{DevicePath: "/dev/nvme1n1"},
+	mockPhysicalDrivesGetter.On("PhysicalDrive", &physicaldrive.Metadata{ID: "/dev/nvme1n1"}).Return(&physicaldrive.PhysicalDrive{
+		Metadata: &physicaldrive.Metadata{ID: "/dev/nvme1n1"},
 		Status:   physicaldrive.PDStatusUnassignedGood,
 	}, nil)
-	mockPhysicalDrivesGetter.On("PhysicalDrive", &physicaldrive.Metadata{DevicePath: "/dev/nvme2n1"}).Return(&physicaldrive.PhysicalDrive{
-		Metadata: &physicaldrive.Metadata{DevicePath: "/dev/nvme2n1"},
+	mockPhysicalDrivesGetter.On("PhysicalDrive", &physicaldrive.Metadata{ID: "/dev/nvme2n1"}).Return(&physicaldrive.PhysicalDrive{
+		Metadata: &physicaldrive.Metadata{ID: "/dev/nvme2n1"},
 		Status:   physicaldrive.PDStatusUsed,
 	}, nil)
 
@@ -334,18 +334,18 @@ func TestMDADM_CreateLV_CommandError(t *testing.T) {
 		Name:      "testlv",
 		RAIDLevel: logicalvolume.RAIDLevel1,
 		PDrivesMetadata: []*physicaldrive.Metadata{
-			{DevicePath: "/dev/nvme1n1"},
-			{DevicePath: "/dev/nvme2n1"},
+			{ID: "/dev/nvme1n1"},
+			{ID: "/dev/nvme2n1"},
 		},
 	}
 
 	// Mock physical drive checks
-	mockPhysicalDrivesGetter.On("PhysicalDrive", &physicaldrive.Metadata{DevicePath: "/dev/nvme1n1"}).Return(&physicaldrive.PhysicalDrive{
-		Metadata: &physicaldrive.Metadata{DevicePath: "/dev/nvme1n1"},
+	mockPhysicalDrivesGetter.On("PhysicalDrive", &physicaldrive.Metadata{ID: "/dev/nvme1n1"}).Return(&physicaldrive.PhysicalDrive{
+		Metadata: &physicaldrive.Metadata{ID: "/dev/nvme1n1"},
 		Status:   physicaldrive.PDStatusUnassignedGood,
 	}, nil)
-	mockPhysicalDrivesGetter.On("PhysicalDrive", &physicaldrive.Metadata{DevicePath: "/dev/nvme2n1"}).Return(&physicaldrive.PhysicalDrive{
-		Metadata: &physicaldrive.Metadata{DevicePath: "/dev/nvme2n1"},
+	mockPhysicalDrivesGetter.On("PhysicalDrive", &physicaldrive.Metadata{ID: "/dev/nvme2n1"}).Return(&physicaldrive.PhysicalDrive{
+		Metadata: &physicaldrive.Metadata{ID: "/dev/nvme2n1"},
 		Status:   physicaldrive.PDStatusUnassignedGood,
 	}, nil)
 
@@ -383,8 +383,8 @@ func TestMDADM_DeleteLV_Success(t *testing.T) {
 		Metadata:   &logicalvolume.Metadata{ID: "/dev/md/testlv"},
 		DevicePath: "/dev/md/testlv",
 		PDrivesMetadata: []*physicaldrive.Metadata{
-			{DevicePath: "/dev/nvme1n1"},
-			{DevicePath: "/dev/nvme2n1"},
+			{ID: "/dev/nvme1n1"},
+			{ID: "/dev/nvme2n1"},
 		},
 	}, nil)
 
@@ -447,8 +447,8 @@ func TestMDADM_DeleteLV_StopError(t *testing.T) {
 		Metadata:   &logicalvolume.Metadata{ID: "/dev/md/testlv"},
 		DevicePath: "/dev/md/testlv",
 		PDrivesMetadata: []*physicaldrive.Metadata{
-			{DevicePath: "/dev/nvme1n1"},
-			{DevicePath: "/dev/nvme2n1"},
+			{ID: "/dev/nvme1n1"},
+			{ID: "/dev/nvme2n1"},
 		},
 	}, nil)
 
@@ -481,8 +481,8 @@ func TestMDADM_DeleteLV_ZeroSuperblockError(t *testing.T) {
 		Metadata:   &logicalvolume.Metadata{ID: "/dev/md/testlv"},
 		DevicePath: "/dev/md/testlv",
 		PDrivesMetadata: []*physicaldrive.Metadata{
-			{DevicePath: "/dev/nvme1n1"},
-			{DevicePath: "/dev/nvme2n1"},
+			{ID: "/dev/nvme1n1"},
+			{ID: "/dev/nvme2n1"},
 		},
 	}, nil)
 
@@ -526,8 +526,8 @@ func TestMDADM_DeleteLV_FailedLogicalVolume(t *testing.T) {
 		DevicePath: "/dev/md/testlv",
 		Status:     logicalvolume.LVStatusFailed,
 		PDrivesMetadata: []*physicaldrive.Metadata{
-			{DevicePath: "/dev/nvme1n1"},
-			{DevicePath: "/dev/nvme2n1"},
+			{ID: "/dev/nvme1n1"},
+			{ID: "/dev/nvme2n1"},
 		},
 	}, nil)
 
@@ -564,7 +564,7 @@ func TestMDADM_AddPDsToLV_RAID0_Success(t *testing.T) {
 	}
 
 	lvMetadata := &logicalvolume.Metadata{ID: "/dev/md/testlv0"}
-	pdMetadata := &physicaldrive.Metadata{DevicePath: "/dev/nvme3n1"}
+	pdMetadata := &physicaldrive.Metadata{ID: "/dev/nvme3n1"}
 
 	// Mock logical volume retrieval
 	mockLogicalVolumeGetter.On("LogicalVolume", lvMetadata).Return(&logicalvolume.LogicalVolume{
@@ -572,8 +572,8 @@ func TestMDADM_AddPDsToLV_RAID0_Success(t *testing.T) {
 		DevicePath: "/dev/md/testlv0",
 		RAIDLevel:  logicalvolume.RAIDLevel0,
 		PDrivesMetadata: []*physicaldrive.Metadata{
-			{DevicePath: "/dev/nvme1n1"},
-			{DevicePath: "/dev/nvme2n1"},
+			{ID: "/dev/nvme1n1"},
+			{ID: "/dev/nvme2n1"},
 		},
 	}, nil)
 
@@ -612,7 +612,7 @@ func TestMDADM_AddPDsToLV_RAID1_Success(t *testing.T) {
 	}
 
 	lvMetadata := &logicalvolume.Metadata{ID: "/dev/md/testlv1"}
-	pdMetadata := &physicaldrive.Metadata{DevicePath: "/dev/nvme3n1"}
+	pdMetadata := &physicaldrive.Metadata{ID: "/dev/nvme3n1"}
 
 	// Mock logical volume retrieval
 	mockLogicalVolumeGetter.On("LogicalVolume", lvMetadata).Return(&logicalvolume.LogicalVolume{
@@ -620,8 +620,8 @@ func TestMDADM_AddPDsToLV_RAID1_Success(t *testing.T) {
 		DevicePath: "/dev/md/testlv1",
 		RAIDLevel:  logicalvolume.RAIDLevel1,
 		PDrivesMetadata: []*physicaldrive.Metadata{
-			{DevicePath: "/dev/nvme1n1"},
-			{DevicePath: "/dev/nvme2n1"},
+			{ID: "/dev/nvme1n1"},
+			{ID: "/dev/nvme2n1"},
 		},
 	}, nil)
 
@@ -664,8 +664,8 @@ func TestMDADM_AddPDsToLV_RAID10_Success(t *testing.T) {
 	}
 
 	lvMetadata := &logicalvolume.Metadata{ID: "/dev/md/testlv10"}
-	pdMetadata1 := &physicaldrive.Metadata{DevicePath: "/dev/nvme5n1"}
-	pdMetadata2 := &physicaldrive.Metadata{DevicePath: "/dev/nvme6n1"}
+	pdMetadata1 := &physicaldrive.Metadata{ID: "/dev/nvme5n1"}
+	pdMetadata2 := &physicaldrive.Metadata{ID: "/dev/nvme6n1"}
 
 	// Mock logical volume retrieval
 	mockLogicalVolumeGetter.On("LogicalVolume", lvMetadata).Return(&logicalvolume.LogicalVolume{
@@ -673,10 +673,10 @@ func TestMDADM_AddPDsToLV_RAID10_Success(t *testing.T) {
 		DevicePath: "/dev/md/testlv10",
 		RAIDLevel:  logicalvolume.RAIDLevel10,
 		PDrivesMetadata: []*physicaldrive.Metadata{
-			{DevicePath: "/dev/nvme1n1"},
-			{DevicePath: "/dev/nvme2n1"},
-			{DevicePath: "/dev/nvme3n1"},
-			{DevicePath: "/dev/nvme4n1"},
+			{ID: "/dev/nvme1n1"},
+			{ID: "/dev/nvme2n1"},
+			{ID: "/dev/nvme3n1"},
+			{ID: "/dev/nvme4n1"},
 		},
 	}, nil)
 
@@ -723,7 +723,7 @@ func TestMDADM_AddPDsToLV_FailedLV(t *testing.T) {
 	}
 
 	lvMetadata := &logicalvolume.Metadata{ID: "/dev/md/testlv1"}
-	pdMetadata := &physicaldrive.Metadata{DevicePath: "/dev/nvme3n1"}
+	pdMetadata := &physicaldrive.Metadata{ID: "/dev/nvme3n1"}
 
 	// Mock logical volume retrieval with failed status
 	mockLogicalVolumeGetter.On("LogicalVolume", lvMetadata).Return(&logicalvolume.LogicalVolume{
@@ -732,8 +732,8 @@ func TestMDADM_AddPDsToLV_FailedLV(t *testing.T) {
 		RAIDLevel:  logicalvolume.RAIDLevel1,
 		Status:     logicalvolume.LVStatusFailed,
 		PDrivesMetadata: []*physicaldrive.Metadata{
-			{DevicePath: "/dev/nvme1n1"},
-			{DevicePath: "/dev/nvme2n1"},
+			{ID: "/dev/nvme1n1"},
+			{ID: "/dev/nvme2n1"},
 		},
 	}, nil)
 
@@ -756,7 +756,7 @@ func TestMDADM_AddPDsToLV_FailedDrive(t *testing.T) {
 	}
 
 	lvMetadata := &logicalvolume.Metadata{ID: "/dev/md/testlv1"}
-	pdMetadata := &physicaldrive.Metadata{DevicePath: "/dev/nvme3n1"}
+	pdMetadata := &physicaldrive.Metadata{ID: "/dev/nvme3n1"}
 
 	// Mock logical volume retrieval
 	mockLogicalVolumeGetter.On("LogicalVolume", lvMetadata).Return(&logicalvolume.LogicalVolume{
@@ -764,8 +764,8 @@ func TestMDADM_AddPDsToLV_FailedDrive(t *testing.T) {
 		DevicePath: "/dev/md/testlv1",
 		RAIDLevel:  logicalvolume.RAIDLevel1,
 		PDrivesMetadata: []*physicaldrive.Metadata{
-			{DevicePath: "/dev/nvme1n1"},
-			{DevicePath: "/dev/nvme2n1"},
+			{ID: "/dev/nvme1n1"},
+			{ID: "/dev/nvme2n1"},
 		},
 	}, nil)
 
@@ -795,7 +795,7 @@ func TestMDADM_AddPDsToLV_UsedDrive(t *testing.T) {
 	}
 
 	lvMetadata := &logicalvolume.Metadata{ID: "/dev/md/testlv1"}
-	pdMetadata := &physicaldrive.Metadata{DevicePath: "/dev/nvme3n1"}
+	pdMetadata := &physicaldrive.Metadata{ID: "/dev/nvme3n1"}
 
 	// Mock logical volume retrieval
 	mockLogicalVolumeGetter.On("LogicalVolume", lvMetadata).Return(&logicalvolume.LogicalVolume{
@@ -803,8 +803,8 @@ func TestMDADM_AddPDsToLV_UsedDrive(t *testing.T) {
 		DevicePath: "/dev/md/testlv1",
 		RAIDLevel:  logicalvolume.RAIDLevel1,
 		PDrivesMetadata: []*physicaldrive.Metadata{
-			{DevicePath: "/dev/nvme1n1"},
-			{DevicePath: "/dev/nvme2n1"},
+			{ID: "/dev/nvme1n1"},
+			{ID: "/dev/nvme2n1"},
 		},
 	}, nil)
 
@@ -834,7 +834,7 @@ func TestMDADM_DeletePDsFromLV_RAID1_Success(t *testing.T) {
 	}
 
 	lvMetadata := &logicalvolume.Metadata{ID: "/dev/md/testlv1"}
-	pdMetadata := &physicaldrive.Metadata{DevicePath: "/dev/nvme2n1"}
+	pdMetadata := &physicaldrive.Metadata{ID: "/dev/nvme2n1"}
 
 	// Mock logical volume retrieval
 	mockLogicalVolumeGetter.On("LogicalVolume", lvMetadata).Return(&logicalvolume.LogicalVolume{
@@ -842,9 +842,9 @@ func TestMDADM_DeletePDsFromLV_RAID1_Success(t *testing.T) {
 		DevicePath: "/dev/md/testlv1",
 		RAIDLevel:  logicalvolume.RAIDLevel1,
 		PDrivesMetadata: []*physicaldrive.Metadata{
-			{DevicePath: "/dev/nvme1n1"},
-			{DevicePath: "/dev/nvme2n1"},
-			{DevicePath: "/dev/nvme3n1"},
+			{ID: "/dev/nvme1n1"},
+			{ID: "/dev/nvme2n1"},
+			{ID: "/dev/nvme3n1"},
 		},
 	}, nil)
 
@@ -899,8 +899,8 @@ func TestMDADM_DeletePDsFromLV_RAID10_Success(t *testing.T) {
 	}
 
 	lvMetadata := &logicalvolume.Metadata{ID: "/dev/md/testlv10"}
-	pdMetadata1 := &physicaldrive.Metadata{DevicePath: "/dev/nvme3n1"}
-	pdMetadata2 := &physicaldrive.Metadata{DevicePath: "/dev/nvme4n1"}
+	pdMetadata1 := &physicaldrive.Metadata{ID: "/dev/nvme3n1"}
+	pdMetadata2 := &physicaldrive.Metadata{ID: "/dev/nvme4n1"}
 
 	// Mock logical volume retrieval
 	mockLogicalVolumeGetter.On("LogicalVolume", lvMetadata).Return(&logicalvolume.LogicalVolume{
@@ -908,10 +908,10 @@ func TestMDADM_DeletePDsFromLV_RAID10_Success(t *testing.T) {
 		DevicePath: "/dev/md/testlv10",
 		RAIDLevel:  logicalvolume.RAIDLevel10,
 		PDrivesMetadata: []*physicaldrive.Metadata{
-			{DevicePath: "/dev/nvme1n1"},
-			{DevicePath: "/dev/nvme2n1"},
-			{DevicePath: "/dev/nvme3n1"},
-			{DevicePath: "/dev/nvme4n1"},
+			{ID: "/dev/nvme1n1"},
+			{ID: "/dev/nvme2n1"},
+			{ID: "/dev/nvme3n1"},
+			{ID: "/dev/nvme4n1"},
 		},
 	}, nil)
 
@@ -954,7 +954,7 @@ func TestMDADM_DeletePDsFromLV_RAID0_Fail(t *testing.T) {
 	}
 
 	lvMetadata := &logicalvolume.Metadata{ID: "/dev/md/testlv0"}
-	pdMetadata := &physicaldrive.Metadata{DevicePath: "/dev/nvme2n1"}
+	pdMetadata := &physicaldrive.Metadata{ID: "/dev/nvme2n1"}
 
 	// Mock logical volume retrieval
 	mockLogicalVolumeGetter.On("LogicalVolume", lvMetadata).Return(&logicalvolume.LogicalVolume{
@@ -962,8 +962,8 @@ func TestMDADM_DeletePDsFromLV_RAID0_Fail(t *testing.T) {
 		DevicePath: "/dev/md/testlv0",
 		RAIDLevel:  logicalvolume.RAIDLevel0,
 		PDrivesMetadata: []*physicaldrive.Metadata{
-			{DevicePath: "/dev/nvme1n1"},
-			{DevicePath: "/dev/nvme2n1"},
+			{ID: "/dev/nvme1n1"},
+			{ID: "/dev/nvme2n1"},
 		},
 	}, nil)
 
@@ -986,7 +986,7 @@ func TestMDADM_DeletePDsFromLV_RAID1_MinimumDisksFail(t *testing.T) {
 	}
 
 	lvMetadata := &logicalvolume.Metadata{ID: "/dev/md/testlv1"}
-	pdMetadata := &physicaldrive.Metadata{DevicePath: "/dev/nvme2n1"}
+	pdMetadata := &physicaldrive.Metadata{ID: "/dev/nvme2n1"}
 
 	// Mock logical volume retrieval with only 2 drives
 	mockLogicalVolumeGetter.On("LogicalVolume", lvMetadata).Return(&logicalvolume.LogicalVolume{
@@ -994,8 +994,8 @@ func TestMDADM_DeletePDsFromLV_RAID1_MinimumDisksFail(t *testing.T) {
 		DevicePath: "/dev/md/testlv1",
 		RAIDLevel:  logicalvolume.RAIDLevel1,
 		PDrivesMetadata: []*physicaldrive.Metadata{
-			{DevicePath: "/dev/nvme1n1"},
-			{DevicePath: "/dev/nvme2n1"},
+			{ID: "/dev/nvme1n1"},
+			{ID: "/dev/nvme2n1"},
 		},
 	}, nil)
 
@@ -1018,7 +1018,7 @@ func TestMDADM_DeletePDsFromLV_FailedLV(t *testing.T) {
 	}
 
 	lvMetadata := &logicalvolume.Metadata{ID: "/dev/md/testlv1"}
-	pdMetadata := &physicaldrive.Metadata{DevicePath: "/dev/nvme2n1"}
+	pdMetadata := &physicaldrive.Metadata{ID: "/dev/nvme2n1"}
 
 	// Mock logical volume retrieval with failed status
 	mockLogicalVolumeGetter.On("LogicalVolume", lvMetadata).Return(&logicalvolume.LogicalVolume{
@@ -1027,9 +1027,9 @@ func TestMDADM_DeletePDsFromLV_FailedLV(t *testing.T) {
 		RAIDLevel:  logicalvolume.RAIDLevel1,
 		Status:     logicalvolume.LVStatusFailed,
 		PDrivesMetadata: []*physicaldrive.Metadata{
-			{DevicePath: "/dev/nvme1n1"},
-			{DevicePath: "/dev/nvme2n1"},
-			{DevicePath: "/dev/nvme3n1"},
+			{ID: "/dev/nvme1n1"},
+			{ID: "/dev/nvme2n1"},
+			{ID: "/dev/nvme3n1"},
 		},
 	}, nil)
 
@@ -1052,7 +1052,7 @@ func TestMDADM_DeletePDsFromLV_FailCommandError(t *testing.T) {
 	}
 
 	lvMetadata := &logicalvolume.Metadata{ID: "/dev/md/testlv1"}
-	pdMetadata := &physicaldrive.Metadata{DevicePath: "/dev/nvme2n1"}
+	pdMetadata := &physicaldrive.Metadata{ID: "/dev/nvme2n1"}
 
 	// Mock logical volume retrieval
 	mockLogicalVolumeGetter.On("LogicalVolume", lvMetadata).Return(&logicalvolume.LogicalVolume{
@@ -1060,9 +1060,9 @@ func TestMDADM_DeletePDsFromLV_FailCommandError(t *testing.T) {
 		DevicePath: "/dev/md/testlv1",
 		RAIDLevel:  logicalvolume.RAIDLevel1,
 		PDrivesMetadata: []*physicaldrive.Metadata{
-			{DevicePath: "/dev/nvme1n1"},
-			{DevicePath: "/dev/nvme2n1"},
-			{DevicePath: "/dev/nvme3n1"},
+			{ID: "/dev/nvme1n1"},
+			{ID: "/dev/nvme2n1"},
+			{ID: "/dev/nvme3n1"},
 		},
 	}, nil)
 
@@ -1093,7 +1093,7 @@ func TestMDADM_DeletePDsFromLV_RemoveCommandError(t *testing.T) {
 	}
 
 	lvMetadata := &logicalvolume.Metadata{ID: "/dev/md/testlv1"}
-	pdMetadata := &physicaldrive.Metadata{DevicePath: "/dev/nvme2n1"}
+	pdMetadata := &physicaldrive.Metadata{ID: "/dev/nvme2n1"}
 
 	// Mock logical volume retrieval
 	mockLogicalVolumeGetter.On("LogicalVolume", lvMetadata).Return(&logicalvolume.LogicalVolume{
@@ -1101,9 +1101,9 @@ func TestMDADM_DeletePDsFromLV_RemoveCommandError(t *testing.T) {
 		DevicePath: "/dev/md/testlv1",
 		RAIDLevel:  logicalvolume.RAIDLevel1,
 		PDrivesMetadata: []*physicaldrive.Metadata{
-			{DevicePath: "/dev/nvme1n1"},
-			{DevicePath: "/dev/nvme2n1"},
-			{DevicePath: "/dev/nvme3n1"},
+			{ID: "/dev/nvme1n1"},
+			{ID: "/dev/nvme2n1"},
+			{ID: "/dev/nvme3n1"},
 		},
 	}, nil)
 
@@ -1141,7 +1141,7 @@ func TestMDADM_DeletePDsFromLV_ZeroSuperblockError(t *testing.T) {
 	}
 
 	lvMetadata := &logicalvolume.Metadata{ID: "/dev/md/testlv1"}
-	pdMetadata := &physicaldrive.Metadata{DevicePath: "/dev/nvme2n1"}
+	pdMetadata := &physicaldrive.Metadata{ID: "/dev/nvme2n1"}
 
 	// Mock logical volume retrieval
 	mockLogicalVolumeGetter.On("LogicalVolume", lvMetadata).Return(&logicalvolume.LogicalVolume{
@@ -1149,9 +1149,9 @@ func TestMDADM_DeletePDsFromLV_ZeroSuperblockError(t *testing.T) {
 		DevicePath: "/dev/md/testlv1",
 		RAIDLevel:  logicalvolume.RAIDLevel1,
 		PDrivesMetadata: []*physicaldrive.Metadata{
-			{DevicePath: "/dev/nvme1n1"},
-			{DevicePath: "/dev/nvme2n1"},
-			{DevicePath: "/dev/nvme3n1"},
+			{ID: "/dev/nvme1n1"},
+			{ID: "/dev/nvme2n1"},
+			{ID: "/dev/nvme3n1"},
 		},
 	}, nil)
 
@@ -1195,7 +1195,7 @@ func TestMDADM_DeletePDsFromLV_GrowDevicesError(t *testing.T) {
 	}
 
 	lvMetadata := &logicalvolume.Metadata{ID: "/dev/md/testlv1"}
-	pdMetadata := &physicaldrive.Metadata{DevicePath: "/dev/nvme2n1"}
+	pdMetadata := &physicaldrive.Metadata{ID: "/dev/nvme2n1"}
 
 	// Mock logical volume retrieval
 	mockLogicalVolumeGetter.On("LogicalVolume", lvMetadata).Return(&logicalvolume.LogicalVolume{
@@ -1203,9 +1203,9 @@ func TestMDADM_DeletePDsFromLV_GrowDevicesError(t *testing.T) {
 		DevicePath: "/dev/md/testlv1",
 		RAIDLevel:  logicalvolume.RAIDLevel1,
 		PDrivesMetadata: []*physicaldrive.Metadata{
-			{DevicePath: "/dev/nvme1n1"},
-			{DevicePath: "/dev/nvme2n1"},
-			{DevicePath: "/dev/nvme3n1"},
+			{ID: "/dev/nvme1n1"},
+			{ID: "/dev/nvme2n1"},
+			{ID: "/dev/nvme3n1"},
 		},
 	}, nil)
 
@@ -1253,7 +1253,7 @@ func TestMDADM_DeletePDsFromLV_GrowArraySizeError(t *testing.T) {
 	}
 
 	lvMetadata := &logicalvolume.Metadata{ID: "/dev/md/testlv1"}
-	pdMetadata := &physicaldrive.Metadata{DevicePath: "/dev/nvme2n1"}
+	pdMetadata := &physicaldrive.Metadata{ID: "/dev/nvme2n1"}
 
 	// Mock logical volume retrieval
 	mockLogicalVolumeGetter.On("LogicalVolume", lvMetadata).Return(&logicalvolume.LogicalVolume{
@@ -1261,9 +1261,9 @@ func TestMDADM_DeletePDsFromLV_GrowArraySizeError(t *testing.T) {
 		DevicePath: "/dev/md/testlv1",
 		RAIDLevel:  logicalvolume.RAIDLevel1,
 		PDrivesMetadata: []*physicaldrive.Metadata{
-			{DevicePath: "/dev/nvme1n1"},
-			{DevicePath: "/dev/nvme2n1"},
-			{DevicePath: "/dev/nvme3n1"},
+			{ID: "/dev/nvme1n1"},
+			{ID: "/dev/nvme2n1"},
+			{ID: "/dev/nvme3n1"},
 		},
 	}, nil)
 

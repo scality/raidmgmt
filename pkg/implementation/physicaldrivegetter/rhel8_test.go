@@ -65,12 +65,9 @@ func TestParseUDevADMOutput(t *testing.T) {
 	output := []byte(uDevADMTestOutput)
 
 	expected := &physicaldrive.PhysicalDrive{
-		Model:  "Amazon Elastic Block Store",
-		Serial: "vol05ece746e40ff492f",
-		ID:     "nvme.1d0f-766f6c3035656365373436653430666634393266-416d617a6f6e20456c617374696320426c6f636b2053746f7265-00000001",
-		Metadata: &physicaldrive.Metadata{
-			DevicePath: "/dev/nvme1n1",
-		},
+		Model:         "Amazon Elastic Block Store",
+		Serial:        "vol05ece746e40ff492f",
+		DevicePath:    "/dev/nvme1n1",
 		PermanentPath: "/dev/disk/by-id/nvme-nvme.1d0f-766f6c3035656365373436653430666634393266-416d617a6f6e20456c617374696320426c6f636b2053746f7265-00000001",
 	}
 
@@ -118,17 +115,18 @@ E: DEVLINKS=/dev/disk/by-id/nvme-123 /dev/disk/by-path/pci-0000:00:1b.0-nvme-1`)
 SMART overall-health self-assessment test result: PASSED
 `), nil)
 
-	metadata := &physicaldrive.Metadata{DevicePath: "/dev/nvme1n1"}
+	metadata := &physicaldrive.Metadata{ID: "/dev/nvme1n1"}
 	physicalDrive, err := r.PhysicalDrive(metadata)
 
 	// Verify result
 	assert.NoError(t, err)
 	assert.Equal(t, "Amazon Elastic Block Store", physicalDrive.Model)
 	assert.Equal(t, "vol05ece746e40ff492f", physicalDrive.Serial)
-	assert.Equal(t, "nvme.1d0f-123456", physicalDrive.ID)
+	assert.Equal(t, "/dev/nvme1n1", physicalDrive.ID)
 	assert.Equal(t, uint64(8589934592), physicalDrive.Size)
 	assert.Equal(t, physicaldrive.DiskTypeNVMe, physicalDrive.Type)
 	assert.Equal(t, physicaldrive.PDStatusUnassignedGood, physicalDrive.Status)
+	assert.Equal(t, "/dev/nvme1n1", physicalDrive.DevicePath)
 	assert.Equal(t, "/dev/disk/by-id/nvme-123", physicalDrive.PermanentPath)
 
 	mockLSBLK.AssertExpectations(t)
@@ -158,7 +156,7 @@ E: DEVLINKS=/dev/disk/by-id/ssd-123`), nil)
 
 	mockSmartCTL.On("Run", mock.AnythingOfType("[]string")).Return([]byte(`SMART overall-health self-assessment test result: PASSED`), nil)
 
-	metadata := &physicaldrive.Metadata{DevicePath: "/dev/sda"}
+	metadata := &physicaldrive.Metadata{ID: "/dev/sda"}
 	physicalDrive, err := r.PhysicalDrive(metadata)
 
 	assert.NoError(t, err)
@@ -187,11 +185,12 @@ E: DEVNAME=/dev/sdb`), nil)
 
 	mockSmartCTL.On("Run", mock.AnythingOfType("[]string")).Return([]byte(`SMART overall-health self-assessment test result: PASSED`), nil)
 
-	metadata := &physicaldrive.Metadata{DevicePath: "/dev/sdb"}
+	metadata := &physicaldrive.Metadata{ID: "/dev/sdb"}
 	physicalDrive, err := r.PhysicalDrive(metadata)
 
 	assert.NoError(t, err)
 	assert.Equal(t, "Seagate HDD", physicalDrive.Model)
+	assert.Equal(t, "/dev/sdb", physicalDrive.DevicePath)
 	assert.Equal(t, physicaldrive.DiskTypeHDD, physicalDrive.Type)
 }
 
@@ -209,7 +208,7 @@ func TestRHEL8_PhysicalDrive_BlockDeviceError(t *testing.T) {
 	// Simulate error from lsblk
 	mockLSBLK.On("Run", mock.AnythingOfType("[]string")).Return([]byte{}, errors.New("lsblk command failed"))
 
-	metadata := &physicaldrive.Metadata{DevicePath: "/dev/nvme1n1"}
+	metadata := &physicaldrive.Metadata{ID: "/dev/nvme1n1"}
 	_, err := r.PhysicalDrive(metadata)
 
 	assert.Error(t, err)
@@ -233,7 +232,7 @@ func TestRHEL8_PhysicalDrive_UDevADMError(t *testing.T) {
 	// Simulate error from udevadm
 	mockUDevADM.On("Run", mock.AnythingOfType("[]string")).Return([]byte{}, errors.New("udevadm command failed"))
 
-	metadata := &physicaldrive.Metadata{DevicePath: "/dev/nvme1n1"}
+	metadata := &physicaldrive.Metadata{ID: "/dev/nvme1n1"}
 	_, err := r.PhysicalDrive(metadata)
 
 	assert.Error(t, err)
@@ -262,13 +261,14 @@ E: DEVNAME=/dev/nvme1n1`), nil)
 	// Simulate error from smartctl
 	mockSmartCTL.On("Run", mock.AnythingOfType("[]string")).Return([]byte{}, errors.New("smartctl command failed"))
 
-	metadata := &physicaldrive.Metadata{DevicePath: "/dev/nvme1n1"}
+	metadata := &physicaldrive.Metadata{ID: "/dev/nvme1n1"}
 	physicalDrive, err := r.PhysicalDrive(metadata)
 
 	// FIXME Ignore errors for now
 	assert.NoError(t, err)
 	assert.Equal(t, physicalDrive.Status, physicaldrive.PDStatusUnassignedGood)
 	assert.Equal(t, physicalDrive.Reason, "smartctl command failed to get physical drive status")
+	assert.Equal(t, physicalDrive.DevicePath, "/dev/nvme1n1")
 }
 
 func TestRHEL8_PhysicalDrive_SmartCTLErrorDeviceUsed(t *testing.T) {
@@ -293,7 +293,7 @@ E: DEVNAME=/dev/nvme1n1`), nil)
 	// Simulate error from smartctl
 	mockSmartCTL.On("Run", mock.AnythingOfType("[]string")).Return([]byte{}, errors.New("smartctl command failed"))
 
-	metadata := &physicaldrive.Metadata{DevicePath: "/dev/nvme1n1"}
+	metadata := &physicaldrive.Metadata{ID: "/dev/nvme1n1"}
 	physicalDrive, err := r.PhysicalDrive(metadata)
 
 	// FIXME Ignore errors for now
@@ -322,12 +322,13 @@ E: DEVNAME=/dev/xda`), nil)
 
 	mockSmartCTL.On("Run", mock.AnythingOfType("[]string")).Return([]byte(`SMART overall-health self-assessment test result: PASSED`), nil)
 
-	metadata := &physicaldrive.Metadata{DevicePath: "/dev/xda"}
+	metadata := &physicaldrive.Metadata{ID: "/dev/xda"}
 	physicalDrive, err := r.PhysicalDrive(metadata)
 
 	assert.NoError(t, err)
 	assert.Equal(t, "Unknown Disk", physicalDrive.Model)
 	assert.Equal(t, physicaldrive.DiskTypeUnknown, physicalDrive.Type)
+	assert.Equal(t, physicalDrive.DevicePath, "/dev/xda")
 }
 
 func TestRHEL8_PhysicalDrive_UsedStatus(t *testing.T) {
@@ -351,7 +352,7 @@ E: DEVNAME=/dev/sda`), nil)
 
 	mockSmartCTL.On("Run", mock.AnythingOfType("[]string")).Return([]byte(`SMART overall-health self-assessment test result: PASSED`), nil)
 
-	metadata := &physicaldrive.Metadata{DevicePath: "/dev/sda"}
+	metadata := &physicaldrive.Metadata{ID: "/dev/sda"}
 	physicalDrive, err := r.PhysicalDrive(metadata)
 
 	assert.NoError(t, err)
@@ -380,7 +381,7 @@ E: DEVNAME=/dev/sda`), nil)
 	mockSmartCTL.On("Run", mock.AnythingOfType("[]string")).Return([]byte(`SMART overall-health self-assessment test result: FAILED
 Reallocated Sector Count: 5`), nil)
 
-	metadata := &physicaldrive.Metadata{DevicePath: "/dev/sda"}
+	metadata := &physicaldrive.Metadata{ID: "/dev/sda"}
 	physicalDrive, err := r.PhysicalDrive(metadata)
 
 	assert.NoError(t, err)
@@ -454,12 +455,14 @@ SMART overall-health self-assessment test result: PASSED
 	// First drive assertions
 	assert.Equal(t, "Amazon Elastic Block Store", physicalDrives[0].Model)
 	assert.Equal(t, "vol05ece746e40ff492f", physicalDrives[0].Serial)
+	assert.Equal(t, "/dev/nvme1n1", physicalDrives[0].ID)
 	assert.Equal(t, "/dev/nvme1n1", physicalDrives[0].DevicePath)
 	assert.Equal(t, physicaldrive.DiskTypeNVMe, physicalDrives[0].Type)
 
 	// Second drive assertions
 	assert.Equal(t, "Amazon Elastic Block Store", physicalDrives[1].Model)
 	assert.Equal(t, "vol05ece746e40ff493g", physicalDrives[1].Serial)
+	assert.Equal(t, "/dev/nvme2n1", physicalDrives[1].ID)
 	assert.Equal(t, "/dev/nvme2n1", physicalDrives[1].DevicePath)
 	assert.Equal(t, physicaldrive.DiskTypeNVMe, physicalDrives[1].Type)
 

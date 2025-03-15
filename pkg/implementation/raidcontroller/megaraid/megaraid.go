@@ -170,7 +170,7 @@ func (a *Adapter) PhysicalDrive(metadata *physicaldrive.Metadata) (
 ) {
 	pd, err := a.physicalDrive(metadata)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to get physical drive %s", metadata.Slot.String())
+		return nil, errors.Wrapf(err, "failed to get physical drive %s", metadata.ID)
 	}
 
 	return pd, nil
