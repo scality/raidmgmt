@@ -152,7 +152,7 @@ func (m *MDADM) LogicalVolume(
 
 	for _, device := range details[0].Devices {
 		logicalVolume.PDrivesMetadata = append(logicalVolume.PDrivesMetadata, &physicaldrive.Metadata{
-			DevicePath: device.Path,
+			ID: device.Path,
 			// FIXME Add a const in the controller metadata to identify the controller
 			CtrlMetadata: metadata.CtrlMetadata,
 		})

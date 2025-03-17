@@ -117,27 +117,23 @@ func TestSSCALIPhysicalDrive(t *testing.T) {
 				CtrlMetadata: &raidcontroller.Metadata{
 					ID: 0,
 				},
-				Slot: &physicaldrive.Slot{
-					Port:      "4I",
-					Enclosure: "6",
-					Bay:       "1",
-				},
+				ID: "4I:6:1",
 			},
 			expected: &physicaldrive.PhysicalDrive{
 				Metadata: &physicaldrive.Metadata{
 					CtrlMetadata: &raidcontroller.Metadata{
 						ID: 0,
 					},
-					Slot: &physicaldrive.Slot{
-						Port:      "4I",
-						Enclosure: "6",
-						Bay:       "1",
-					},
+					ID: "4I:6:1",
+				},
+				Slot: &physicaldrive.Slot{
+					Port:      "4I",
+					Enclosure: "6",
+					Bay:       "1",
 				},
 				Vendor: "HPE",
 				Model:  "MO000800JXBEV",
 				Serial: "W2X0751Y",
-				ID:     "5000CCA0B8712794",
 				Size:   858993459200,
 				Status: physicaldrive.PDStatusUsed,
 			},
@@ -151,7 +147,7 @@ func TestSSCALIPhysicalDrive(t *testing.T) {
 			"controller",
 			"slot=" + strconv.Itoa(tt.metadata.CtrlMetadata.ID),
 			"physicaldrive",
-			tt.metadata.Slot.Format(),
+			tt.metadata.ID,
 			"show",
 			"detail",
 		}).Return(tt.mocking, nil)
@@ -164,11 +160,7 @@ func TestSSCALIPhysicalDrive(t *testing.T) {
 			CtrlMetadata: &raidcontroller.Metadata{
 				ID: tt.metadata.CtrlMetadata.ID,
 			},
-			Slot: &physicaldrive.Slot{
-				Port:      "4I",
-				Enclosure: "6",
-				Bay:       "1",
-			},
+			ID: "4I:6:1",
 		}
 
 		physicalDrive, err := s.PhysicalDrive(metadata)

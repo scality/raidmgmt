@@ -6,7 +6,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-const SSACLIPath = "/opt/hp/hp_ssacli/bin/hp_ssacli"
+const SSACLIPath = "ssacli"
 
 type SSACLI struct {
 	cliPath string

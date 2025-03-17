@@ -37,20 +37,15 @@ func (a *Adapter) physicaldrives(metadata *raidcontroller.Metadata) (
 
 	// Fill the slice of physical drives
 	for _, pd := range pds {
-		enclosure, slot := pd.EnclosureSlot()
-
 		pdMetadata := &physicaldrive.Metadata{
 			CtrlMetadata: metadata,
-			Slot: &physicaldrive.Slot{
-				Enclosure: enclosure,
-				Bay:       slot,
-			},
+			ID:           pd.EIDSlot,
 		}
 
 		physicalDrive, err := a.physicalDrive(pdMetadata)
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to get physical drive %s",
-				pdMetadata.Slot.String())
+				pdMetadata.ID)
 		}
 
 		physicalDrives = append(physicalDrives, physicalDrive)
@@ -70,6 +65,8 @@ func (a *Adapter) physicaldrives(metadata *raidcontroller.Metadata) (
 }
 
 // physicalDrive returns a physical drive for a given physical drive metadata.
+//
+//nolint:funlen // no good reason to split it for now
 func (a *Adapter) physicalDrive(
 	metadata *physicaldrive.Metadata) (
 	*physicaldrive.PhysicalDrive, error,
@@ -110,9 +107,14 @@ func (a *Adapter) physicalDrive(
 
 	jbod := strings.Contains(strings.ToUpper(pd.Type), "JBOD")
 
+	slot, err := validateID(metadata.ID)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to validate slot IDs")
+	}
+
 	physicalDrive := &physicaldrive.PhysicalDrive{
 		Metadata: metadata,
-		ID:       strconv.Itoa(pd.DeviceID),
+		Slot:     slot,
 		Vendor:   strings.TrimSpace(ddAttributes.ManufacturerID),
 		Model:    strings.TrimSpace(pd.Model),
 		Serial:   strings.TrimSpace(ddAttributes.SerialNumber),
@@ -127,23 +129,6 @@ func (a *Adapter) physicalDrive(
 	}
 
 	return physicalDrive, nil
-}
-
-// EnclosureSlot returns the enclosure and slot of a physical drive.
-func (pd *PD) EnclosureSlot() (enclosure, slot string) {
-	eidSlotSplit := strings.Split(pd.EIDSlot, ":")
-	splitParts := 2
-
-	// If the enclosureSlot is not in the format "enclosure:slot"
-	// then the slot is the value of EIDSlot
-	if len(eidSlotSplit) != splitParts {
-		return "", pd.EIDSlot
-	}
-
-	enclosure = eidSlotSplit[0]
-	slot = eidSlotSplit[1]
-
-	return enclosure, slot
 }
 
 // DiskType returns the disk type of a physical drive.
@@ -182,41 +167,46 @@ func (pd *PD) PDStatus() physicaldrive.PDStatus {
 }
 
 // validateID validates the slot IDs of a physical drive.
-func validateID(s *physicaldrive.Slot) error {
-	bayID, err := strconv.Atoi(s.Bay)
+func validateID(s string) (*physicaldrive.Slot, error) {
+	slot, err := physicaldrive.ParseSlot(s)
 	if err != nil {
-		return errors.Wrapf(err, "failed to convert bay ID to int: %s", s.Bay)
+		return nil, errors.Wrap(err, "failed to parse ID")
+	}
+
+	bayID, err := strconv.Atoi(slot.Bay)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to convert bay ID to int: %s", slot.Bay)
 	}
 
 	if bayID < 0 {
-		return errors.Wrapf(err, "invalid bay ID: %s", s.Bay)
+		return nil, errors.Wrapf(err, "invalid bay ID: %s", slot.Bay)
 	}
 
-	if s.Enclosure != "" {
-		enclosureID, err := strconv.Atoi(s.Enclosure)
+	if slot.Enclosure != "" {
+		enclosureID, err := strconv.Atoi(slot.Enclosure)
 		if err != nil {
-			return errors.Wrapf(err, "failed to convert enclosure ID to int: %s", s.Enclosure)
+			return nil, errors.Wrapf(err, "failed to convert enclosure ID to int: %s", slot.Enclosure)
 		}
 
 		if enclosureID < 0 {
-			return errors.Wrapf(err, "invalid enclosure ID: %s", s.Enclosure)
+			return nil, errors.Wrapf(err, "invalid enclosure ID: %s", slot.Enclosure)
 		}
 	}
 
-	return nil
+	return slot, nil
 }
 
 // selectorPD returns the selector for a physical drive metadata.
 func selectorPD(m *physicaldrive.Metadata) (string, error) {
-	err := validateID(m.Slot)
+	slot, err := validateID(m.ID)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to validate slot IDs")
 	}
 
-	selector := fmt.Sprintf(patternNoEnclosure, m.CtrlMetadata.ID, m.Slot.Bay)
+	selector := fmt.Sprintf(patternNoEnclosure, m.CtrlMetadata.ID, slot.Bay)
 
-	if m.Slot.Enclosure != "" {
-		selector = fmt.Sprintf(patternEnclosure, m.CtrlMetadata.ID, m.Slot.Enclosure, m.Slot.Bay)
+	if slot.Enclosure != "" {
+		selector = fmt.Sprintf(patternEnclosure, m.CtrlMetadata.ID, slot.Enclosure, slot.Bay)
 	}
 
 	return selector, nil

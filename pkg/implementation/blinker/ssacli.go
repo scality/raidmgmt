@@ -44,20 +44,18 @@ func (s *SSACLI) StopBlink(metadata *physicaldrive.Metadata) error {
 
 // blink makes a physical drive blink.
 func (s *SSACLI) blink(metadata *physicaldrive.Metadata, action string) error {
-	slot := metadata.Slot.Format()
-
 	args := []string{
 		"controller",
 		"slot=" + strconv.Itoa(metadata.CtrlMetadata.ID),
 		"physicaldrive",
-		slot,
+		metadata.ID,
 		"modify",
 		"led=" + action,
 	}
 
 	_, err := s.SSACLI.Run(args)
 	if err != nil {
-		return errors.Wrapf(err, "failed to blink physical drive %s", slot)
+		return errors.Wrapf(err, "failed to blink physical drive %s", metadata.ID)
 	}
 
 	return nil

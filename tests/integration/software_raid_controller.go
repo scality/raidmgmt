@@ -45,9 +45,6 @@ func (t *SoftwareRAIDControllerTester) runRAID10Tests() error {
 	}
 
 	controllerMetadata := &raidcontroller.Metadata{ID: 0}
-	slot := &physicaldrive.Slot{
-		Port: "pouet",
-	}
 
 	creationRequest := &logicalvolume.Request{
 		CacheOptions: &logicalvolume.CacheOptions{},
@@ -55,24 +52,20 @@ func (t *SoftwareRAIDControllerTester) runRAID10Tests() error {
 		RAIDLevel:    logicalvolume.RAIDLevel10,
 		PDrivesMetadata: []*physicaldrive.Metadata{
 			{
-				DevicePath:   "/dev/nvme1n1",
+				ID:           "/dev/nvme1n1",
 				CtrlMetadata: controllerMetadata,
-				Slot:         slot,
 			},
 			{
-				DevicePath:   "/dev/nvme2n1",
+				ID:           "/dev/nvme2n1",
 				CtrlMetadata: controllerMetadata,
-				Slot:         slot,
 			},
 			{
-				DevicePath:   "/dev/nvme3n1",
+				ID:           "/dev/nvme3n1",
 				CtrlMetadata: controllerMetadata,
-				Slot:         slot,
 			},
 			{
-				DevicePath:   "/dev/nvme4n1",
+				ID:           "/dev/nvme4n1",
 				CtrlMetadata: controllerMetadata,
-				Slot:         slot,
 			},
 		},
 		Name: "test_raid10",
@@ -101,9 +94,8 @@ func (t *SoftwareRAIDControllerTester) runRAID10Tests() error {
 
 	drives := []*physicaldrive.Metadata{
 		{
-			DevicePath:   "/dev/nvme1n1",
+			ID:           "/dev/nvme1n1",
 			CtrlMetadata: controllerMetadata,
-			Slot:         slot,
 		},
 	}
 
@@ -157,14 +149,12 @@ func (t *SoftwareRAIDControllerTester) runRAID10Tests() error {
 
 	drives = []*physicaldrive.Metadata{
 		{
-			DevicePath:   "/dev/nvme1n1",
+			ID:           "/dev/nvme1n1",
 			CtrlMetadata: controllerMetadata,
-			Slot:         slot,
 		},
 		{
-			DevicePath:   "/dev/nvme4n1",
+			ID:           "/dev/nvme4n1",
 			CtrlMetadata: controllerMetadata,
-			Slot:         slot,
 		},
 	}
 
@@ -218,14 +208,12 @@ func (t *SoftwareRAIDControllerTester) runRAID10Tests() error {
 
 	drives = []*physicaldrive.Metadata{
 		{
-			DevicePath:   "/dev/nvme5n1",
+			ID:           "/dev/nvme5n1",
 			CtrlMetadata: controllerMetadata,
-			Slot:         slot,
 		},
 		{
-			DevicePath:   "/dev/nvme6n1",
+			ID:           "/dev/nvme6n1",
 			CtrlMetadata: controllerMetadata,
-			Slot:         slot,
 		},
 	}
 
@@ -242,14 +230,12 @@ func (t *SoftwareRAIDControllerTester) runRAID10Tests() error {
 
 	drives = []*physicaldrive.Metadata{
 		{
-			DevicePath:   "/dev/nvme6n1",
+			ID:           "/dev/nvme6n1",
 			CtrlMetadata: controllerMetadata,
-			Slot:         slot,
 		},
 		{
-			DevicePath:   "/dev/nvme7n1",
+			ID:           "/dev/nvme7n1",
 			CtrlMetadata: controllerMetadata,
-			Slot:         slot,
 		},
 	}
 
@@ -317,9 +303,6 @@ func (t *SoftwareRAIDControllerTester) runRAID1Tests() error {
 	}
 
 	controllerMetadata := &raidcontroller.Metadata{ID: 0}
-	slot := &physicaldrive.Slot{
-		Port: "pouet",
-	}
 
 	creationRequest := &logicalvolume.Request{
 		CacheOptions: &logicalvolume.CacheOptions{},
@@ -327,14 +310,12 @@ func (t *SoftwareRAIDControllerTester) runRAID1Tests() error {
 		RAIDLevel:    logicalvolume.RAIDLevel1,
 		PDrivesMetadata: []*physicaldrive.Metadata{
 			{
-				DevicePath:   "/dev/nvme1n1",
+				ID:           "/dev/nvme1n1",
 				CtrlMetadata: controllerMetadata,
-				Slot:         slot,
 			},
 			{
-				DevicePath:   "/dev/nvme2n1",
+				ID:           "/dev/nvme2n1",
 				CtrlMetadata: controllerMetadata,
-				Slot:         slot,
 			},
 		},
 		Name: "test_raid1",
@@ -361,9 +342,8 @@ func (t *SoftwareRAIDControllerTester) runRAID1Tests() error {
 
 	drives := []*physicaldrive.Metadata{
 		{
-			DevicePath:   "/dev/nvme1n1",
+			ID:           "/dev/nvme1n1",
 			CtrlMetadata: controllerMetadata,
-			Slot:         slot,
 		},
 	}
 
@@ -378,9 +358,8 @@ func (t *SoftwareRAIDControllerTester) runRAID1Tests() error {
 
 	drives = []*physicaldrive.Metadata{
 		{
-			DevicePath:   "/dev/nvme3n1",
+			ID:           "/dev/nvme3n1",
 			CtrlMetadata: controllerMetadata,
-			Slot:         slot,
 		},
 	}
 
@@ -414,9 +393,6 @@ func (t *SoftwareRAIDControllerTester) runRAID0Tests() error {
 	}
 
 	controllerMetadata := &raidcontroller.Metadata{ID: 0}
-	slot := &physicaldrive.Slot{
-		Port: "pouet",
-	}
 
 	creationRequest := &logicalvolume.Request{
 		CacheOptions: &logicalvolume.CacheOptions{},
@@ -424,16 +400,14 @@ func (t *SoftwareRAIDControllerTester) runRAID0Tests() error {
 		RAIDLevel:    logicalvolume.RAIDLevel0,
 		PDrivesMetadata: []*physicaldrive.Metadata{
 			{
-				DevicePath: "/dev/nvme1n1",
-				// DevicePath:   physicalDrives[0].DevicePath,
+				ID: "/dev/nvme1n1",
+				// ID:   physicalDrives[0].DevicePath,
 				CtrlMetadata: controllerMetadata,
-				Slot:         slot,
 			},
 			{
-				// DevicePath:   physicalDrives[1].DevicePath,
-				DevicePath:   "/dev/nvme2n1",
+				// ID:   physicalDrives[1].DevicePath,
+				ID:           "/dev/nvme2n1",
 				CtrlMetadata: controllerMetadata,
-				Slot:         slot,
 			},
 		},
 		Name: "test_raid0",
@@ -453,9 +427,8 @@ func (t *SoftwareRAIDControllerTester) runRAID0Tests() error {
 
 	drives := []*physicaldrive.Metadata{
 		{
-			DevicePath:   "/dev/nvme3n1",
+			ID:           "/dev/nvme3n1",
 			CtrlMetadata: controllerMetadata,
-			Slot:         slot,
 		},
 	}
 

@@ -59,7 +59,7 @@ func (r *RHEL8) PhysicalDrives(
 
 	for _, device := range blockDevices {
 		physicalDrive, err := r.PhysicalDrive(&physicaldrive.Metadata{
-			DevicePath: device.DevicePath,
+			ID: device.DevicePath,
 		})
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to get physical drive: %s", device.DevicePath)
@@ -75,9 +75,9 @@ func (r *RHEL8) PhysicalDrives(
 func (r *RHEL8) PhysicalDrive(
 	metadata *physicaldrive.Metadata,
 ) (*physicaldrive.PhysicalDrive, error) {
-	device, err := r.getBlockDevice(metadata.DevicePath)
+	device, err := r.getBlockDevice(metadata.ID)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to get block device: %s", metadata.DevicePath)
+		return nil, errors.Wrapf(err, "failed to get block device: %s", metadata.ID)
 	}
 
 	physicalDrive := &physicaldrive.PhysicalDrive{}
@@ -85,7 +85,7 @@ func (r *RHEL8) PhysicalDrive(
 	output, err := r.UDevADM.Run([]string{
 		"info",
 		"--query=all",
-		"--name=" + metadata.DevicePath,
+		"--name=" + device.DevicePath,
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to run udevadm physical drive info command")
@@ -152,7 +152,9 @@ func (r *RHEL8) physicalDriveStatus(device *BlockDevice) (physicaldrive.PDStatus
 
 	// If err is not nil, it means smartctl failed to run
 	// so we ignore this case for now.
-	if healthStatus != "PASSED" && err == nil {
+	// Sometimes health status can be empty, because some older drives
+	// doesn't support the associated SMART instruction
+	if healthStatus != "PASSED" && healthStatus != "" && err == nil {
 		return physicaldrive.PDStatusFailed, "", nil
 	}
 
@@ -269,13 +271,7 @@ func ParseUDevADMOutput(output []byte) (*physicaldrive.PhysicalDrive, error) {
 			physicalDrive.Model = strings.TrimPrefix(line, "E: ID_MODEL=")
 		case strings.HasPrefix(line, "E: ID_SERIAL_SHORT="):
 			physicalDrive.Serial = strings.TrimPrefix(line, "E: ID_SERIAL_SHORT=")
-		case strings.HasPrefix(line, "E: ID_WWN="):
-			physicalDrive.ID = strings.TrimPrefix(line, "E: ID_WWN=")
 		case strings.HasPrefix(line, "E: DEVNAME="):
-			if physicalDrive.Metadata == nil {
-				physicalDrive.Metadata = &physicaldrive.Metadata{}
-			}
-
 			physicalDrive.DevicePath = strings.TrimPrefix(line, "E: DEVNAME=")
 		case strings.HasPrefix(line, "E: DEVLINKS="):
 			devlinks := strings.Split(strings.TrimPrefix(line, "E: DEVLINKS="), " ")

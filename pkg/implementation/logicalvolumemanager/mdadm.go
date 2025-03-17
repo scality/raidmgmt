@@ -41,7 +41,7 @@ func (m *MDADM) CreateLV(request *logicalvolume.Request) (*logicalvolume.Logical
 	for _, drive := range request.PDrivesMetadata {
 		physicalDrive, err := m.PhysicalDrive(drive)
 		if err != nil {
-			return nil, errors.Wrapf(err, "failed to get physical drive : %s", drive.DevicePath)
+			return nil, errors.Wrapf(err, "failed to get physical drive : %s", drive.ID)
 		}
 
 		if physicalDrive.Status == physicaldrive.PDStatusFailed {
@@ -50,7 +50,7 @@ func (m *MDADM) CreateLV(request *logicalvolume.Request) (*logicalvolume.Logical
 			return nil, errors.New("cannot create a logical volume with a used physical drive")
 		}
 
-		physicalDrivesName = append(physicalDrivesName, drive.DevicePath)
+		physicalDrivesName = append(physicalDrivesName, drive.ID)
 	}
 
 	devicePath := fmt.Sprintf("%s/%s", baseMDPath, request.Name)
@@ -107,13 +107,13 @@ func (m *MDADM) DeleteLV(metadata *logicalvolume.Metadata) error {
 	for _, device := range logicalVolume.PDrivesMetadata {
 		// Remove the superblock of the device
 		_, err = m.MDADM.Run([]string{
-			"--zero-superblock", device.DevicePath,
+			"--zero-superblock", device.ID,
 		})
 		if err != nil {
 			return errors.Wrapf(
 				err,
 				"failed to run mdadm zero superblock command on physical drive: %s",
-				device.DevicePath,
+				device.ID,
 			)
 		}
 	}
@@ -146,15 +146,15 @@ func (m *MDADM) AddPDsToLV(
 
 		if physicalDrive.Status == physicaldrive.PDStatusFailed {
 			return errors.Errorf(
-				"cannot add a failed physical drive to a logical volume : %s ", physicalDrive.DevicePath,
+				"cannot add a failed physical drive to a logical volume : %s ", physicalDrive.ID,
 			)
 		} else if physicalDrive.Status == physicaldrive.PDStatusUsed {
 			return errors.Errorf(
-				"cannot add a used physical drive to a logical volume : %s", physicalDrive.DevicePath,
+				"cannot add a used physical drive to a logical volume : %s", physicalDrive.ID,
 			)
 		}
 
-		devicesPaths = append(devicesPaths, pdMetadata.DevicePath)
+		devicesPaths = append(devicesPaths, pdMetadata.ID)
 	}
 
 	if logicalVolume.RAIDLevel == logicalvolume.RAIDLevel10 ||
@@ -240,7 +240,7 @@ func (m *MDADM) DeletePDsFromLV(
 
 	pdsDevicePaths := make([]string, 0, len(pdsMetadata))
 	for _, pdMetadata := range pdsMetadata {
-		pdsDevicePaths = append(pdsDevicePaths, pdMetadata.DevicePath)
+		pdsDevicePaths = append(pdsDevicePaths, pdMetadata.ID)
 	}
 
 	// Prepare the mdadm fail command

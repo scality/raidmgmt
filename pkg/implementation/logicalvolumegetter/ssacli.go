@@ -2,6 +2,7 @@
 package logicalvolumegetter
 
 import (
+	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
@@ -254,12 +255,8 @@ func extractInfoFromConfig(
 
 			// Create the PhysicalDrive metadata
 			pDriveMetadata := &physicaldrive.Metadata{
+				ID:           fmt.Sprintf("%s:%s:%s", matches[1], matches[2], matches[3]),
 				CtrlMetadata: logicalVolume.CtrlMetadata,
-				Slot: &physicaldrive.Slot{
-					Port:      matches[1],
-					Enclosure: matches[2],
-					Bay:       matches[3],
-				},
 			}
 
 			pDrivesMetadata = append(pDrivesMetadata, pDriveMetadata)

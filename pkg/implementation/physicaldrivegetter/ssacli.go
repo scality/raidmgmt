@@ -74,20 +74,18 @@ func (s *SSACLI) PhysicalDrive(metadata *physicaldrive.Metadata) (
 	*physicaldrive.PhysicalDrive,
 	error,
 ) {
-	slot := metadata.Slot.Format()
-
 	args := []string{
 		"controller",
 		"slot=" + strconv.Itoa(metadata.CtrlMetadata.ID),
 		"physicaldrive",
-		slot,
+		metadata.ID,
 		"show",
 		"detail",
 	}
 
 	output, err := s.SSACLI.Run(args)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to show details for physical drive %s", slot)
+		return nil, errors.Wrapf(err, "failed to show details for physical drive %s", metadata.ID)
 	}
 
 	controllerID, err := parseControllerID(output)
@@ -97,7 +95,7 @@ func (s *SSACLI) PhysicalDrive(metadata *physicaldrive.Metadata) (
 
 	physicalDrive, err := s.parsePhysicalDrive(output)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to parse physical drive %s", slot)
+		return nil, errors.Wrapf(err, "failed to parse physical drive %s", metadata.ID)
 	}
 
 	physicalDrive.CtrlMetadata.ID = controllerID
@@ -153,8 +151,8 @@ func (s *SSACLI) parsePhysicalDrive(block []byte) (*physicaldrive.PhysicalDrive,
 	physicalDrive := &physicaldrive.PhysicalDrive{
 		Metadata: &physicaldrive.Metadata{
 			CtrlMetadata: &raidcontroller.Metadata{},
-			Slot:         &physicaldrive.Slot{},
 		},
+		Slot: &physicaldrive.Slot{},
 	}
 
 	// Split the block into lines and parse each line
@@ -165,6 +163,8 @@ func (s *SSACLI) parsePhysicalDrive(block []byte) (*physicaldrive.PhysicalDrive,
 			)
 		}
 	}
+
+	physicalDrive.ID = physicalDrive.Slot.Format()
 
 	return physicalDrive, nil
 }
@@ -235,9 +235,6 @@ func (s *SSACLI) parsePDLine( //nolint:funlen // This function is long and not c
 		}
 
 		physicalDrive.Type = interfaceType
-
-	case "Drive Unique ID":
-		physicalDrive.ID = value
 
 	case "Disk Name":
 		physicalDrive.DevicePath = value
