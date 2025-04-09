@@ -74,6 +74,8 @@ func NewMDADM(
 }
 
 // LogicalVolumes returns all the logical volumes on the system.
+//
+//nolint:funlen // This function is complex by nature
 func (m *MDADM) LogicalVolumes(
 	_ *raidcontroller.Metadata,
 ) ([]*logicalvolume.LogicalVolume, error) {
@@ -96,11 +98,12 @@ func (m *MDADM) LogicalVolumes(
 	logicalVolumes := make([]*logicalvolume.LogicalVolume, 0, len(details))
 
 	for _, detail := range details {
-		devicesNames := make([]string, 0, 2)
+		devicesNames := make([]string, 0)
 
 		if detail.DeviceName != "" {
 			devicesNames = append(devicesNames, detail.DeviceName)
 		}
+
 		devicesNames = append(devicesNames, detail.Name)
 
 		var lastErr error

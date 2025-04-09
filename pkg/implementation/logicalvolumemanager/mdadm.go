@@ -44,9 +44,11 @@ func (m *MDADM) CreateLV(request *logicalvolume.Request) (*logicalvolume.Logical
 			return nil, errors.Wrapf(err, "failed to get physical drive : %s", drive.ID)
 		}
 
-		if physicalDrive.Status == physicaldrive.PDStatusFailed {
+		//nolint:exhaustive // We only support a subset of physical drive status
+		switch physicalDrive.Status {
+		case physicaldrive.PDStatusFailed:
 			return nil, errors.New("cannot create a logical volume with a failed physical drive")
-		} else if physicalDrive.Status == physicaldrive.PDStatusUsed {
+		case physicaldrive.PDStatusUsed:
 			return nil, errors.New("cannot create a logical volume with a used physical drive")
 		}
 
@@ -144,11 +146,13 @@ func (m *MDADM) AddPDsToLV(
 			return errors.Wrap(err, "failed to get physical drive")
 		}
 
-		if physicalDrive.Status == physicaldrive.PDStatusFailed {
+		//nolint:exhaustive // We only support a subset of physical drive status
+		switch physicalDrive.Status {
+		case physicaldrive.PDStatusFailed:
 			return errors.Errorf(
 				"cannot add a failed physical drive to a logical volume : %s ", physicalDrive.ID,
 			)
-		} else if physicalDrive.Status == physicaldrive.PDStatusUsed {
+		case physicaldrive.PDStatusUsed:
 			return errors.Errorf(
 				"cannot add a used physical drive to a logical volume : %s", physicalDrive.ID,
 			)
