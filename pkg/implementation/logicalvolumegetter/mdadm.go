@@ -96,17 +96,20 @@ func (m *MDADM) LogicalVolumes(
 	logicalVolumes := make([]*logicalvolume.LogicalVolume, 0, len(details))
 
 	for _, detail := range details {
-		devicesNames := []string{detail.Name}
+		devicesNames := make([]string, 0, 2)
 
 		if detail.DeviceName != "" {
 			devicesNames = append(devicesNames, detail.DeviceName)
 		}
+		devicesNames = append(devicesNames, detail.Name)
 
 		var lastErr error
+
 		var logicalVolume *logicalvolume.LogicalVolume
 
 		for _, deviceName := range devicesNames {
 			var err error
+
 			logicalVolume, err = m.LogicalVolume(&logicalvolume.Metadata{
 				ID: deviceName,
 			})
