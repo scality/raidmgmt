@@ -96,14 +96,33 @@ func (m *MDADM) LogicalVolumes(
 	logicalVolumes := make([]*logicalvolume.LogicalVolume, 0, len(details))
 
 	for _, detail := range details {
-		logicalVolume, err := m.LogicalVolume(&logicalvolume.Metadata{
-			ID: detail.Name,
-		})
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to get logical volume")
+		devicesNames := []string{detail.Name}
+
+		if detail.DeviceName != "" {
+			devicesNames = append(devicesNames, detail.DeviceName)
 		}
 
-		logicalVolumes = append(logicalVolumes, logicalVolume)
+		var lastErr error
+		var logicalVolume *logicalvolume.LogicalVolume
+
+		for _, deviceName := range devicesNames {
+			var err error
+			logicalVolume, err = m.LogicalVolume(&logicalvolume.Metadata{
+				ID: deviceName,
+			})
+			if err != nil {
+				lastErr = err
+				continue
+			}
+
+			logicalVolumes = append(logicalVolumes, logicalVolume)
+
+			break
+		}
+
+		if logicalVolume == nil {
+			return nil, errors.Wrap(lastErr, "failed to get logical volume")
+		}
 	}
 
 	return logicalVolumes, nil

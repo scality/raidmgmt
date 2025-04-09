@@ -362,6 +362,11 @@ func TestDeviceNameToDevicePath(t *testing.T) {
 			deviceName: "0",
 			want:       "/dev/md/0",
 		},
+		{
+			name:       "concrete test",
+			deviceName: "artesca",
+			want:       "/dev/md/artesca",
+		},
 	}
 
 	for _, tt := range tests {
