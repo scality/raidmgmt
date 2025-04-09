@@ -376,6 +376,7 @@ func enclosureSlots(pdsMetadatas []*physicaldrive.Metadata) (
 		if err != nil {
 			return defaultEnclosure, nil, errors.Wrapf(err, "failed to parse slot %s", pd.ID)
 		}
+
 		enclosure, bay := slot.Enclosure, slot.Bay
 
 		enclosureInt, err := strconv.Atoi(enclosure)

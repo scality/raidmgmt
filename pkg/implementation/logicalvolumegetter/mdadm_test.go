@@ -100,8 +100,8 @@ func TestMDADMLogicalVolumes(t *testing.T) {
 
 	// Set up expected behavior of the mock
 	mockRunner.On("Run", []string{"--detail", "--scan", "--export"}).Return([]byte(mdadmMultipleLogicalVolumesExportOutput), nil)
-	mockRunner.On("Run", []string{"--detail", "/dev/md/0"}).Return([]byte(mdadmDetailOutput), nil)
-	mockRunner.On("Run", []string{"--detail", "/dev/md/0", "--export"}).Return([]byte(mdadmSingleLogicalVolumeExportOutput), nil)
+	mockRunner.On("Run", []string{"--detail", "/dev/md/0_0"}).Return([]byte(mdadmDetailOutput), nil)
+	mockRunner.On("Run", []string{"--detail", "/dev/md/0_0", "--export"}).Return([]byte(mdadmSingleLogicalVolumeExportOutput), nil)
 	mockRunner.On("Run", []string{"--detail", "/dev/md/1"}).Return([]byte(mdadmDetailOutput), nil)
 	mockRunner.On("Run", []string{"--detail", "/dev/md/1", "--export"}).Return([]byte(mdadmSingleLogicalVolumeExportOutput), nil)
 
@@ -112,7 +112,7 @@ func TestMDADMLogicalVolumes(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.Equal(t, 2, len(logicalVolumes))
-	assert.Equal(t, "/dev/md/0", logicalVolumes[0].DevicePath)
+	assert.Equal(t, "/dev/md/0_0", logicalVolumes[0].DevicePath)
 	assert.Equal(t, "/dev/md/1", logicalVolumes[1].DevicePath)
 	assert.Equal(t, logicalvolume.RAIDLevel1, logicalVolumes[0].RAIDLevel)
 
@@ -361,6 +361,11 @@ func TestDeviceNameToDevicePath(t *testing.T) {
 			name:       "Simple md name",
 			deviceName: "0",
 			want:       "/dev/md/0",
+		},
+		{
+			name:       "concrete test",
+			deviceName: "artesca",
+			want:       "/dev/md/artesca",
 		},
 	}
 

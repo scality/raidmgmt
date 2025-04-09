@@ -156,9 +156,11 @@ func ParseSlot(slot string) (*Slot, error) {
 	if len(parts) > 2 { //nolint:mnd // just the number of parts
 		res.Port, parts = parts[0], parts[1:]
 	}
+
 	if len(parts) > 1 {
 		res.Enclosure, parts = parts[0], parts[1:]
 	}
+
 	res.Bay = parts[0]
 
 	return res, nil
