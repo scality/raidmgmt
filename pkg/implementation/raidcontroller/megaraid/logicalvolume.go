@@ -572,7 +572,7 @@ func getPaths(vdp *VDProperties, pdrives []*physicaldrive.PhysicalDrive) (
 		}
 
 		pd := pdrives[0]
-		permanentPath = fmt.Sprintf("/dev/disk/by-id/scsi-S%s_%s_%s", pd.Vendor, pd.Model, pd.Serial)
+		permanentPath = computePermanentPath(pd)
 		if !CustomFileExists(permanentPath) {
 			return devicePath, "", errors.New("failed to get permanent path from physical drive")
 		}
