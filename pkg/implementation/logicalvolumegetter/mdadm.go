@@ -295,9 +295,10 @@ func ParseMDADMExportOutput(output []byte) ([]*MDADMExportDetails, error) {
 					device = currentDetails.Devices[deviceName]
 				}
 
-				if matches[2] == "ROLE" {
+				switch matches[2] {
+				case "ROLE":
 					device.Role = matches[3]
-				} else if matches[2] == "DEV" {
+				case "DEV":
 					device.Path = matches[3]
 				}
 
