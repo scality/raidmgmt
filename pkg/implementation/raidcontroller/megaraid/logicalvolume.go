@@ -166,7 +166,7 @@ func selectorLV(m *logicalvolume.Metadata) (string, error) {
 
 // logicalVolume returns a logical volume for a given logical volume metadata.
 //
-//nolint:funlen // The function is not too complex
+//nolint:funlen,cyclop // The function is not too complex
 func (a *Adapter) logicalVolume(
 	metadata *logicalvolume.Metadata) (
 	*logicalvolume.LogicalVolume, error,
@@ -224,14 +224,21 @@ func (a *Adapter) logicalVolume(
 		return nil, errors.Wrap(err, "failed to unmarshal VD properties")
 	}
 
-	permanentPath, err := vdProperties.permanentPath()
+	// Get the physical drives from the metadata
+	// NOTE: This is needed as fallback to get the device path
+	pds, err := a.fillPhysicalDrives(pdsMetadata)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get permanent path")
+		return nil, errors.Wrap(err, "failed to fill physical drives")
+	}
+
+	devicePath, permanentPath, err := getPaths(vdProperties, pds)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get paths")
 	}
 
 	logicalVolume := &logicalvolume.LogicalVolume{
 		Metadata:        metadata,
-		DevicePath:      vdProperties.OSDriveName,
+		DevicePath:      devicePath,
 		RAIDLevel:       logicalvolume.RAIDLevelMap(vd.Type),
 		PDrivesMetadata: pdsMetadata,
 		CacheOptions:    cacheOptions,
@@ -542,19 +549,42 @@ func hasMatchingPDs(lvPDs []*physicaldrive.Metadata, pdSlots map[string]struct{}
 	return false
 }
 
-// CustomEvalSymlinks is a variable that holds a function that evaluates symlinks.
-// It is used to mock the filepath.EvalSymlinks function in tests.
+// It is used to mock the functions in tests.
 // nolint: gochecknoglobals // This is a variable that is used to mock a function in tests.
-var CustomEvalSymlinks = filepath.EvalSymlinks
+var (
+	CustomEvalSymlinks = filepath.EvalSymlinks
+	CustomFileExists   = utils.FileExists
+)
 
-// permanentPath returns the permanent path of a virtual drive.
-func (vdp *VDProperties) permanentPath() (string, error) {
-	sysPath := fmt.Sprintf("/dev/disk/by-id/wwn-0x%s", vdp.SCSINAAID)
+// getPaths returns the device path and a permanent paths for the logical volumes.
+func getPaths(vdp *VDProperties, pdrives []*physicaldrive.PhysicalDrive) (
+	devicePath, permanentPath string, err error,
+) {
+	devicePath = vdp.OSDriveName
 
-	permanentPath, err := CustomEvalSymlinks(sysPath)
-	if err != nil {
-		return "", errors.Wrap(err, "failed to evaluate symlink")
+	permanentPath = fmt.Sprintf("/dev/disk/by-id/wwn-0x%s", vdp.SCSINAAID)
+	if !CustomFileExists(permanentPath) {
+		// If the permanent path is not found and there is only one physical drive,
+		// we will try to get the path from the physical drive information
+		// otherwise let's error here
+		if len(pdrives) != 1 {
+			return devicePath, "", errors.New("failed to get permanent path")
+		}
+
+		pd := pdrives[0]
+		permanentPath = fmt.Sprintf("/dev/disk/by-id/scsi-S%s_%s_%s", pd.Vendor, pd.Model, pd.Serial)
+		if !CustomFileExists(permanentPath) {
+			return devicePath, "", errors.New("failed to get permanent path from physical drive")
+		}
 	}
 
-	return permanentPath, nil
+	// If the devicePath is empty let's retrieve it from the permanent path
+	if devicePath == "" {
+		devicePath, err = CustomEvalSymlinks(permanentPath)
+		if err != nil {
+			return "", "", errors.Wrap(err, "failed to evaluate symlink")
+		}
+	}
+
+	return devicePath, permanentPath, nil
 }
