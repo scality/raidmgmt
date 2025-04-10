@@ -30,6 +30,9 @@ type UnitTestSuite struct {
 
 	wasCreateLVCalledOnce bool
 
+	// fileExistsFunc is the original FileExists function
+	// It's used to restore the original function after mocking it
+	fileExistsFunc func(string) bool
 	// evalSymlinksFunc is the original EvalSymlinks function
 	// It's used to restore the original function after mocking it
 	evalSymlinksFunc func(string) (string, error)
@@ -191,26 +194,19 @@ func (s *UnitTestSuite) generalMockCalls(args []string) (*megaraid2.CmdOutput, e
 	return mockReturn(filename)
 }
 
-// setupMockCallsEvalSymlinksList sets up the mock calls for EvalSymlinks.
-func (s *UnitTestSuite) setupMockCallsEvalSymlinksList() {
-	ids := []string{
-		"600062b212da5d402bd3b43351207e5f",
-		"600062b212da5d402bd3b47dc0433389",
-		"600062b212da5d402bd3b47fc3685d94",
-		"600062b212da5d402bd3b481c696852b",
-		"600062b212da5d402bd3b483c9c3e053",
-		"600062b212da5d402bd3b486ccf8622c",
-		"600062b212da5d402bd3b488d03a89ca",
-		"600062b212da5d402bd3b48ad38fb43e",
-		"600062b212da5d402bd3b48cd6db37db",
-		"600062b212da5d402bd3b48eda2832e2",
-		"600062b212da5d402bd3b491dd849969",
-		"600062b212da5d402bd3b493e1699377",
-	}
+// restoreCustomFileExists restores the custom FileExists function
+// to the original one.
+// It's used to mock the FileExists function.
+func (s *UnitTestSuite) restoreCustomFileExists() {
+	megaraid2.CustomFileExists = s.fileExistsFunc
+}
 
-	for _, id := range ids {
-		s.mockPathResolver.On("EvalSymlinks", "/dev/disk/by-id/wwn-0x"+id).Return("/dev/sda", nil)
-	}
+// setupCustomFileExists sets up the custom FileExists function
+// to be used in the tests.
+// It's used to mock the FileExists function.
+func (s *UnitTestSuite) setupCustomFileExists() {
+	s.fileExistsFunc = megaraid2.CustomFileExists
+	megaraid2.CustomFileExists = s.mockPathResolver.FileExists
 }
 
 // restoreCustomEvalSymlinks restores the custom EvalSymlinks function
@@ -393,7 +389,11 @@ func (s *UnitTestSuite) TestPhysicalDrive() {
 
 func (s *UnitTestSuite) TestLogicalVolumes() {
 	s.setupMockCalls()
-	s.setupMockCallsEvalSymlinksList()
+	s.mockPathResolver.On("FileExists", mock.Anything).Return(true)
+	s.mockPathResolver.On("EvalSymlinks", "/dev/disk/by-id/wwn-0x600062b212da5d402bd3b493e1699377").Return("/dev/sda", nil)
+
+	s.setupCustomFileExists()
+	defer s.restoreCustomFileExists()
 
 	s.setupCustomEvalSymlinks()
 	defer s.restoreCustomEvalSymlinks()
@@ -450,7 +450,11 @@ func (s *UnitTestSuite) TestLogicalVolumes() {
 
 func (s *UnitTestSuite) TestLogicalVolume() {
 	s.setupMockCalls()
+	s.mockPathResolver.On("FileExists", "/dev/disk/by-id/wwn-0x600062b212da5d402bd3b493e1699377").Return(true)
 	s.mockPathResolver.On("EvalSymlinks", "/dev/disk/by-id/wwn-0x600062b212da5d402bd3b493e1699377").Return("/dev/sda", nil)
+
+	s.setupCustomFileExists()
+	defer s.restoreCustomFileExists()
 
 	s.setupCustomEvalSymlinks()
 	defer s.restoreCustomEvalSymlinks()
@@ -559,7 +563,11 @@ func (s *UnitTestSuite) TestDisableJBOD() {
 func (s *UnitTestSuite) TestSetLVCacheOptions() {
 	s.setupMockCalls()
 
+	s.mockPathResolver.On("FileExists", "/dev/disk/by-id/wwn-0x600062b212da5d402bd3b493e1699377").Return(true)
 	s.mockPathResolver.On("EvalSymlinks", "/dev/disk/by-id/wwn-0x600062b212da5d402bd3b493e1699377").Return("/dev/sda", nil)
+
+	s.setupCustomFileExists()
+	defer s.restoreCustomFileExists()
 
 	s.setupCustomEvalSymlinks()
 	defer s.restoreCustomEvalSymlinks()
@@ -614,7 +622,11 @@ func (s *UnitTestSuite) TestSetLVCacheOptions() {
 
 func (s *UnitTestSuite) TestCreateLV() {
 	s.setupMockCallsCreateLV()
-	s.setupMockCallsEvalSymlinksList()
+	s.mockPathResolver.On("FileExists", mock.Anything).Return(true)
+	s.mockPathResolver.On("EvalSymlinks", "/dev/disk/by-id/wwn-0x600062b212da5d402bd3b493e1699377").Return("/dev/sda", nil)
+
+	s.setupCustomFileExists()
+	defer s.restoreCustomFileExists()
 
 	s.setupCustomEvalSymlinks()
 	defer s.restoreCustomEvalSymlinks()
@@ -691,7 +703,7 @@ func (s *UnitTestSuite) TestCreateLV() {
 			s.Equal(logicalvolume.ReadPolicyReadAhead, newLv.CacheOptions.ReadPolicy)
 			s.Equal(logicalvolume.WritePolicyWriteThrough, newLv.CacheOptions.WritePolicy)
 			s.Equal(logicalvolume.IOPolicyDirect, newLv.CacheOptions.IOPolicy)
-			s.Equal("/dev/sda", newLv.PermanentPath)
+			s.Equal("/dev/disk/by-id/wwn-0x600062b212da5d402bd3b493e1699377", newLv.PermanentPath)
 		}
 	}
 }

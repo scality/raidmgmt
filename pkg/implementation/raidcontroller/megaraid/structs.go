@@ -65,10 +65,12 @@ type (
 
 	// Physical Drive.
 	PD struct {
-		EIDSlot             string `json:"EID:Slt"`
-		DeviceID            int    `json:"DID"`
-		State               string `json:"State"`
-		DeviceGroup         int    `json:"DG"`
+		EIDSlot  string `json:"EID:Slt"`
+		DeviceID int    `json:"DID"`
+		State    string `json:"State"`
+		// DG can be either a "-" or a int, since we are
+		// not using it today let's just comment it out
+		// DeviceGroup         int    `json:"DG"`
 		Size                string `json:"Size"` // Size (humanized)
 		Interface           string `json:"Intf"`
 		MediaType           string `json:"Med"` // Media Type (HDD, SSD, NVMe)
