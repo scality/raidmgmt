@@ -244,7 +244,6 @@ func (r *RHEL8) listBlockDevices() ([]BlockDevice, error) {
 		"--list",
 		"--paths",
 		"--bytes",
-		"--nodeps",
 		"--output",
 		"name,rota,size,type,tran,mountpoint,fstype,parttype",
 	})
