@@ -260,7 +260,7 @@ func (s *SSACLI) getBlockDevice(devicePath string) (*BlockDevice, error) {
 		"--bytes",
 		"--nodeps",
 		"--output",
-		"name,rota,size,type,tran,mountpoint,fstype,parttype",
+		"name,rota,size,type,tran,mountpoint,fstype,parttype,pkname",
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get block device using lsblk")
@@ -294,7 +294,10 @@ func parseSlotInfo(pd *physicaldrive.PhysicalDrive, key, value string) {
 // If the device is mounted or has a filesystem type, it is considered used.
 // Otherwise, it is considered unassigned good.
 func isBlockDeviceUsed(device *BlockDevice) bool {
-	if device.MountPoint != "" || device.FilesystemType != "" || device.PartitionType != "" {
+	if device.MountPoint != "" ||
+		device.FileSystemType != "" ||
+		device.PartitionType != "" ||
+		device.ParentKernelName != "" {
 		return true
 	}
 

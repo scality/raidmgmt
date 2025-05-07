@@ -402,14 +402,15 @@ func TestRHEL8_PhysicalDrives_Success(t *testing.T) {
 	// Setup mock for listing block devices
 	mockLSBLK.On("Run", mock.MatchedBy(func(args []string) bool {
 		return len(args) > 0 && args[0] == "--list"
-	})).Return([]byte(`NAME         ROTA        SIZE TYPE TRAN   MOUNTPOINT FSTYPE PARTTYPE
-/dev/nvme1n1    0  8589934592 disk nvme
-/dev/nvme2n1    0  8589934592 disk nvme`), nil)
+	})).Return([]byte(`NAME           ROTA         SIZE TYPE  TRAN   MOUNTPOINT FSTYPE            PARTTYPE                             PKNAME
+/dev/nvme1n1      0  8589934592 disk nvme
+/dev/nvme1n1p1    0   103809024 part nvme   /boot/efi  vfat              c12a7328-f81f-11d2-ba4b-00a0c93ec93b /dev/nvme1n1
+/dev/nvme2n1      0  8589934592 disk nvme`), nil)
 
 	// Setup mocks for first device
 	mockLSBLK.On("Run", mock.MatchedBy(func(args []string) bool {
 		return len(args) > 0 && args[0] == "/dev/nvme1n1"
-	})).Return([]byte(`NAME         ROTA       SIZE TYPE TRAN   MOUNTPOINT FSTYPE PARTTYPE
+	})).Return([]byte(`NAME           ROTA         SIZE TYPE  TRAN   MOUNTPOINT FSTYPE            PARTTYPE                             PKNAME
 /dev/nvme1n1    0 8589934592 disk nvme`), nil)
 
 	mockUDevADM.On("Run", mock.MatchedBy(func(args []string) bool {
@@ -421,6 +422,26 @@ E: DEVNAME=/dev/nvme1n1
 E: DEVLINKS=/dev/disk/by-id/nvme-123`), nil)
 
 	mockSmartCTL.On("Run", []string{"-a", "/dev/nvme1n1"}).Return([]byte(`
+	=== START OF SMART DATA SECTION ===
+	SMART overall-health self-assessment test result: PASSED
+	`), nil)
+
+	// Setup mock for partition of the first device
+	mockLSBLK.On("Run", mock.MatchedBy(func(args []string) bool {
+		return len(args) > 0 && args[0] == "/dev/nvme1n1p1"
+	})).Return([]byte(`NAME           ROTA         SIZE TYPE  TRAN   MOUNTPOINT FSTYPE            PARTTYPE                             PKNAME
+	/dev/nvme1n1p1    0   103809024 part nvme   /boot/efi  vfat              c12a7328-f81f-11d2-ba4b-00a0c93ec93b /dev/nvme1n1
+	`), nil)
+
+	mockUDevADM.On("Run", mock.MatchedBy(func(args []string) bool {
+		return len(args) > 1 && args[2] == "--name=/dev/nvme1n1p1"
+	})).Return([]byte(`E: ID_MODEL=Amazon Elastic Block Store
+E: ID_SERIAL_SHORT=vol05ece746e40ff492f
+E: ID_WWN=nvme.1d0f-123456
+E: DEVNAME=/dev/nvme1n1p1
+E: DEVLINKS=/dev/disk/by-id/nvme-123`), nil)
+
+	mockSmartCTL.On("Run", []string{"-a", "/dev/nvme1n1p1"}).Return([]byte(`
 === START OF SMART DATA SECTION ===
 SMART overall-health self-assessment test result: PASSED
 `), nil)
@@ -450,7 +471,7 @@ SMART overall-health self-assessment test result: PASSED
 
 	// Assertions
 	assert.NoError(t, err)
-	assert.Equal(t, 2, len(physicalDrives))
+	assert.Equal(t, 3, len(physicalDrives))
 
 	// First drive assertions
 	assert.Equal(t, "Amazon Elastic Block Store", physicalDrives[0].Model)
@@ -458,13 +479,23 @@ SMART overall-health self-assessment test result: PASSED
 	assert.Equal(t, "/dev/nvme1n1", physicalDrives[0].ID)
 	assert.Equal(t, "/dev/nvme1n1", physicalDrives[0].DevicePath)
 	assert.Equal(t, physicaldrive.DiskTypeNVMe, physicalDrives[0].Type)
+	assert.Equal(t, physicaldrive.PDStatusUsed, physicalDrives[0].Status)
+
+	// Partition of the first drive assertions
+	assert.Equal(t, "Amazon Elastic Block Store", physicalDrives[1].Model)
+	assert.Equal(t, "vol05ece746e40ff492f", physicalDrives[1].Serial)
+	assert.Equal(t, "/dev/nvme1n1p1", physicalDrives[1].ID)
+	assert.Equal(t, "/dev/nvme1n1p1", physicalDrives[1].DevicePath)
+	assert.Equal(t, physicaldrive.DiskTypeNVMe, physicalDrives[1].Type)
+	assert.Equal(t, physicaldrive.PDStatusUsed, physicalDrives[1].Status)
 
 	// Second drive assertions
-	assert.Equal(t, "Amazon Elastic Block Store", physicalDrives[1].Model)
-	assert.Equal(t, "vol05ece746e40ff493g", physicalDrives[1].Serial)
-	assert.Equal(t, "/dev/nvme2n1", physicalDrives[1].ID)
-	assert.Equal(t, "/dev/nvme2n1", physicalDrives[1].DevicePath)
-	assert.Equal(t, physicaldrive.DiskTypeNVMe, physicalDrives[1].Type)
+	assert.Equal(t, "Amazon Elastic Block Store", physicalDrives[2].Model)
+	assert.Equal(t, "vol05ece746e40ff493g", physicalDrives[2].Serial)
+	assert.Equal(t, "/dev/nvme2n1", physicalDrives[2].ID)
+	assert.Equal(t, "/dev/nvme2n1", physicalDrives[2].DevicePath)
+	assert.Equal(t, physicaldrive.DiskTypeNVMe, physicalDrives[2].Type)
+	assert.Equal(t, physicaldrive.PDStatusUnassignedGood, physicalDrives[2].Status)
 
 	mockLSBLK.AssertExpectations(t)
 	mockUDevADM.AssertExpectations(t)
