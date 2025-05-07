@@ -2,7 +2,6 @@ package megaraid
 
 import (
 	"fmt"
-	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
@@ -119,6 +118,7 @@ func (a *Adapter) physicalDrive(
 		Vendor:   strings.TrimSpace(ddAttributes.ManufacturerID),
 		Model:    strings.TrimSpace(pd.Model),
 		Serial:   strings.TrimSpace(ddAttributes.SerialNumber),
+		WWN:      fmt.Sprintf("0x%s", strings.TrimSpace(ddAttributes.WWN)),
 		Size:     size,
 		Type:     pd.DiskType(),
 		Status:   pd.PDStatus(),
@@ -128,14 +128,9 @@ func (a *Adapter) physicalDrive(
 	}
 
 	if physicalDrive.JBOD {
-		physicalDrive.PermanentPath = computePermanentPath(physicalDrive)
-		if !utils.FileExists((physicalDrive.PermanentPath)) {
-			return nil, errors.New("permanent path does not exist")
-		}
-
-		physicalDrive.DevicePath, err = filepath.EvalSymlinks(physicalDrive.PermanentPath)
+		err := physicalDrive.ComputePaths()
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to evaluate symlinks")
+			return nil, errors.Wrap(err, "failed to compute paths")
 		}
 	}
 
@@ -257,11 +252,4 @@ func (a *Adapter) setJBOD(
 	}
 
 	return nil
-}
-
-// computePermanentPath computes the permanent path for a given physical drive.
-// The permanent path is a string that represents the physical drive
-// this may not exists if the drive is not in JBOD.
-func computePermanentPath(pd *physicaldrive.PhysicalDrive) string {
-	return fmt.Sprintf("/dev/disk/by-id/scsi-S%s_%s_%s", pd.Vendor, pd.Model, pd.Serial)
 }

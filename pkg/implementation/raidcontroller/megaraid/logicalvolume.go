@@ -573,10 +573,12 @@ func getPaths(vdp *VDProperties, pdrives []*physicaldrive.PhysicalDrive) (
 
 		pd := pdrives[0]
 
-		permanentPath = computePermanentPath(pd)
-		if !CustomFileExists(permanentPath) {
-			return devicePath, "", errors.New("failed to get permanent path from physical drive")
+		err = pd.ComputePaths()
+		if err != nil {
+			return devicePath, "", errors.Wrap(err, "failed to compute paths from physical drive")
 		}
+
+		return pd.DevicePath, pd.PermanentPath, nil
 	}
 
 	// If the devicePath is empty let's retrieve it from the permanent path

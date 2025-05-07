@@ -2,11 +2,14 @@
 package physicaldrive
 
 import (
+	"fmt"
+	"path/filepath"
 	"strings"
 
 	"github.com/pkg/errors"
 
 	"github.com/scality/raidmgmt/pkg/domain/entities/raidcontroller"
+	"github.com/scality/raidmgmt/pkg/utils"
 )
 
 const (
@@ -23,6 +26,7 @@ type (
 		Vendor        string   `json:"vendor,omitempty"`         // Vendor
 		Model         string   `json:"model,omitempty"`          // Model
 		Serial        string   `json:"serial,omitempty"`         // Serial number
+		WWN           string   `json:"wwn,omitempty"`            // World Wide Name
 		Size          uint64   `json:"size,omitempty"`           // Size in bytes
 		Type          DiskType `json:"type,omitempty"`           // Type (e.g.: HDD, SSD)
 		JBOD          bool     `json:"jbod,omitempty"`           // Is the disk in JBOD mode
@@ -108,6 +112,71 @@ func (s *Slot) Format() string {
 // Available checks if the PhysicalDrive Status is PDStatusUnassignedGood.
 func (pd *PhysicalDrive) IsAvailable() bool {
 	return pd.Status == PDStatusUnassignedGood
+}
+
+// ComputePermanentPath computes the permanent path of the physical drive.
+// NOTE: For physical drives backed by hardware RAID controllers this might not
+// be available.
+// nolint: funlen,nestif // This function is pretty simple to follow.
+func (pd *PhysicalDrive) ComputePaths() error {
+	if pd.PermanentPath == "" {
+		if pd.Type == DiskTypeNVMe {
+			if pd.Model != "" && pd.Serial != "" {
+				permanentPath := fmt.Sprintf(
+					"/dev/disk/by-id/nvme-%s_%s",
+					strings.ReplaceAll(pd.Model, " ", "_"),
+					strings.ReplaceAll(pd.Serial, " ", "_"),
+				)
+				if utils.FileExists(permanentPath) {
+					pd.PermanentPath = permanentPath
+				}
+			}
+		} else {
+			if pd.WWN != "" {
+				permanentPath := fmt.Sprintf("/dev/disk/by-id/wwn-%s", pd.WWN)
+				if utils.FileExists(permanentPath) {
+					pd.PermanentPath = permanentPath
+				}
+			}
+
+			if pd.PermanentPath == "" && pd.Vendor != "" && pd.Model != "" && pd.Serial != "" {
+				permanentPath := fmt.Sprintf(
+					"/dev/disk/by-id/scsi-S%s_%s_%s",
+					strings.ReplaceAll(pd.Vendor, " ", "_"),
+					strings.ReplaceAll(pd.Model, " ", "_"),
+					strings.ReplaceAll(pd.Serial, " ", "_"),
+				)
+				if utils.FileExists(permanentPath) {
+					pd.PermanentPath = permanentPath
+				}
+			}
+		}
+
+		if pd.PermanentPath == "" {
+			return errors.New("failed to compute permanent path")
+		}
+	}
+
+	if pd.DevicePath == "" {
+		resolvedPath, err := filepath.EvalSymlinks(pd.PermanentPath)
+		if err != nil {
+			return errors.Wrap(err, "failed to resolve permanent path symlink")
+		}
+
+		pd.DevicePath = resolvedPath
+	} else {
+		// Verify that device path matches the resolved symlink of permanent path
+		resolvedPath, err := filepath.EvalSymlinks(pd.PermanentPath)
+		if err != nil {
+			return errors.Wrap(err, "failed to resolve permanent path symlink")
+		}
+
+		if resolvedPath != pd.DevicePath {
+			return errors.New("device path does not match resolved permanent path")
+		}
+	}
+
+	return nil
 }
 
 // IsEqualTo checks if the Slot instance is equal to another Slot instance.
