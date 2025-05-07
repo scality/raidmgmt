@@ -22,14 +22,15 @@ type (
 	}
 
 	BlockDevice struct {
-		DevicePath     string
-		Size           uint64
-		Rotational     string
-		Type           string
-		Tran           string
-		MountPoint     string
-		PartitionType  string
-		FilesystemType string
+		DevicePath       string
+		Size             uint64
+		Rotational       string
+		Type             string
+		Tran             string
+		MountPoint       string
+		PartitionType    string
+		FileSystemType   string
+		ParentKernelName string
 	}
 )
 
@@ -55,9 +56,17 @@ func (r *RHEL8) PhysicalDrives(
 		return nil, errors.Wrap(err, "failed to list block devices")
 	}
 
+	pkNames := make(map[string]struct{})
+
 	physicalDrives := make([]*physicaldrive.PhysicalDrive, 0, len(blockDevices))
 
 	for _, device := range blockDevices {
+		// We need to find the parent kernel names of the block devices
+		// to set the Used status correctly.
+		if device.ParentKernelName != "" {
+			pkNames[device.ParentKernelName] = struct{}{}
+		}
+
 		physicalDrive, err := r.PhysicalDrive(&physicaldrive.Metadata{
 			ID: device.DevicePath,
 		})
@@ -66,6 +75,17 @@ func (r *RHEL8) PhysicalDrives(
 		}
 
 		physicalDrives = append(physicalDrives, physicalDrive)
+	}
+
+	// Set the Used status if the physical drive is a disk
+	// and its parent kernel name is in the list of block devices
+	// of the partitions.
+	for pkName := range pkNames {
+		for _, physicalDrive := range physicalDrives {
+			if pkName == physicalDrive.ID {
+				physicalDrive.Status = physicaldrive.PDStatusUsed
+			}
+		}
 	}
 
 	return physicalDrives, nil
@@ -207,7 +227,10 @@ func (r *RHEL8) physicalDriveStatus(device *BlockDevice) (physicaldrive.PDStatus
 		return physicaldrive.PDStatusFailed, "", nil
 	}
 
-	if device.MountPoint != "" || device.FilesystemType != "" || device.PartitionType != "" {
+	if device.MountPoint != "" ||
+		device.FileSystemType != "" ||
+		device.PartitionType != "" ||
+		device.ParentKernelName != "" {
 		return physicaldrive.PDStatusUsed, reason, nil
 	}
 
@@ -221,7 +244,7 @@ func (r *RHEL8) getBlockDevice(devicePath string) (*BlockDevice, error) {
 		"--bytes",
 		"--nodeps",
 		"--output",
-		"name,rota,size,type,tran,mountpoint,fstype,parttype",
+		"name,rota,size,type,tran,mountpoint,fstype,parttype,pkname",
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get block device using lsblk")
@@ -245,7 +268,7 @@ func (r *RHEL8) listBlockDevices() ([]BlockDevice, error) {
 		"--paths",
 		"--bytes",
 		"--output",
-		"name,rota,size,type,tran,mountpoint,fstype,parttype",
+		"name,rota,size,type,tran,mountpoint,fstype,parttype,pkname",
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to run list block devices command")
@@ -327,9 +350,11 @@ func ParseLSBLKOutput(output []byte) ([]BlockDevice, error) {
 				case "MOUNTPOINT":
 					device.MountPoint = field
 				case "FSTYPE":
-					device.FilesystemType = field
+					device.FileSystemType = field
 				case "PARTTYPE":
 					device.PartitionType = field
+				case "PKNAME":
+					device.ParentKernelName = field
 				}
 			}
 		}
