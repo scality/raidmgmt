@@ -227,10 +227,7 @@ func (r *RHEL8) physicalDriveStatus(device *BlockDevice) (physicaldrive.PDStatus
 		return physicaldrive.PDStatusFailed, "", nil
 	}
 
-	if device.MountPoint != "" ||
-		device.FileSystemType != "" ||
-		device.PartitionType != "" ||
-		device.ParentKernelName != "" {
+	if device.MountPoint != "" || device.FileSystemType != "" || device.PartitionType != "" {
 		return physicaldrive.PDStatusUsed, reason, nil
 	}
 

@@ -294,10 +294,7 @@ func parseSlotInfo(pd *physicaldrive.PhysicalDrive, key, value string) {
 // If the device is mounted or has a filesystem type, it is considered used.
 // Otherwise, it is considered unassigned good.
 func isBlockDeviceUsed(device *BlockDevice) bool {
-	if device.MountPoint != "" ||
-		device.FileSystemType != "" ||
-		device.PartitionType != "" ||
-		device.ParentKernelName != "" {
+	if device.MountPoint != "" || device.FileSystemType != "" || device.PartitionType != "" {
 		return true
 	}
 
