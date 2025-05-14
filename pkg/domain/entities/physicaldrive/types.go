@@ -133,7 +133,7 @@ func (pd *PhysicalDrive) ComputePaths() error {
 			}
 		} else {
 			if pd.WWN != "" {
-				permanentPath := fmt.Sprintf("/dev/disk/by-id/wwn-%s", pd.WWN)
+				permanentPath := fmt.Sprintf("/dev/disk/by-id/wwn-%s", strings.ToLower(pd.WWN))
 				if utils.FileExists(permanentPath) {
 					pd.PermanentPath = permanentPath
 				}
