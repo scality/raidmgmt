@@ -4,6 +4,10 @@
     "config:recommended",
     "abandonments:recommended"
   ],
+  
+  "env": {
+    "GOPRIVATE": "github.com/scality/*"
+  },
 
   "packageRules": [
     {
@@ -29,11 +33,5 @@
         "prFooter": ""
       }
     }
-  ],
-
-  "go": {
-    "privateRegistries": [
-      "github.com/scality"
-    ]
-  }
+  ]
 }
