@@ -1,4 +1,4 @@
-package utils
+package utils //nolint:revive // This is a utility package.
 
 import "os"
 
