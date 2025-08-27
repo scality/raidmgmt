@@ -1,0 +1,39 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    "abandonments:recommended"
+  ],
+
+  "packageRules": [
+    {
+      "matchDatasources": ["go"],
+      "matchManagers": ["gomod"],
+      "groupName": "golang-dependencies",
+      "major": {
+        "automerge": false,
+        "addLabels": ["major-version-golang-dep", "manual-review"],
+        "prBody": "Major Golang dependency update detected. **Requires manual review and merge.**",
+        "prFooter": ""
+      },
+      "minor": {
+        "automerge": true,
+        "addLabels": ["minor-version-golang-dep"],
+        "prBody": "Minor Golang dependency update. Merging automatically if tests pass.",
+        "prFooter": ""
+      },
+      "patch": {
+        "automerge": true,
+        "addLabels": ["patch-version-golang-dep"],
+        "prBody": "Patch Golang dependency update. Merging automatically if tests pass.",
+        "prFooter": ""
+      }
+    }
+  ],
+
+  "go": {
+    "privateRegistries": [
+      "github.com/scality"
+    ]
+  }
+}
