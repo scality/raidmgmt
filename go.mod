@@ -7,6 +7,7 @@ require (
 	github.com/rs/zerolog v1.34.0
 	github.com/stretchr/testify v1.11.1
 	github.com/vektra/mockery/v2 v2.53.5
+	github.com/vektra/mockery/v3 v3.5.5
 )
 
 require (
