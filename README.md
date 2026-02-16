@@ -1,76 +1,139 @@
 # RAIDmgmt
 
-RAIDmgmt is a Go library for managing RAID configurations on various RAID controllers. 
-It provides an abstraction layer for interacting with different RAID controllers and software RAID setups, allowing users to perform RAID operations in a consistent way across different environments.
+[![Pre-merge checks](https://github.com/scality/raidmgmt/actions/workflows/pre-merge.yaml/badge.svg)](https://github.com/scality/raidmgmt/actions/workflows/pre-merge.yaml)
+![Status: Experimental](https://img.shields.io/badge/status-experimental-orange)
 
-It follows the [Hexagonal architecture](https://en.wikipedia.org/wiki/Hexagonal_architecture_(software)) to easily integrate new RAID controllers.
+> **Warning:** This project is in an experimental phase. While it is used as
+> part of a larger product, its API may change and it has not been extensively
+> battle-tested in diverse environments. Use with caution in production.
+
+RAIDmgmt is a Go library for managing RAID configurations across hardware and
+software RAID controllers. It provides a unified abstraction layer so consumers
+can perform RAID operations consistently, regardless of the underlying
+controller.
+
+Managing RAID across heterogeneous hardware is painful: each controller family
+has its own CLI tool, output format, and quirks. RAIDmgmt solves this by
+providing a single, well-typed Go interface that works identically whether
+you're talking to a MegaRAID card, an HPE Smart Array, or a plain `mdadm`
+setup.
 
 ## Features
 
-- Supports MegaRAID, PERC, Smart Array, and software RAID on RHEL8 based OSes.
-- Provides abstraction over RAID configuration and operations.
-- Extensible with support for additional RAID controllers via adapters.
+- **Hardware RAID** -- MegaRAID, Dell PERC, and HPE Smart Array controllers.
+- **Software RAID** -- `mdadm`-based RAID on RHEL8-family systems.
+- **Unified interface** -- A single set of ports covers controller listing,
+  physical drive and logical volume management, cache options, JBOD, and drive
+  identification blinking.
+- **Extensible** -- New controllers can be added by implementing the adapter
+  interfaces.
 
-## Usage 
+## Installation
 
-### Basic Example
-
-TODO
-
-## Architecture
-
-This library is designed with Hexagonal Architecture, which separates the core business logic (domain layer) from the system-specific implementations (adapters).
-
-- Core Domain: Contains core RAID logic and domain models.
-- Ports: Defines the interfaces for interacting with RAID controllers.
-- Adapters: Implementations of RAID interactions for specific controllers (e.g., MegaRAID, Smart Array).
-
-The repo is structured as it follows:
-
-```
-├── go.work
-├── Makefile
-├── pkg
-│   ├── core
-│   │   ├── go.mod
-│   │   ├── go.sum
-│   │   └── raidcontroller.go
-│   ├── domain
-│   │   ├── entities
-│   │   │   ├── logicalvolume
-│   │   │   │   ├── enums.go
-│   │   │   │   ├── errors.go
-│   │   │   │   ├── methods.go
-│   │   │   │   └── types.go
-│   │   │   ├── physicaldrive
-│   │   │   │   ├── enums.go
-│   │   │   │   ├── errors.go
-│   │   │   │   ├── methods.go
-│   │   │   │   └── types.go
-│   │   │   └── raidcontroller
-│   │   │       ├── errors.go
-│   │   │       ├── methods.go
-│   │   │       └── types.go
-│   │   ├── go.mod
-│   │   └── ports
-│   │       └── raidcontroller.go
-│   └── impl
-│       └── raidcontroller
-│           ├── megaraid
-│           │   ├── go.mod
-│           │   ├── go.sum
-│           │   ├── storcli.go
-│           ├── rhel8
-│           │   ├── go.mod
-│           │   └── mdadm.go
-│           └── smartarray
-│               ├── go.mod
-│               └── ssacli.go
-└── README.md
+```bash
+go get github.com/scality/raidmgmt
 ```
 
-**Core** (`pkg/core/`): This is where the core business logic resides, such as the orchestration of RAID management tasks through the `raidcontrollerservice.go`. This part of the code should be agnostic to the specific RAID controller being used.
+## Quick Start
 
-**Domain** (`pkg/domain/`): This contains both the **ports** (interfaces that define how the core interacts with the outside world) and **models** (representations of domain entities like `LogicalVolume`, `PhysicalVolume`, and `RaidController`). 
+```go
+package main
 
-**Impl** (`pkg/impl/`): This holds the **adapters** for the different RAID controllers (MegaRAID, PERC, SmartArray, etc.). These adapters implement the ports defined in `pkg/domain/` and are responsible for the actual interaction with the respective CLI tools or system-level commands for each RAID controller.
+import (
+	"fmt"
+	"log"
+
+	"github.com/scality/raidmgmt/pkg/core"
+	"github.com/scality/raidmgmt/pkg/implementation/commandrunner"
+	"github.com/scality/raidmgmt/pkg/implementation/logicalvolumegetter"
+	"github.com/scality/raidmgmt/pkg/implementation/logicalvolumemanager"
+	"github.com/scality/raidmgmt/pkg/implementation/physicaldrivegetter"
+	"github.com/scality/raidmgmt/pkg/implementation/raidcontroller"
+)
+
+func main() {
+	// Create an RHEL8 software RAID controller
+	runner := commandrunner.New()
+	rc := raidcontroller.NewRHEL8(
+		physicaldrivegetter.NewRHEL8(runner),
+		logicalvolumegetter.NewMDADM(runner),
+		logicalvolumemanager.NewMDADM(runner),
+	)
+
+	// Wrap it with the core service for input validation
+	svc := core.NewRAIDController(rc)
+
+	// List logical volumes (nil metadata for software RAID)
+	volumes, err := svc.LogicalVolumes(nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, lv := range volumes {
+		fmt.Printf("Volume %s: %s (%s)\n", lv.ID, lv.DevicePath, lv.RAIDLevel)
+	}
+}
+```
+
+> **Note:** The example above is for software RAID. For hardware RAID
+> controllers (MegaRAID, Smart Array), see the adapter constructors in
+> `pkg/implementation/raidcontroller/`.
+
+## Project Structure
+
+```
+pkg/
+├── core/                        # Core service (validation + delegation)
+├── domain/
+│   ├── entities/
+│   │   ├── logicalvolume/       # LogicalVolume entity, enums, methods
+│   │   ├── physicaldrive/       # PhysicalDrive entity, enums, methods
+│   │   └── raidcontroller/      # RAIDController entity
+│   └── ports/                   # Port interfaces
+├── implementation/
+│   ├── blinker/                 # Drive blinking adapters
+│   ├── commandrunner/           # CLI tool wrappers (storcli, ssacli, mdadm, ...)
+│   ├── controllergetter/        # Controller listing adapters
+│   ├── logicalvolumegetter/     # Logical volume listing adapters
+│   ├── logicalvolumemanager/    # Logical volume CRUD adapters
+│   ├── physicaldrivegetter/     # Physical drive listing adapters
+│   └── raidcontroller/          # Full RAIDController adapter compositions
+│       └── megaraid/            # MegaRAID/PERC-specific implementation
+└── utils/                       # Shared utilities
+```
+
+See [DESIGN.md](DESIGN.md) for a detailed description of the architecture,
+entities, ports, and adapters.
+
+## Development
+
+### Prerequisites
+
+- Go 1.25+
+- [golangci-lint](https://golangci-lint.run/)
+
+### Commands
+
+```bash
+make lint    # Run linters
+make tests   # Run unit tests
+make all     # Run both
+```
+
+## Help
+
+- **Issues & feature requests:** [GitHub Issues](https://github.com/scality/raidmgmt/issues)
+- **Design documentation:** [DESIGN.md](DESIGN.md)
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## Maintainers
+
+This project is maintained by the [MetalK8s](https://github.com/scality/metalk8s)
+team at [Scality](https://github.com/scality).
+
+## License
+
+This project is licensed under the [Apache License 2.0](LICENSE).
