@@ -1,13 +1,12 @@
 module github.com/scality/raidmgmt
 
-go 1.25.0
+go 1.25.6
 
 require (
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.34.0
 	github.com/stretchr/testify v1.11.1
 	github.com/vektra/mockery/v2 v2.53.5
-	github.com/vektra/mockery/v3 v3.6.4
 )
 
 require (
