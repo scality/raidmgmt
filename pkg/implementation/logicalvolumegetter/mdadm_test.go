@@ -364,8 +364,8 @@ func TestDeviceNameToDevicePath(t *testing.T) {
 		},
 		{
 			name:       "concrete test",
-			deviceName: "artesca",
-			want:       "/dev/md/artesca",
+			deviceName: "default",
+			want:       "/dev/md/default",
 		},
 	}
 
