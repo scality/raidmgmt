@@ -2,6 +2,7 @@
 
 [![Pre-merge checks](https://github.com/scality/raidmgmt/actions/workflows/pre-merge.yaml/badge.svg)](https://github.com/scality/raidmgmt/actions/workflows/pre-merge.yaml)
 ![Status: Experimental](https://img.shields.io/badge/status-experimental-orange)
+[![GitHub release](https://img.shields.io/github/release/scality/raidmgmt.svg)](https://github.com/scality/raidmgmt/releases/latest)
 
 > **Warning:** This project is in an experimental phase. While it is used as
 > part of a larger product, its API may change and it has not been extensively
