@@ -18,9 +18,14 @@ var (
 	MDADMExecCommand = exec.Command
 )
 
-func NewMDADM() *MDADM {
+func NewMDADM(path *string) *MDADM {
+	cliPath := MDADMBinaryPath
+	if path != nil {
+		cliPath = *path
+	}
+
 	return &MDADM{
-		cliPath: MDADMBinaryPath,
+		cliPath: cliPath,
 	}
 }
 
