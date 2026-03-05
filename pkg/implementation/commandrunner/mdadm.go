@@ -20,7 +20,7 @@ var (
 
 func NewMDADM(path *string) *MDADM {
 	cliPath := MDADMBinaryPath
-	if path != nil {
+	if path != nil && *path != "" {
 		cliPath = *path
 	}
 

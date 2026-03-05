@@ -21,7 +21,7 @@ var (
 
 func NewSSACLI(path *string) *SSACLI {
 	cliPath := SSACLIPath
-	if path != nil {
+	if path != nil && *path != "" {
 		cliPath = *path
 	}
 

@@ -20,7 +20,7 @@ var (
 
 func NewLSBLK(path *string) *LSBLK {
 	cliPath := LSBLKBinaryPath
-	if path != nil {
+	if path != nil && *path != "" {
 		cliPath = *path
 	}
 

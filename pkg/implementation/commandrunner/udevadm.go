@@ -22,7 +22,7 @@ var (
 
 func NewUDevADM(path *string) *UDevADM {
 	cliPath := UDevADMBinaryPath
-	if path != nil {
+	if path != nil && *path != "" {
 		cliPath = *path
 	}
 

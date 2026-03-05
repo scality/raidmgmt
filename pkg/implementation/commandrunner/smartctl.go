@@ -21,7 +21,7 @@ var (
 
 func NewSmartCTL(path *string) *SmartCTL {
 	cliPath := SmartCTLBinaryPath
-	if path != nil {
+	if path != nil && *path != "" {
 		cliPath = *path
 	}
 
