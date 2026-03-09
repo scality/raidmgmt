@@ -15,7 +15,7 @@ func TestMockMDADMRun(t *testing.T) {
 
 	commandrunner.MDADMExecCommand = mockedExecCommand
 
-	runner := commandrunner.NewMDADM()
+	runner := commandrunner.NewMDADM(nil)
 
 	// Run the function & assert the results
 	output, err := runner.Run([]string{"mocked mdadm command"})

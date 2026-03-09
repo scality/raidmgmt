@@ -15,7 +15,7 @@ func TestMockUDevADMRun(t *testing.T) {
 
 	commandrunner.UDevADMExecCommand = mockedExecCommand
 
-	runner := commandrunner.NewUDevADM()
+	runner := commandrunner.NewUDevADM(nil)
 
 	// Run the function
 	output, err := runner.Run([]string{"mocked udevadm command"})

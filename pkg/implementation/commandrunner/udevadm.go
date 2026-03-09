@@ -20,9 +20,14 @@ var (
 	UDevADMExecCommand = exec.Command
 )
 
-func NewUDevADM() *UDevADM {
+func NewUDevADM(path *string) *UDevADM {
+	cliPath := UDevADMBinaryPath
+	if path != nil && *path != "" {
+		cliPath = *path
+	}
+
 	return &UDevADM{
-		cliPath: UDevADMBinaryPath,
+		cliPath: cliPath,
 	}
 }
 

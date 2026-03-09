@@ -19,9 +19,14 @@ var (
 	SmartCTLExecCommand = exec.Command
 )
 
-func NewSmartCTL() *SmartCTL {
+func NewSmartCTL(path *string) *SmartCTL {
+	cliPath := SmartCTLBinaryPath
+	if path != nil && *path != "" {
+		cliPath = *path
+	}
+
 	return &SmartCTL{
-		cliPath: SmartCTLBinaryPath,
+		cliPath: cliPath,
 	}
 }
 

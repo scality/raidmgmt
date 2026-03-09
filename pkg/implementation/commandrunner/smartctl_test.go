@@ -15,7 +15,7 @@ func TestMockSmartCTLRun(t *testing.T) {
 
 	commandrunner.SmartCTLExecCommand = mockedExecCommand
 
-	runner := commandrunner.NewSmartCTL()
+	runner := commandrunner.NewSmartCTL(nil)
 
 	// Run the function
 	output, err := runner.Run([]string{"mocked smartctl command"})

@@ -17,10 +17,10 @@ import (
 func main() {
 	logger := zerolog.New(os.Stdout).With().Str("test_type", "integration").Logger()
 
-	uDevADMCommandRunner := commandrunner.NewUDevADM()
-	lsblkCommandRunner := commandrunner.NewLSBLK()
-	smartCTLCommandRunner := commandrunner.NewSmartCTL()
-	mdadmCommandRunner := commandrunner.NewMDADM()
+	uDevADMCommandRunner := commandrunner.NewUDevADM(nil)
+	lsblkCommandRunner := commandrunner.NewLSBLK(nil)
+	smartCTLCommandRunner := commandrunner.NewSmartCTL(nil)
+	mdadmCommandRunner := commandrunner.NewMDADM(nil)
 
 	physicalDriveGetter := physicaldrivegetter.NewRHEL8(
 		uDevADMCommandRunner,

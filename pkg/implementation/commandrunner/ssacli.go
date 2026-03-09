@@ -19,9 +19,14 @@ var (
 	SSACLIExecCommand = exec.Command
 )
 
-func NewSSACLI() *SSACLI {
+func NewSSACLI(path *string) *SSACLI {
+	cliPath := SSACLIPath
+	if path != nil && *path != "" {
+		cliPath = *path
+	}
+
 	return &SSACLI{
-		cliPath: SSACLIPath,
+		cliPath: cliPath,
 	}
 }
 

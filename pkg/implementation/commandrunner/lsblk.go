@@ -18,9 +18,14 @@ var (
 	LSBLKExecCommand = exec.Command
 )
 
-func NewLSBLK() *LSBLK {
+func NewLSBLK(path *string) *LSBLK {
+	cliPath := LSBLKBinaryPath
+	if path != nil && *path != "" {
+		cliPath = *path
+	}
+
 	return &LSBLK{
-		cliPath: LSBLKBinaryPath,
+		cliPath: cliPath,
 	}
 }
 

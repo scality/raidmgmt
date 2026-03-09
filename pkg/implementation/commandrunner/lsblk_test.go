@@ -15,7 +15,7 @@ func TestMockLSBLKRun(t *testing.T) {
 
 	commandrunner.LSBLKExecCommand = mockedExecCommand
 
-	runner := commandrunner.NewLSBLK()
+	runner := commandrunner.NewLSBLK(nil)
 
 	// Run the function
 	output, err := runner.Run([]string{"mocked lsblk command"})
