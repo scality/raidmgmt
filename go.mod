@@ -4,7 +4,7 @@ go 1.25.6
 
 require (
 	github.com/pkg/errors v0.9.1
-	github.com/rs/zerolog v1.34.0
+	github.com/rs/zerolog v1.35.1
 	github.com/stretchr/testify v1.11.1
 	github.com/vektra/mockery/v2 v2.53.6
 )
