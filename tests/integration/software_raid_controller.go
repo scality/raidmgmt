@@ -35,7 +35,7 @@ func (t *SoftwareRAIDControllerTester) runRAID10Tests(ctx context.Context) error
 
 	physicalDrives, err := t.controller.PhysicalDrives(&raidcontroller.Metadata{})
 	if err != nil {
-		l.ErrorContext(ctx, "failed to get physical drives", slog.Any("error_message", err))
+		l.ErrorContext(ctx, "failed to get physical drives", slog.Any("error", err))
 
 		return errors.Wrap(err, "failed to get physical drives")
 	}
@@ -76,7 +76,7 @@ func (t *SoftwareRAIDControllerTester) runRAID10Tests(ctx context.Context) error
 	// Create RAID1 with 4 disks
 	logicalVolume, err := t.controller.CreateLV(creationRequest)
 	if err != nil {
-		l.ErrorContext(ctx, "failed to create RAID1", slog.Any("error_message", err))
+		l.ErrorContext(ctx, "failed to create RAID1", slog.Any("error", err))
 
 		return errors.Wrap(err, "failed to create RAID1")
 	}
@@ -87,7 +87,7 @@ func (t *SoftwareRAIDControllerTester) runRAID10Tests(ctx context.Context) error
 		// Remove the full array
 		err = t.controller.DeleteLV(&logicalvolume.Metadata{ID: logicalVolume.DevicePath, CtrlMetadata: controllerMetadata})
 		if err != nil {
-			l.ErrorContext(ctx, "failed to delete RAID10", slog.Any("error_message", err))
+			l.ErrorContext(ctx, "failed to delete RAID10", slog.Any("error", err))
 			return
 		}
 
@@ -103,7 +103,7 @@ func (t *SoftwareRAIDControllerTester) runRAID10Tests(ctx context.Context) error
 
 	err = t.controller.DeletePDsFromLV(&logicalvolume.Metadata{ID: logicalVolume.DevicePath, CtrlMetadata: controllerMetadata}, drives...)
 	if err != nil {
-		l.ErrorContext(ctx, "RAID1 should not be able to remove a disk if only two are there", slog.Any("error_message", err))
+		l.ErrorContext(ctx, "RAID1 should not be able to remove a disk if only two are there", slog.Any("error", err))
 
 		return errors.Wrap(err, "RAID1 should not be able to remove a disk if only two are there")
 	}
@@ -112,7 +112,7 @@ func (t *SoftwareRAIDControllerTester) runRAID10Tests(ctx context.Context) error
 
 	logicalVolume, err = t.controller.LogicalVolume(&logicalvolume.Metadata{ID: logicalVolume.DevicePath, CtrlMetadata: controllerMetadata})
 	if err != nil {
-		l.ErrorContext(ctx, "failed to get logical volume", slog.Any("error_message", err))
+		l.ErrorContext(ctx, "failed to get logical volume", slog.Any("error", err))
 
 		return errors.Wrap(err, "failed to get logical volume")
 	}
@@ -129,14 +129,14 @@ func (t *SoftwareRAIDControllerTester) runRAID10Tests(ctx context.Context) error
 
 	err = t.controller.AddPDsToLV(&logicalvolume.Metadata{ID: logicalVolume.DevicePath, CtrlMetadata: controllerMetadata}, drives...)
 	if err != nil {
-		l.ErrorContext(ctx, "failed to extend RAID1", slog.Any("error_message", err))
+		l.ErrorContext(ctx, "failed to extend RAID1", slog.Any("error", err))
 
 		return errors.Wrap(err, "failed to extend RAID1")
 	}
 
 	logicalVolume, err = t.controller.LogicalVolume(&logicalvolume.Metadata{ID: logicalVolume.DevicePath, CtrlMetadata: controllerMetadata})
 	if err != nil {
-		l.ErrorContext(ctx, "failed to get logical volume", slog.Any("error_message", err))
+		l.ErrorContext(ctx, "failed to get logical volume", slog.Any("error", err))
 
 		return errors.Wrap(err, "failed to get logical volume")
 	}
@@ -164,14 +164,14 @@ func (t *SoftwareRAIDControllerTester) runRAID10Tests(ctx context.Context) error
 
 	err = t.controller.DeletePDsFromLV(&logicalvolume.Metadata{ID: logicalVolume.DevicePath, CtrlMetadata: controllerMetadata}, drives...)
 	if err != nil {
-		l.ErrorContext(ctx, "failed to extend RAID1", slog.Any("error_message", err))
+		l.ErrorContext(ctx, "failed to extend RAID1", slog.Any("error", err))
 
 		return errors.Wrap(err, "failed to extend RAID1")
 	}
 
 	logicalVolume, err = t.controller.LogicalVolume(&logicalvolume.Metadata{ID: logicalVolume.DevicePath, CtrlMetadata: controllerMetadata})
 	if err != nil {
-		l.ErrorContext(ctx, "failed to get logical volume", slog.Any("error_message", err))
+		l.ErrorContext(ctx, "failed to get logical volume", slog.Any("error", err))
 
 		return errors.Wrap(err, "failed to get logical volume")
 	}
@@ -188,14 +188,14 @@ func (t *SoftwareRAIDControllerTester) runRAID10Tests(ctx context.Context) error
 
 	err = t.controller.AddPDsToLV(&logicalvolume.Metadata{ID: logicalVolume.DevicePath, CtrlMetadata: controllerMetadata}, drives...)
 	if err != nil {
-		l.ErrorContext(ctx, "failed to extend RAID1", slog.Any("error_message", err))
+		l.ErrorContext(ctx, "failed to extend RAID1", slog.Any("error", err))
 
 		return errors.Wrap(err, "failed to extend RAID1")
 	}
 
 	logicalVolume, err = t.controller.LogicalVolume(&logicalvolume.Metadata{ID: logicalVolume.DevicePath, CtrlMetadata: controllerMetadata})
 	if err != nil {
-		l.ErrorContext(ctx, "failed to get logical volume", slog.Any("error_message", err))
+		l.ErrorContext(ctx, "failed to get logical volume", slog.Any("error", err))
 
 		return errors.Wrap(err, "failed to get logical volume")
 	}
@@ -243,7 +243,7 @@ func (t *SoftwareRAIDControllerTester) runRAID10Tests(ctx context.Context) error
 
 	err = t.controller.AddPDsToLV(&logicalvolume.Metadata{ID: logicalVolume.DevicePath, CtrlMetadata: controllerMetadata}, drives...)
 	if err != nil {
-		l.ErrorContext(ctx, "failed to extend RAID1", slog.Any("error_message", err))
+		l.ErrorContext(ctx, "failed to extend RAID1", slog.Any("error", err))
 
 		return errors.Wrap(err, "failed to extend RAID1")
 	}
@@ -252,7 +252,7 @@ func (t *SoftwareRAIDControllerTester) runRAID10Tests(ctx context.Context) error
 
 	logicalVolume, err = t.controller.LogicalVolume(&logicalvolume.Metadata{ID: logicalVolume.DevicePath, CtrlMetadata: controllerMetadata})
 	if err != nil {
-		l.ErrorContext(ctx, "failed to get logical volume", slog.Any("error_message", err))
+		l.ErrorContext(ctx, "failed to get logical volume", slog.Any("error", err))
 
 		return errors.Wrap(err, "failed to get logical volume")
 	}
@@ -269,7 +269,7 @@ func (t *SoftwareRAIDControllerTester) runSoftwareControllerIntegrationTestSuite
 
 	err := t.runRAID0Tests(ctx)
 	if err != nil {
-		l.ErrorContext(ctx, "failed to run RAID0 tests", slog.Any("error_message", err))
+		l.ErrorContext(ctx, "failed to run RAID0 tests", slog.Any("error", err))
 		os.Exit(1)
 	}
 
@@ -277,7 +277,7 @@ func (t *SoftwareRAIDControllerTester) runSoftwareControllerIntegrationTestSuite
 
 	err = t.runRAID1Tests(ctx)
 	if err != nil {
-		l.ErrorContext(ctx, "failed to run RAID1 tests", slog.Any("error_message", err))
+		l.ErrorContext(ctx, "failed to run RAID1 tests", slog.Any("error", err))
 		os.Exit(1)
 	}
 
@@ -285,7 +285,7 @@ func (t *SoftwareRAIDControllerTester) runSoftwareControllerIntegrationTestSuite
 
 	err = t.runRAID10Tests(ctx)
 	if err != nil {
-		l.ErrorContext(ctx, "failed to run RAID10 tests", slog.Any("error_message", err))
+		l.ErrorContext(ctx, "failed to run RAID10 tests", slog.Any("error", err))
 		os.Exit(1)
 	}
 }
@@ -296,7 +296,7 @@ func (t *SoftwareRAIDControllerTester) runRAID1Tests(ctx context.Context) error 
 
 	physicalDrives, err := t.controller.PhysicalDrives(&raidcontroller.Metadata{})
 	if err != nil {
-		l.ErrorContext(ctx, "failed to get physical drives", slog.Any("error_message", err))
+		l.ErrorContext(ctx, "failed to get physical drives", slog.Any("error", err))
 
 		return errors.Wrap(err, "failed to get physical drives")
 	}
@@ -329,7 +329,7 @@ func (t *SoftwareRAIDControllerTester) runRAID1Tests(ctx context.Context) error 
 	// Create RAID1 with 2 disks
 	logicalVolume, err := t.controller.CreateLV(creationRequest)
 	if err != nil {
-		l.ErrorContext(ctx, "failed to create RAID1", slog.Any("error_message", err))
+		l.ErrorContext(ctx, "failed to create RAID1", slog.Any("error", err))
 
 		return errors.Wrap(err, "failed to create RAID1")
 	}
@@ -338,7 +338,7 @@ func (t *SoftwareRAIDControllerTester) runRAID1Tests(ctx context.Context) error 
 		// Remove the full array
 		err = t.controller.DeleteLV(&logicalvolume.Metadata{ID: logicalVolume.DevicePath, CtrlMetadata: controllerMetadata})
 		if err != nil {
-			l.ErrorContext(ctx, "failed to delete RAID1", slog.Any("error_message", err))
+			l.ErrorContext(ctx, "failed to delete RAID1", slog.Any("error", err))
 			return
 		}
 
@@ -354,7 +354,7 @@ func (t *SoftwareRAIDControllerTester) runRAID1Tests(ctx context.Context) error 
 
 	err = t.controller.DeletePDsFromLV(&logicalvolume.Metadata{ID: logicalVolume.DevicePath, CtrlMetadata: controllerMetadata}, drives...)
 	if err == nil {
-		l.ErrorContext(ctx, "RAID1 should not be able to remove a disk if only two are there", slog.Any("error_message", err))
+		l.ErrorContext(ctx, "RAID1 should not be able to remove a disk if only two are there", slog.Any("error", err))
 
 		return errors.Wrap(err, "RAID1 should not be able to remove a disk if only two are there")
 	}
@@ -373,7 +373,7 @@ func (t *SoftwareRAIDControllerTester) runRAID1Tests(ctx context.Context) error 
 		drives...,
 	)
 	if err != nil {
-		l.ErrorContext(ctx, "failed to extend RAID1", slog.Any("error_message", err))
+		l.ErrorContext(ctx, "failed to extend RAID1", slog.Any("error", err))
 
 		return errors.Wrap(err, "failed to extend RAID1")
 	}
@@ -386,7 +386,7 @@ func (t *SoftwareRAIDControllerTester) runRAID0Tests(ctx context.Context) error 
 
 	physicalDrives, err := t.controller.PhysicalDrives(&raidcontroller.Metadata{})
 	if err != nil {
-		l.ErrorContext(ctx, "failed to get physical drives", slog.Any("error_message", err))
+		l.ErrorContext(ctx, "failed to get physical drives", slog.Any("error", err))
 
 		return errors.Wrap(err, "failed to get physical drives")
 	}
@@ -421,7 +421,7 @@ func (t *SoftwareRAIDControllerTester) runRAID0Tests(ctx context.Context) error 
 	// Create with 2 disks
 	logicalVolume, err := t.controller.CreateLV(creationRequest)
 	if err != nil {
-		l.ErrorContext(ctx, "failed to create RAID0", slog.Any("error_message", err))
+		l.ErrorContext(ctx, "failed to create RAID0", slog.Any("error", err))
 
 		return errors.Wrap(err, "failed to create RAID0")
 	}
@@ -442,7 +442,7 @@ func (t *SoftwareRAIDControllerTester) runRAID0Tests(ctx context.Context) error 
 		drives...,
 	)
 	if err != nil {
-		l.ErrorContext(ctx, "failed to extend RAID0", slog.Any("error_message", err))
+		l.ErrorContext(ctx, "failed to extend RAID0", slog.Any("error", err))
 
 		return errors.Wrap(err, "failed to extend RAID0")
 	}
@@ -457,7 +457,7 @@ func (t *SoftwareRAIDControllerTester) runRAID0Tests(ctx context.Context) error 
 		CtrlMetadata: controllerMetadata,
 	})
 	if err != nil {
-		l.ErrorContext(ctx, "failed to get logical volume", slog.Any("error_message", err))
+		l.ErrorContext(ctx, "failed to get logical volume", slog.Any("error", err))
 
 		return errors.Wrap(err, "failed to get logical volume")
 	}
@@ -487,7 +487,7 @@ func (t *SoftwareRAIDControllerTester) runRAID0Tests(ctx context.Context) error 
 	// Remove the full array
 	err = t.controller.DeleteLV(&logicalvolume.Metadata{ID: logicalVolume.DevicePath, CtrlMetadata: controllerMetadata})
 	if err != nil {
-		l.ErrorContext(ctx, "failed to delete RAID0", slog.Any("error_message", err))
+		l.ErrorContext(ctx, "failed to delete RAID0", slog.Any("error", err))
 
 		return errors.Wrap(err, "failed to delete RAID0")
 	}
