@@ -466,7 +466,7 @@ func (t *SoftwareRAIDControllerTester) runRAID0Tests(ctx context.Context) error 
 	// 		break
 	// 	}
 	//
-	// 	l.Info().Msg("Waiting for RAID0 size to be updated")
+	// 	l.InfoContext(ctx, "Waiting for RAID0 size to be updated")
 	// 	time.Sleep(5 * time.Second)
 	// }
 
