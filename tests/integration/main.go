@@ -1,9 +1,9 @@
 package main
 
 import (
+	"context"
+	"log/slog"
 	"os"
-
-	"github.com/rs/zerolog"
 
 	"github.com/scality/raidmgmt/pkg/core"
 	"github.com/scality/raidmgmt/pkg/implementation/commandrunner"
@@ -15,7 +15,9 @@ import (
 
 // Remove the full array.
 func main() {
-	logger := zerolog.New(os.Stdout).With().Str("test_type", "integration").Logger()
+	ctx := context.Background()
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil)).
+		With(slog.String("test_type", "integration"))
 
 	uDevADMCommandRunner := commandrunner.NewUDevADM(nil)
 	lsblkCommandRunner := commandrunner.NewLSBLK(nil)
@@ -46,7 +48,7 @@ func main() {
 		),
 	)
 
-	tester := NewSoftwareRAIDControllerTester(*controller, &logger)
+	tester := NewSoftwareRAIDControllerTester(*controller, logger)
 
-	tester.runSoftwareControllerIntegrationTestSuite(&logger)
+	tester.runSoftwareControllerIntegrationTestSuite(ctx, logger)
 }
