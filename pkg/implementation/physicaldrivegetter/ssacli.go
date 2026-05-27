@@ -29,6 +29,20 @@ var (
 
 	ssacliSlotRegexp          = regexp.MustCompile(ssacliSlotRegexpPattern)
 	ssacliPhysicalDriveRegexp = regexp.MustCompile(ssacliPhysicalDriveRegexpPattern)
+
+	// ssacliStatusMap maps known ssacli "Status:" values to a PDStatus. Any
+	// value not in the map is treated as PDStatusUnknown by parseSSACLIStatus
+	// so the parser keeps working when ssacli reports a status we don't model
+	// (e.g. "Predictive Failure", "Rebuilding", or a future label). A
+	// "Predictive Failure" drive is still online and serving its array, so it
+	// is mapped to PDStatusUsed and the install is allowed to continue.
+	//nolint:gochecknoglobals // small lookup table.
+	ssacliStatusMap = map[string]physicaldrive.PDStatus{
+		"OK":                 physicaldrive.PDStatusUsed,
+		"Failed":             physicaldrive.PDStatusFailed,
+		"Offline":            physicaldrive.PDStatusFailed,
+		"Predictive Failure": physicaldrive.PDStatusUsed,
+	}
 )
 
 // NewSSACLI creates a new SSACLI instance.
@@ -202,18 +216,8 @@ func (s *SSACLI) parsePDLine( //nolint:funlen // This function is long and not c
 
 	case "Status":
 		if physicalDrive.Status == physicaldrive.PDStatusUnknown {
-			mapStatus := map[string]physicaldrive.PDStatus{
-				"OK":      physicaldrive.PDStatusUsed,
-				"Failed":  physicaldrive.PDStatusFailed,
-				"Offline": physicaldrive.PDStatusFailed,
-			}
-
-			status, ok := mapStatus[value]
-			if !ok {
-				return errors.Errorf("invalid status: %s", value)
-			}
-
-			physicalDrive.Status = status
+			physicalDrive.Status = parseSSACLIStatus(value)
+			physicalDrive.Reason = value
 		}
 
 	case "Drive Type":
@@ -299,4 +303,15 @@ func isBlockDeviceUsed(device *BlockDevice) bool {
 	}
 
 	return false
+}
+
+// parseSSACLIStatus maps an ssacli "Status:" value to a PDStatus. Unknown
+// values are mapped to PDStatusUnknown rather than aborting the whole inventory
+// call; callers can read PhysicalDrive.Reason to recover the raw label.
+func parseSSACLIStatus(value string) physicaldrive.PDStatus {
+	if status, ok := ssacliStatusMap[value]; ok {
+		return status
+	}
+
+	return physicaldrive.PDStatusUnknown
 }
