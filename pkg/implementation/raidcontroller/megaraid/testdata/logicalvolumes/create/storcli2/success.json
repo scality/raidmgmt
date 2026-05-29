@@ -1,0 +1,26 @@
+{
+"Controllers":[
+{
+	"Command Status" : {
+		"CLI Version" : "008.0005.0000.0010 Feb 22, 2023",
+		"Operating system" : "Linux4.18.0-553.115.1.el8_10.x86_64",
+		"Controller" : "0",
+		"Status" : "Success",
+		"Description" : "Add VD succeeded."
+	},
+	"Response Data" : {
+		"VD Information" : [
+			{
+				"VDID" : 25,
+				"VDSize" : "9.094 TiB",
+				"Status" : "Success",
+				"ErrType" : "-",
+				"ErrCd" : "-",
+				"Msg" : "-"
+			}
+		]
+	}
+}
+]
+}
+
