@@ -18,7 +18,14 @@ const (
 	ErrInvalidSizeUnit   = "invalid size unit: %s"
 )
 
-// mapSize is a map of size units to their respective bytes.
+// mapSize maps size unit labels to their multiplier in bytes.
+//
+// All supported RAID CLIs report binary quantities. ssacli and megaraid print
+// decimal-style labels (KB/MB/GB/TB/PB) for binary values — e.g. ssacli "800 GB"
+// is 858993459200 bytes (= 800 GiB, matching the lsblk byte count) and megaraid
+// "16.370 TB" is 17999005346693 bytes (= 16.370 TiB). storcli2 prints proper IEC
+// labels (KiB/MiB/GiB/TiB/PiB), e.g. "9.094 TiB". Both label families therefore
+// map to the same 1024-based multipliers; this is intentional, not a typo.
 //
 //nolint:gochecknoglobals // This map is used to convert size units to bytes.
 var mapSize = map[string]uint64{
@@ -27,6 +34,12 @@ var mapSize = map[string]uint64{
 	"GB": GB,
 	"TB": TB,
 	"PB": PB,
+
+	"KiB": KB,
+	"MiB": MB,
+	"GiB": GB,
+	"TiB": TB,
+	"PiB": PB,
 }
 
 // ConvertSizeBytes converts a size string to bytes.
