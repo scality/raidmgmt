@@ -1,0 +1,44 @@
+{
+"Controllers":[
+{
+	"Command Status" : {
+		"CLI Version" : "008.0005.0000.0010 Feb 22, 2023",
+		"Operating system" : "Linux4.18.0-553.115.1.el8_10.x86_64",
+		"Status Code" : 0,
+		"Status" : "Success",
+		"Description" : "None"
+	},
+	"Response Data" : {
+		"Number of Controllers" : 1,
+		"Host Name" : "artesca-node",
+		"Operating System " : "Linux4.18.0-553.115.1.el8_10.x86_64",
+		"SL8 Library Version" : "08.0507.0000",
+		"System Overview" : [
+			{
+				"Ctrl" : 0,
+				"Product Name" : "MegaRAID 9660-16i Tri-Mode Storage Adapter",
+				"SASAddress" : "0X500062B22066D540",
+				"Personality" : "RAID",
+				"Status" : "Optimal",
+				"PD(s)" : 24,
+				"VD(s)" : 24,
+				"VNOpt" : 0,
+				"EPack" : "Optimal"
+			}
+		],
+		"ASO" : [
+			{
+				"Ctrl" : 0,
+				"RP" : "U",
+				"R0/00" : "U",
+				"R1/10" : "U",
+				"R5/50" : "U",
+				"R6/60" : "U",
+				"JBOD" : "U"
+			}
+		]
+	}
+}
+]
+}
+
