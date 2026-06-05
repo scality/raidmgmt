@@ -1,0 +1,2682 @@
+{
+"Controllers":[
+{
+	"Command Status" : {
+		"CLI Version" : "008.0005.0000.0010 Feb 22, 2023",
+		"Operating system" : "Linux4.18.0-553.115.1.el8_10.x86_64",
+		"Controller" : "0",
+		"Status" : "Success",
+		"Description" : "Show Drive Information Succeeded."
+	},
+	"Response Data" : {
+		"Drives List" : [
+			{
+				"Drive Information" : {
+					"EID:Slt" : "306:0",
+					"PID" : 293,
+					"State" : "Conf",
+					"Status" : "Online",
+					"DG" : 0,
+					"Size" : "9.094 TiB",
+					"Intf" : "SAS",
+					"Med" : "HDD",
+					"SED_Type" : "-",
+					"SeSz" : "512B",
+					"Model" : "ST10000NM018B   ",
+					"Sp" : "U",
+					"LU/NS Count" : 1,
+					"Alt-EID" : "-"
+				},
+				"LU/NS Information" : [
+					{
+						"PID" : 293,
+						"LUN/NSID" : "0/-",
+						"Status" : "Online",
+						"Size" : "9.094 TiB"
+					}
+				],
+				"Drive Detailed Information" : {
+					"Shield Counter" : 0,
+					"Temperature(C)" : 40,
+					"Serial Number" : "WP00MLCA0000E2426EZU",
+					"Vendor" : "SEAGATE ",
+					"Model" : "ST10000NM018B   ",
+					"WWN" : "5000C500EF7DE7D4",
+					"Firmware Revision Level" : "E001",
+					"Firmware Release Number" : "01110618",
+					"Logical Sector Size" : "512B",
+					"Physical Sector Size" : "4 KiB",
+					"Raw size" : "9.095 TiB [0x48c400000 Sectors]",
+					"Coerced size" : "9.094 TiB [0x48c300000 Sectors]",
+					"Capable Speed" : "12.0Gb/s",
+					"Capable Link Width" : "x1",
+					"Negotiated Link Width" : "x1",
+					"Drive position" : "DriveGroup:0, Span:0, Row:0",
+					"Sequence Number" : 2,
+					"Commissioned Spare" : "No",
+					"Emergency Spare" : "No",
+					"Successful Shield Diagnostics completed on(Localtime yyyy/mm/dd hh:mm:sec)" : "NA",
+					"SED Capable" : "No",
+					"ISE Capable" : "No",
+					"Unmap Capable for Single Drive RAID 0 VDs" : "No",
+					"Unmap Capable for RAID 0 VDs" : "No",
+					"Unmap Capable for RAID 1 VDs" : "No",
+					"Unmap Capable for RAID 5/6 VDs" : "No",
+					"Unmap Capable" : "No",
+					"Writesame Unmap Capable for Single Drive RAID 0 VDs" : "No",
+					"Writesame Unmap Capable for RAID 0 VDs" : "No",
+					"Writesame Unmap Capable for RAID 1 VDs" : "No",
+					"Writesame Unmap Capable for RAID 5/6 VDs" : "No",
+					"Writesame Unmap Capable" : "No",
+					"T10 Power Mode" : "Yes",
+					"Needs EKM Attention" : "No",
+					"Secured By EKM" : "No",
+					"Certified" : "Yes",
+					"Supported Data Format" : "None",
+					"Hard Disk Drive RPM" : 7200,
+					"Device port count" : 1,
+					"Path Information" : [
+						{
+							"SASAddress" : "0x5000c500ef7de7d5",
+							"DevicePID" : 293,
+							"Path" : "Primary",
+							"ConnectorIndex" : 1,
+							"Negotiated Speed" : "12.0Gb/s",
+							"Num Phys/Lanes used" : 1
+						}
+					],
+					"Connector Information" : [
+						{
+							"ConnId" : 1,
+							"Name" : "C0.0",
+							"Location" : "Internal",
+							"Type" : "SFF-8654 8I"
+						},
+						{
+							"ConnId" : 1,
+							"Name" : "C0.1",
+							"Location" : "Internal",
+							"Type" : "SFF-8654 8I"
+						}
+					],
+					"LU/NS Properties" : {
+						"Media Error Count" : 0,
+						"Other Error Count" : 0,
+						"Predictive Failure Count" : 0,
+						"Last Predictive Failure Event Sequence Number" : 0,
+						"Logical Sector Size" : "512B",
+						"Physical Sector Size" : "4 KiB",
+						"Raw size" : "9.095 TiB [0x48c400000 Sectors]",
+						"Coerced size" : "9.094 TiB [0x48c300000 Sectors]",
+						"FW managed drive security" : "No",
+						"Secured" : "No",
+						"Locked" : "No",
+						"PI Formatted" : "No",
+						"PI type" : 1,
+						"Number of bytes of user data in LBA" : "512B",
+						"Current Write Cache" : "Off",
+						"Default Write Cache" : "On",
+						"Write Cache Changeable" : "Yes"
+					},
+					"Inquiry Data" : "00 00 07 12 8b 01 10 02 53 45 41 47 41 54 45 20 53 54 31 30 30 30 30 4e 4d 30 31 38 42 20 20 20 45 30 30 31 57 50 30 30 4d 4c 43 41 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 a2 0c 60 20 e0 04 60 04 c0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 43 6f 70 79 72 69 67 68 74 20 28 63 29 20 32 30 32 31 20 53 65 61 67 61 74 65 20 41 6c 6c 20 "
+				}
+			},
+			{
+				"Drive Information" : {
+					"EID:Slt" : "306:1",
+					"PID" : 294,
+					"State" : "Conf",
+					"Status" : "Online",
+					"DG" : 1,
+					"Size" : "9.094 TiB",
+					"Intf" : "SAS",
+					"Med" : "HDD",
+					"SED_Type" : "-",
+					"SeSz" : "512B",
+					"Model" : "ST10000NM018B   ",
+					"Sp" : "U",
+					"LU/NS Count" : 1,
+					"Alt-EID" : "-"
+				},
+				"LU/NS Information" : [
+					{
+						"PID" : 294,
+						"LUN/NSID" : "0/-",
+						"Status" : "Online",
+						"Size" : "9.094 TiB"
+					}
+				],
+				"Drive Detailed Information" : {
+					"Shield Counter" : 0,
+					"Temperature(C)" : 43,
+					"Serial Number" : "WWY08M9N0000E2415H2H",
+					"Vendor" : "SEAGATE ",
+					"Model" : "ST10000NM018B   ",
+					"WWN" : "5000C500EF30DE9C",
+					"Firmware Revision Level" : "E001",
+					"Firmware Release Number" : "01110618",
+					"Logical Sector Size" : "512B",
+					"Physical Sector Size" : "4 KiB",
+					"Raw size" : "9.095 TiB [0x48c400000 Sectors]",
+					"Coerced size" : "9.094 TiB [0x48c300000 Sectors]",
+					"Capable Speed" : "12.0Gb/s",
+					"Capable Link Width" : "x1",
+					"Negotiated Link Width" : "x1",
+					"Drive position" : "DriveGroup:1, Span:0, Row:0",
+					"Sequence Number" : 2,
+					"Commissioned Spare" : "No",
+					"Emergency Spare" : "No",
+					"Successful Shield Diagnostics completed on(Localtime yyyy/mm/dd hh:mm:sec)" : "NA",
+					"SED Capable" : "No",
+					"ISE Capable" : "No",
+					"Unmap Capable for Single Drive RAID 0 VDs" : "No",
+					"Unmap Capable for RAID 0 VDs" : "No",
+					"Unmap Capable for RAID 1 VDs" : "No",
+					"Unmap Capable for RAID 5/6 VDs" : "No",
+					"Unmap Capable" : "No",
+					"Writesame Unmap Capable for Single Drive RAID 0 VDs" : "No",
+					"Writesame Unmap Capable for RAID 0 VDs" : "No",
+					"Writesame Unmap Capable for RAID 1 VDs" : "No",
+					"Writesame Unmap Capable for RAID 5/6 VDs" : "No",
+					"Writesame Unmap Capable" : "No",
+					"T10 Power Mode" : "Yes",
+					"Needs EKM Attention" : "No",
+					"Secured By EKM" : "No",
+					"Certified" : "Yes",
+					"Supported Data Format" : "None",
+					"Hard Disk Drive RPM" : 7200,
+					"Device port count" : 1,
+					"Path Information" : [
+						{
+							"SASAddress" : "0x5000c500ef30de9d",
+							"DevicePID" : 294,
+							"Path" : "Primary",
+							"ConnectorIndex" : 1,
+							"Negotiated Speed" : "12.0Gb/s",
+							"Num Phys/Lanes used" : 1
+						}
+					],
+					"Connector Information" : [
+						{
+							"ConnId" : 1,
+							"Name" : "C0.0",
+							"Location" : "Internal",
+							"Type" : "SFF-8654 8I"
+						},
+						{
+							"ConnId" : 1,
+							"Name" : "C0.1",
+							"Location" : "Internal",
+							"Type" : "SFF-8654 8I"
+						}
+					],
+					"LU/NS Properties" : {
+						"Media Error Count" : 0,
+						"Other Error Count" : 0,
+						"Predictive Failure Count" : 0,
+						"Last Predictive Failure Event Sequence Number" : 0,
+						"Logical Sector Size" : "512B",
+						"Physical Sector Size" : "4 KiB",
+						"Raw size" : "9.095 TiB [0x48c400000 Sectors]",
+						"Coerced size" : "9.094 TiB [0x48c300000 Sectors]",
+						"FW managed drive security" : "No",
+						"Secured" : "No",
+						"Locked" : "No",
+						"PI Formatted" : "No",
+						"PI type" : 1,
+						"Number of bytes of user data in LBA" : "512B",
+						"Current Write Cache" : "Off",
+						"Default Write Cache" : "On",
+						"Write Cache Changeable" : "Yes"
+					},
+					"Inquiry Data" : "00 00 07 12 8b 01 10 02 53 45 41 47 41 54 45 20 53 54 31 30 30 30 30 4e 4d 30 31 38 42 20 20 20 45 30 30 31 57 57 59 30 38 4d 39 4e 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 a2 0c 60 20 e0 04 60 04 c0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 43 6f 70 79 72 69 67 68 74 20 28 63 29 20 32 30 32 31 20 53 65 61 67 61 74 65 20 41 6c 6c 20 "
+				}
+			},
+			{
+				"Drive Information" : {
+					"EID:Slt" : "306:2",
+					"PID" : 295,
+					"State" : "Conf",
+					"Status" : "Online",
+					"DG" : 2,
+					"Size" : "9.094 TiB",
+					"Intf" : "SAS",
+					"Med" : "HDD",
+					"SED_Type" : "-",
+					"SeSz" : "512B",
+					"Model" : "ST10000NM018B   ",
+					"Sp" : "U",
+					"LU/NS Count" : 1,
+					"Alt-EID" : "-"
+				},
+				"LU/NS Information" : [
+					{
+						"PID" : 295,
+						"LUN/NSID" : "0/-",
+						"Status" : "Online",
+						"Size" : "9.094 TiB"
+					}
+				],
+				"Drive Detailed Information" : {
+					"Shield Counter" : 0,
+					"Temperature(C)" : 45,
+					"Serial Number" : "WP00MNPX0000E2424KEX",
+					"Vendor" : "SEAGATE ",
+					"Model" : "ST10000NM018B   ",
+					"WWN" : "5000C500EF7D7908",
+					"Firmware Revision Level" : "E001",
+					"Firmware Release Number" : "01110618",
+					"Logical Sector Size" : "512B",
+					"Physical Sector Size" : "4 KiB",
+					"Raw size" : "9.095 TiB [0x48c400000 Sectors]",
+					"Coerced size" : "9.094 TiB [0x48c300000 Sectors]",
+					"Capable Speed" : "12.0Gb/s",
+					"Capable Link Width" : "x1",
+					"Negotiated Link Width" : "x1",
+					"Drive position" : "DriveGroup:2, Span:0, Row:0",
+					"Sequence Number" : 2,
+					"Commissioned Spare" : "No",
+					"Emergency Spare" : "No",
+					"Successful Shield Diagnostics completed on(Localtime yyyy/mm/dd hh:mm:sec)" : "NA",
+					"SED Capable" : "No",
+					"ISE Capable" : "No",
+					"Unmap Capable for Single Drive RAID 0 VDs" : "No",
+					"Unmap Capable for RAID 0 VDs" : "No",
+					"Unmap Capable for RAID 1 VDs" : "No",
+					"Unmap Capable for RAID 5/6 VDs" : "No",
+					"Unmap Capable" : "No",
+					"Writesame Unmap Capable for Single Drive RAID 0 VDs" : "No",
+					"Writesame Unmap Capable for RAID 0 VDs" : "No",
+					"Writesame Unmap Capable for RAID 1 VDs" : "No",
+					"Writesame Unmap Capable for RAID 5/6 VDs" : "No",
+					"Writesame Unmap Capable" : "No",
+					"T10 Power Mode" : "Yes",
+					"Needs EKM Attention" : "No",
+					"Secured By EKM" : "No",
+					"Certified" : "Yes",
+					"Supported Data Format" : "None",
+					"Hard Disk Drive RPM" : 7200,
+					"Device port count" : 1,
+					"Path Information" : [
+						{
+							"SASAddress" : "0x5000c500ef7d7909",
+							"DevicePID" : 295,
+							"Path" : "Primary",
+							"ConnectorIndex" : 1,
+							"Negotiated Speed" : "12.0Gb/s",
+							"Num Phys/Lanes used" : 1
+						}
+					],
+					"Connector Information" : [
+						{
+							"ConnId" : 1,
+							"Name" : "C0.0",
+							"Location" : "Internal",
+							"Type" : "SFF-8654 8I"
+						},
+						{
+							"ConnId" : 1,
+							"Name" : "C0.1",
+							"Location" : "Internal",
+							"Type" : "SFF-8654 8I"
+						}
+					],
+					"LU/NS Properties" : {
+						"Media Error Count" : 0,
+						"Other Error Count" : 0,
+						"Predictive Failure Count" : 0,
+						"Last Predictive Failure Event Sequence Number" : 0,
+						"Logical Sector Size" : "512B",
+						"Physical Sector Size" : "4 KiB",
+						"Raw size" : "9.095 TiB [0x48c400000 Sectors]",
+						"Coerced size" : "9.094 TiB [0x48c300000 Sectors]",
+						"FW managed drive security" : "No",
+						"Secured" : "No",
+						"Locked" : "No",
+						"PI Formatted" : "No",
+						"PI type" : 1,
+						"Number of bytes of user data in LBA" : "512B",
+						"Current Write Cache" : "Off",
+						"Default Write Cache" : "On",
+						"Write Cache Changeable" : "Yes"
+					},
+					"Inquiry Data" : "00 00 07 12 8b 01 10 02 53 45 41 47 41 54 45 20 53 54 31 30 30 30 30 4e 4d 30 31 38 42 20 20 20 45 30 30 31 57 50 30 30 4d 4e 50 58 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 a2 0c 60 20 e0 04 60 04 c0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 43 6f 70 79 72 69 67 68 74 20 28 63 29 20 32 30 32 31 20 53 65 61 67 61 74 65 20 41 6c 6c 20 "
+				}
+			},
+			{
+				"Drive Information" : {
+					"EID:Slt" : "306:3",
+					"PID" : 296,
+					"State" : "Conf",
+					"Status" : "Online",
+					"DG" : 3,
+					"Size" : "9.094 TiB",
+					"Intf" : "SAS",
+					"Med" : "HDD",
+					"SED_Type" : "-",
+					"SeSz" : "512B",
+					"Model" : "ST10000NM018B   ",
+					"Sp" : "U",
+					"LU/NS Count" : 1,
+					"Alt-EID" : "-"
+				},
+				"LU/NS Information" : [
+					{
+						"PID" : 296,
+						"LUN/NSID" : "0/-",
+						"Status" : "Online",
+						"Size" : "9.094 TiB"
+					}
+				],
+				"Drive Detailed Information" : {
+					"Shield Counter" : 0,
+					"Temperature(C)" : 41,
+					"Serial Number" : "WP00PYG60000E2423C4V",
+					"Vendor" : "SEAGATE ",
+					"Model" : "ST10000NM018B   ",
+					"WWN" : "5000C500EF71BECC",
+					"Firmware Revision Level" : "E001",
+					"Firmware Release Number" : "01110618",
+					"Logical Sector Size" : "512B",
+					"Physical Sector Size" : "4 KiB",
+					"Raw size" : "9.095 TiB [0x48c400000 Sectors]",
+					"Coerced size" : "9.094 TiB [0x48c300000 Sectors]",
+					"Capable Speed" : "12.0Gb/s",
+					"Capable Link Width" : "x1",
+					"Negotiated Link Width" : "x1",
+					"Drive position" : "DriveGroup:3, Span:0, Row:0",
+					"Sequence Number" : 2,
+					"Commissioned Spare" : "No",
+					"Emergency Spare" : "No",
+					"Successful Shield Diagnostics completed on(Localtime yyyy/mm/dd hh:mm:sec)" : "NA",
+					"SED Capable" : "No",
+					"ISE Capable" : "No",
+					"Unmap Capable for Single Drive RAID 0 VDs" : "No",
+					"Unmap Capable for RAID 0 VDs" : "No",
+					"Unmap Capable for RAID 1 VDs" : "No",
+					"Unmap Capable for RAID 5/6 VDs" : "No",
+					"Unmap Capable" : "No",
+					"Writesame Unmap Capable for Single Drive RAID 0 VDs" : "No",
+					"Writesame Unmap Capable for RAID 0 VDs" : "No",
+					"Writesame Unmap Capable for RAID 1 VDs" : "No",
+					"Writesame Unmap Capable for RAID 5/6 VDs" : "No",
+					"Writesame Unmap Capable" : "No",
+					"T10 Power Mode" : "Yes",
+					"Needs EKM Attention" : "No",
+					"Secured By EKM" : "No",
+					"Certified" : "Yes",
+					"Supported Data Format" : "None",
+					"Hard Disk Drive RPM" : 7200,
+					"Device port count" : 1,
+					"Path Information" : [
+						{
+							"SASAddress" : "0x5000c500ef71becd",
+							"DevicePID" : 296,
+							"Path" : "Primary",
+							"ConnectorIndex" : 1,
+							"Negotiated Speed" : "12.0Gb/s",
+							"Num Phys/Lanes used" : 1
+						}
+					],
+					"Connector Information" : [
+						{
+							"ConnId" : 1,
+							"Name" : "C0.0",
+							"Location" : "Internal",
+							"Type" : "SFF-8654 8I"
+						},
+						{
+							"ConnId" : 1,
+							"Name" : "C0.1",
+							"Location" : "Internal",
+							"Type" : "SFF-8654 8I"
+						}
+					],
+					"LU/NS Properties" : {
+						"Media Error Count" : 0,
+						"Other Error Count" : 0,
+						"Predictive Failure Count" : 0,
+						"Last Predictive Failure Event Sequence Number" : 0,
+						"Logical Sector Size" : "512B",
+						"Physical Sector Size" : "4 KiB",
+						"Raw size" : "9.095 TiB [0x48c400000 Sectors]",
+						"Coerced size" : "9.094 TiB [0x48c300000 Sectors]",
+						"FW managed drive security" : "No",
+						"Secured" : "No",
+						"Locked" : "No",
+						"PI Formatted" : "No",
+						"PI type" : 1,
+						"Number of bytes of user data in LBA" : "512B",
+						"Current Write Cache" : "Off",
+						"Default Write Cache" : "On",
+						"Write Cache Changeable" : "Yes"
+					},
+					"Inquiry Data" : "00 00 07 12 8b 01 10 02 53 45 41 47 41 54 45 20 53 54 31 30 30 30 30 4e 4d 30 31 38 42 20 20 20 45 30 30 31 57 50 30 30 50 59 47 36 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 a2 0c 60 20 e0 04 60 04 c0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 43 6f 70 79 72 69 67 68 74 20 28 63 29 20 32 30 32 31 20 53 65 61 67 61 74 65 20 41 6c 6c 20 "
+				}
+			},
+			{
+				"Drive Information" : {
+					"EID:Slt" : "306:4",
+					"PID" : 297,
+					"State" : "Conf",
+					"Status" : "Online",
+					"DG" : 4,
+					"Size" : "9.094 TiB",
+					"Intf" : "SAS",
+					"Med" : "HDD",
+					"SED_Type" : "-",
+					"SeSz" : "512B",
+					"Model" : "ST10000NM018B   ",
+					"Sp" : "U",
+					"LU/NS Count" : 1,
+					"Alt-EID" : "-"
+				},
+				"LU/NS Information" : [
+					{
+						"PID" : 297,
+						"LUN/NSID" : "0/-",
+						"Status" : "Online",
+						"Size" : "9.094 TiB"
+					}
+				],
+				"Drive Detailed Information" : {
+					"Shield Counter" : 0,
+					"Temperature(C)" : 40,
+					"Serial Number" : "WWY06PXX0000E2415HDD",
+					"Vendor" : "SEAGATE ",
+					"Model" : "ST10000NM018B   ",
+					"WWN" : "5000C500EF3E023C",
+					"Firmware Revision Level" : "E001",
+					"Firmware Release Number" : "01110618",
+					"Logical Sector Size" : "512B",
+					"Physical Sector Size" : "4 KiB",
+					"Raw size" : "9.095 TiB [0x48c400000 Sectors]",
+					"Coerced size" : "9.094 TiB [0x48c300000 Sectors]",
+					"Capable Speed" : "12.0Gb/s",
+					"Capable Link Width" : "x1",
+					"Negotiated Link Width" : "x1",
+					"Drive position" : "DriveGroup:4, Span:0, Row:0",
+					"Sequence Number" : 2,
+					"Commissioned Spare" : "No",
+					"Emergency Spare" : "No",
+					"Successful Shield Diagnostics completed on(Localtime yyyy/mm/dd hh:mm:sec)" : "NA",
+					"SED Capable" : "No",
+					"ISE Capable" : "No",
+					"Unmap Capable for Single Drive RAID 0 VDs" : "No",
+					"Unmap Capable for RAID 0 VDs" : "No",
+					"Unmap Capable for RAID 1 VDs" : "No",
+					"Unmap Capable for RAID 5/6 VDs" : "No",
+					"Unmap Capable" : "No",
+					"Writesame Unmap Capable for Single Drive RAID 0 VDs" : "No",
+					"Writesame Unmap Capable for RAID 0 VDs" : "No",
+					"Writesame Unmap Capable for RAID 1 VDs" : "No",
+					"Writesame Unmap Capable for RAID 5/6 VDs" : "No",
+					"Writesame Unmap Capable" : "No",
+					"T10 Power Mode" : "Yes",
+					"Needs EKM Attention" : "No",
+					"Secured By EKM" : "No",
+					"Certified" : "Yes",
+					"Supported Data Format" : "None",
+					"Hard Disk Drive RPM" : 7200,
+					"Device port count" : 1,
+					"Path Information" : [
+						{
+							"SASAddress" : "0x5000c500ef3e023d",
+							"DevicePID" : 297,
+							"Path" : "Primary",
+							"ConnectorIndex" : 1,
+							"Negotiated Speed" : "12.0Gb/s",
+							"Num Phys/Lanes used" : 1
+						}
+					],
+					"Connector Information" : [
+						{
+							"ConnId" : 1,
+							"Name" : "C0.0",
+							"Location" : "Internal",
+							"Type" : "SFF-8654 8I"
+						},
+						{
+							"ConnId" : 1,
+							"Name" : "C0.1",
+							"Location" : "Internal",
+							"Type" : "SFF-8654 8I"
+						}
+					],
+					"LU/NS Properties" : {
+						"Media Error Count" : 0,
+						"Other Error Count" : 0,
+						"Predictive Failure Count" : 0,
+						"Last Predictive Failure Event Sequence Number" : 0,
+						"Logical Sector Size" : "512B",
+						"Physical Sector Size" : "4 KiB",
+						"Raw size" : "9.095 TiB [0x48c400000 Sectors]",
+						"Coerced size" : "9.094 TiB [0x48c300000 Sectors]",
+						"FW managed drive security" : "No",
+						"Secured" : "No",
+						"Locked" : "No",
+						"PI Formatted" : "No",
+						"PI type" : 1,
+						"Number of bytes of user data in LBA" : "512B",
+						"Current Write Cache" : "Off",
+						"Default Write Cache" : "On",
+						"Write Cache Changeable" : "Yes"
+					},
+					"Inquiry Data" : "00 00 07 12 8b 01 10 02 53 45 41 47 41 54 45 20 53 54 31 30 30 30 30 4e 4d 30 31 38 42 20 20 20 45 30 30 31 57 57 59 30 36 50 58 58 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 a2 0c 60 20 e0 04 60 04 c0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 43 6f 70 79 72 69 67 68 74 20 28 63 29 20 32 30 32 31 20 53 65 61 67 61 74 65 20 41 6c 6c 20 "
+				}
+			},
+			{
+				"Drive Information" : {
+					"EID:Slt" : "306:5",
+					"PID" : 298,
+					"State" : "Conf",
+					"Status" : "Online",
+					"DG" : 5,
+					"Size" : "9.094 TiB",
+					"Intf" : "SAS",
+					"Med" : "HDD",
+					"SED_Type" : "-",
+					"SeSz" : "512B",
+					"Model" : "ST10000NM018B   ",
+					"Sp" : "U",
+					"LU/NS Count" : 1,
+					"Alt-EID" : "-"
+				},
+				"LU/NS Information" : [
+					{
+						"PID" : 298,
+						"LUN/NSID" : "0/-",
+						"Status" : "Online",
+						"Size" : "9.094 TiB"
+					}
+				],
+				"Drive Detailed Information" : {
+					"Shield Counter" : 0,
+					"Temperature(C)" : 44,
+					"Serial Number" : "WWY098M60000E24125CV",
+					"Vendor" : "SEAGATE ",
+					"Model" : "ST10000NM018B   ",
+					"WWN" : "5000C500EF2F067C",
+					"Firmware Revision Level" : "E001",
+					"Firmware Release Number" : "01110618",
+					"Logical Sector Size" : "512B",
+					"Physical Sector Size" : "4 KiB",
+					"Raw size" : "9.095 TiB [0x48c400000 Sectors]",
+					"Coerced size" : "9.094 TiB [0x48c300000 Sectors]",
+					"Capable Speed" : "12.0Gb/s",
+					"Capable Link Width" : "x1",
+					"Negotiated Link Width" : "x1",
+					"Drive position" : "DriveGroup:5, Span:0, Row:0",
+					"Sequence Number" : 2,
+					"Commissioned Spare" : "No",
+					"Emergency Spare" : "No",
+					"Successful Shield Diagnostics completed on(Localtime yyyy/mm/dd hh:mm:sec)" : "NA",
+					"SED Capable" : "No",
+					"ISE Capable" : "No",
+					"Unmap Capable for Single Drive RAID 0 VDs" : "No",
+					"Unmap Capable for RAID 0 VDs" : "No",
+					"Unmap Capable for RAID 1 VDs" : "No",
+					"Unmap Capable for RAID 5/6 VDs" : "No",
+					"Unmap Capable" : "No",
+					"Writesame Unmap Capable for Single Drive RAID 0 VDs" : "No",
+					"Writesame Unmap Capable for RAID 0 VDs" : "No",
+					"Writesame Unmap Capable for RAID 1 VDs" : "No",
+					"Writesame Unmap Capable for RAID 5/6 VDs" : "No",
+					"Writesame Unmap Capable" : "No",
+					"T10 Power Mode" : "Yes",
+					"Needs EKM Attention" : "No",
+					"Secured By EKM" : "No",
+					"Certified" : "Yes",
+					"Supported Data Format" : "None",
+					"Hard Disk Drive RPM" : 7200,
+					"Device port count" : 1,
+					"Path Information" : [
+						{
+							"SASAddress" : "0x5000c500ef2f067d",
+							"DevicePID" : 298,
+							"Path" : "Primary",
+							"ConnectorIndex" : 1,
+							"Negotiated Speed" : "12.0Gb/s",
+							"Num Phys/Lanes used" : 1
+						}
+					],
+					"Connector Information" : [
+						{
+							"ConnId" : 1,
+							"Name" : "C0.0",
+							"Location" : "Internal",
+							"Type" : "SFF-8654 8I"
+						},
+						{
+							"ConnId" : 1,
+							"Name" : "C0.1",
+							"Location" : "Internal",
+							"Type" : "SFF-8654 8I"
+						}
+					],
+					"LU/NS Properties" : {
+						"Media Error Count" : 0,
+						"Other Error Count" : 0,
+						"Predictive Failure Count" : 0,
+						"Last Predictive Failure Event Sequence Number" : 0,
+						"Logical Sector Size" : "512B",
+						"Physical Sector Size" : "4 KiB",
+						"Raw size" : "9.095 TiB [0x48c400000 Sectors]",
+						"Coerced size" : "9.094 TiB [0x48c300000 Sectors]",
+						"FW managed drive security" : "No",
+						"Secured" : "No",
+						"Locked" : "No",
+						"PI Formatted" : "No",
+						"PI type" : 1,
+						"Number of bytes of user data in LBA" : "512B",
+						"Current Write Cache" : "Off",
+						"Default Write Cache" : "On",
+						"Write Cache Changeable" : "Yes"
+					},
+					"Inquiry Data" : "00 00 07 12 8b 01 10 02 53 45 41 47 41 54 45 20 53 54 31 30 30 30 30 4e 4d 30 31 38 42 20 20 20 45 30 30 31 57 57 59 30 39 38 4d 36 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 a2 0c 60 20 e0 04 60 04 c0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 43 6f 70 79 72 69 67 68 74 20 28 63 29 20 32 30 32 31 20 53 65 61 67 61 74 65 20 41 6c 6c 20 "
+				}
+			},
+			{
+				"Drive Information" : {
+					"EID:Slt" : "306:6",
+					"PID" : 299,
+					"State" : "Conf",
+					"Status" : "Online",
+					"DG" : 6,
+					"Size" : "9.094 TiB",
+					"Intf" : "SAS",
+					"Med" : "HDD",
+					"SED_Type" : "-",
+					"SeSz" : "512B",
+					"Model" : "ST10000NM018B   ",
+					"Sp" : "U",
+					"LU/NS Count" : 1,
+					"Alt-EID" : "-"
+				},
+				"LU/NS Information" : [
+					{
+						"PID" : 299,
+						"LUN/NSID" : "0/-",
+						"Status" : "Online",
+						"Size" : "9.094 TiB"
+					}
+				],
+				"Drive Detailed Information" : {
+					"Shield Counter" : 0,
+					"Temperature(C)" : 45,
+					"Serial Number" : "WP00PXQ70000E242438M",
+					"Vendor" : "SEAGATE ",
+					"Model" : "ST10000NM018B   ",
+					"WWN" : "5000C500EF71FDC0",
+					"Firmware Revision Level" : "E001",
+					"Firmware Release Number" : "01110618",
+					"Logical Sector Size" : "512B",
+					"Physical Sector Size" : "4 KiB",
+					"Raw size" : "9.095 TiB [0x48c400000 Sectors]",
+					"Coerced size" : "9.094 TiB [0x48c300000 Sectors]",
+					"Capable Speed" : "12.0Gb/s",
+					"Capable Link Width" : "x1",
+					"Negotiated Link Width" : "x1",
+					"Drive position" : "DriveGroup:6, Span:0, Row:0",
+					"Sequence Number" : 2,
+					"Commissioned Spare" : "No",
+					"Emergency Spare" : "No",
+					"Successful Shield Diagnostics completed on(Localtime yyyy/mm/dd hh:mm:sec)" : "NA",
+					"SED Capable" : "No",
+					"ISE Capable" : "No",
+					"Unmap Capable for Single Drive RAID 0 VDs" : "No",
+					"Unmap Capable for RAID 0 VDs" : "No",
+					"Unmap Capable for RAID 1 VDs" : "No",
+					"Unmap Capable for RAID 5/6 VDs" : "No",
+					"Unmap Capable" : "No",
+					"Writesame Unmap Capable for Single Drive RAID 0 VDs" : "No",
+					"Writesame Unmap Capable for RAID 0 VDs" : "No",
+					"Writesame Unmap Capable for RAID 1 VDs" : "No",
+					"Writesame Unmap Capable for RAID 5/6 VDs" : "No",
+					"Writesame Unmap Capable" : "No",
+					"T10 Power Mode" : "Yes",
+					"Needs EKM Attention" : "No",
+					"Secured By EKM" : "No",
+					"Certified" : "Yes",
+					"Supported Data Format" : "None",
+					"Hard Disk Drive RPM" : 7200,
+					"Device port count" : 1,
+					"Path Information" : [
+						{
+							"SASAddress" : "0x5000c500ef71fdc1",
+							"DevicePID" : 299,
+							"Path" : "Primary",
+							"ConnectorIndex" : 1,
+							"Negotiated Speed" : "12.0Gb/s",
+							"Num Phys/Lanes used" : 1
+						}
+					],
+					"Connector Information" : [
+						{
+							"ConnId" : 1,
+							"Name" : "C0.0",
+							"Location" : "Internal",
+							"Type" : "SFF-8654 8I"
+						},
+						{
+							"ConnId" : 1,
+							"Name" : "C0.1",
+							"Location" : "Internal",
+							"Type" : "SFF-8654 8I"
+						}
+					],
+					"LU/NS Properties" : {
+						"Media Error Count" : 0,
+						"Other Error Count" : 0,
+						"Predictive Failure Count" : 0,
+						"Last Predictive Failure Event Sequence Number" : 0,
+						"Logical Sector Size" : "512B",
+						"Physical Sector Size" : "4 KiB",
+						"Raw size" : "9.095 TiB [0x48c400000 Sectors]",
+						"Coerced size" : "9.094 TiB [0x48c300000 Sectors]",
+						"FW managed drive security" : "No",
+						"Secured" : "No",
+						"Locked" : "No",
+						"PI Formatted" : "No",
+						"PI type" : 1,
+						"Number of bytes of user data in LBA" : "512B",
+						"Current Write Cache" : "Off",
+						"Default Write Cache" : "On",
+						"Write Cache Changeable" : "Yes"
+					},
+					"Inquiry Data" : "00 00 07 12 8b 01 10 02 53 45 41 47 41 54 45 20 53 54 31 30 30 30 30 4e 4d 30 31 38 42 20 20 20 45 30 30 31 57 50 30 30 50 58 51 37 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 a2 0c 60 20 e0 04 60 04 c0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 43 6f 70 79 72 69 67 68 74 20 28 63 29 20 32 30 32 31 20 53 65 61 67 61 74 65 20 41 6c 6c 20 "
+				}
+			},
+			{
+				"Drive Information" : {
+					"EID:Slt" : "306:7",
+					"PID" : 300,
+					"State" : "Conf",
+					"Status" : "Online",
+					"DG" : 7,
+					"Size" : "9.094 TiB",
+					"Intf" : "SAS",
+					"Med" : "HDD",
+					"SED_Type" : "-",
+					"SeSz" : "512B",
+					"Model" : "ST10000NM018B   ",
+					"Sp" : "U",
+					"LU/NS Count" : 1,
+					"Alt-EID" : "-"
+				},
+				"LU/NS Information" : [
+					{
+						"PID" : 300,
+						"LUN/NSID" : "0/-",
+						"Status" : "Online",
+						"Size" : "9.094 TiB"
+					}
+				],
+				"Drive Detailed Information" : {
+					"Shield Counter" : 0,
+					"Temperature(C)" : 40,
+					"Serial Number" : "WP00PXYC0000E24240U6",
+					"Vendor" : "SEAGATE ",
+					"Model" : "ST10000NM018B   ",
+					"WWN" : "5000C500EF71ECCC",
+					"Firmware Revision Level" : "E001",
+					"Firmware Release Number" : "01110618",
+					"Logical Sector Size" : "512B",
+					"Physical Sector Size" : "4 KiB",
+					"Raw size" : "9.095 TiB [0x48c400000 Sectors]",
+					"Coerced size" : "9.094 TiB [0x48c300000 Sectors]",
+					"Capable Speed" : "12.0Gb/s",
+					"Capable Link Width" : "x1",
+					"Negotiated Link Width" : "x1",
+					"Drive position" : "DriveGroup:7, Span:0, Row:0",
+					"Sequence Number" : 2,
+					"Commissioned Spare" : "No",
+					"Emergency Spare" : "No",
+					"Successful Shield Diagnostics completed on(Localtime yyyy/mm/dd hh:mm:sec)" : "NA",
+					"SED Capable" : "No",
+					"ISE Capable" : "No",
+					"Unmap Capable for Single Drive RAID 0 VDs" : "No",
+					"Unmap Capable for RAID 0 VDs" : "No",
+					"Unmap Capable for RAID 1 VDs" : "No",
+					"Unmap Capable for RAID 5/6 VDs" : "No",
+					"Unmap Capable" : "No",
+					"Writesame Unmap Capable for Single Drive RAID 0 VDs" : "No",
+					"Writesame Unmap Capable for RAID 0 VDs" : "No",
+					"Writesame Unmap Capable for RAID 1 VDs" : "No",
+					"Writesame Unmap Capable for RAID 5/6 VDs" : "No",
+					"Writesame Unmap Capable" : "No",
+					"T10 Power Mode" : "Yes",
+					"Needs EKM Attention" : "No",
+					"Secured By EKM" : "No",
+					"Certified" : "Yes",
+					"Supported Data Format" : "None",
+					"Hard Disk Drive RPM" : 7200,
+					"Device port count" : 1,
+					"Path Information" : [
+						{
+							"SASAddress" : "0x5000c500ef71eccd",
+							"DevicePID" : 300,
+							"Path" : "Primary",
+							"ConnectorIndex" : 1,
+							"Negotiated Speed" : "12.0Gb/s",
+							"Num Phys/Lanes used" : 1
+						}
+					],
+					"Connector Information" : [
+						{
+							"ConnId" : 1,
+							"Name" : "C0.0",
+							"Location" : "Internal",
+							"Type" : "SFF-8654 8I"
+						},
+						{
+							"ConnId" : 1,
+							"Name" : "C0.1",
+							"Location" : "Internal",
+							"Type" : "SFF-8654 8I"
+						}
+					],
+					"LU/NS Properties" : {
+						"Media Error Count" : 0,
+						"Other Error Count" : 0,
+						"Predictive Failure Count" : 0,
+						"Last Predictive Failure Event Sequence Number" : 0,
+						"Logical Sector Size" : "512B",
+						"Physical Sector Size" : "4 KiB",
+						"Raw size" : "9.095 TiB [0x48c400000 Sectors]",
+						"Coerced size" : "9.094 TiB [0x48c300000 Sectors]",
+						"FW managed drive security" : "No",
+						"Secured" : "No",
+						"Locked" : "No",
+						"PI Formatted" : "No",
+						"PI type" : 1,
+						"Number of bytes of user data in LBA" : "512B",
+						"Current Write Cache" : "Off",
+						"Default Write Cache" : "On",
+						"Write Cache Changeable" : "Yes"
+					},
+					"Inquiry Data" : "00 00 07 12 8b 01 10 02 53 45 41 47 41 54 45 20 53 54 31 30 30 30 30 4e 4d 30 31 38 42 20 20 20 45 30 30 31 57 50 30 30 50 58 59 43 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 a2 0c 60 20 e0 04 60 04 c0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 43 6f 70 79 72 69 67 68 74 20 28 63 29 20 32 30 32 31 20 53 65 61 67 61 74 65 20 41 6c 6c 20 "
+				}
+			},
+			{
+				"Drive Information" : {
+					"EID:Slt" : "306:8",
+					"PID" : 301,
+					"State" : "Conf",
+					"Status" : "Online",
+					"DG" : 8,
+					"Size" : "9.094 TiB",
+					"Intf" : "SAS",
+					"Med" : "HDD",
+					"SED_Type" : "-",
+					"SeSz" : "512B",
+					"Model" : "ST10000NM018B   ",
+					"Sp" : "U",
+					"LU/NS Count" : 1,
+					"Alt-EID" : "-"
+				},
+				"LU/NS Information" : [
+					{
+						"PID" : 301,
+						"LUN/NSID" : "0/-",
+						"Status" : "Online",
+						"Size" : "9.094 TiB"
+					}
+				],
+				"Drive Detailed Information" : {
+					"Shield Counter" : 0,
+					"Temperature(C)" : 40,
+					"Serial Number" : "WWY012N70000E2415YWJ",
+					"Vendor" : "SEAGATE ",
+					"Model" : "ST10000NM018B   ",
+					"WWN" : "5000C500EF3DFA38",
+					"Firmware Revision Level" : "E001",
+					"Firmware Release Number" : "01110618",
+					"Logical Sector Size" : "512B",
+					"Physical Sector Size" : "4 KiB",
+					"Raw size" : "9.095 TiB [0x48c400000 Sectors]",
+					"Coerced size" : "9.094 TiB [0x48c300000 Sectors]",
+					"Capable Speed" : "12.0Gb/s",
+					"Capable Link Width" : "x1",
+					"Negotiated Link Width" : "x1",
+					"Drive position" : "DriveGroup:8, Span:0, Row:0",
+					"Sequence Number" : 2,
+					"Commissioned Spare" : "No",
+					"Emergency Spare" : "No",
+					"Successful Shield Diagnostics completed on(Localtime yyyy/mm/dd hh:mm:sec)" : "NA",
+					"SED Capable" : "No",
+					"ISE Capable" : "No",
+					"Unmap Capable for Single Drive RAID 0 VDs" : "No",
+					"Unmap Capable for RAID 0 VDs" : "No",
+					"Unmap Capable for RAID 1 VDs" : "No",
+					"Unmap Capable for RAID 5/6 VDs" : "No",
+					"Unmap Capable" : "No",
+					"Writesame Unmap Capable for Single Drive RAID 0 VDs" : "No",
+					"Writesame Unmap Capable for RAID 0 VDs" : "No",
+					"Writesame Unmap Capable for RAID 1 VDs" : "No",
+					"Writesame Unmap Capable for RAID 5/6 VDs" : "No",
+					"Writesame Unmap Capable" : "No",
+					"T10 Power Mode" : "Yes",
+					"Needs EKM Attention" : "No",
+					"Secured By EKM" : "No",
+					"Certified" : "Yes",
+					"Supported Data Format" : "None",
+					"Hard Disk Drive RPM" : 7200,
+					"Device port count" : 1,
+					"Path Information" : [
+						{
+							"SASAddress" : "0x5000c500ef3dfa39",
+							"DevicePID" : 301,
+							"Path" : "Primary",
+							"ConnectorIndex" : 1,
+							"Negotiated Speed" : "12.0Gb/s",
+							"Num Phys/Lanes used" : 1
+						}
+					],
+					"Connector Information" : [
+						{
+							"ConnId" : 1,
+							"Name" : "C0.0",
+							"Location" : "Internal",
+							"Type" : "SFF-8654 8I"
+						},
+						{
+							"ConnId" : 1,
+							"Name" : "C0.1",
+							"Location" : "Internal",
+							"Type" : "SFF-8654 8I"
+						}
+					],
+					"LU/NS Properties" : {
+						"Media Error Count" : 0,
+						"Other Error Count" : 0,
+						"Predictive Failure Count" : 0,
+						"Last Predictive Failure Event Sequence Number" : 0,
+						"Logical Sector Size" : "512B",
+						"Physical Sector Size" : "4 KiB",
+						"Raw size" : "9.095 TiB [0x48c400000 Sectors]",
+						"Coerced size" : "9.094 TiB [0x48c300000 Sectors]",
+						"FW managed drive security" : "No",
+						"Secured" : "No",
+						"Locked" : "No",
+						"PI Formatted" : "No",
+						"PI type" : 1,
+						"Number of bytes of user data in LBA" : "512B",
+						"Current Write Cache" : "Off",
+						"Default Write Cache" : "On",
+						"Write Cache Changeable" : "Yes"
+					},
+					"Inquiry Data" : "00 00 07 12 8b 01 10 02 53 45 41 47 41 54 45 20 53 54 31 30 30 30 30 4e 4d 30 31 38 42 20 20 20 45 30 30 31 57 57 59 30 31 32 4e 37 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 a2 0c 60 20 e0 04 60 04 c0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 43 6f 70 79 72 69 67 68 74 20 28 63 29 20 32 30 32 31 20 53 65 61 67 61 74 65 20 41 6c 6c 20 "
+				}
+			},
+			{
+				"Drive Information" : {
+					"EID:Slt" : "306:9",
+					"PID" : 302,
+					"State" : "Conf",
+					"Status" : "Online",
+					"DG" : 9,
+					"Size" : "9.094 TiB",
+					"Intf" : "SAS",
+					"Med" : "HDD",
+					"SED_Type" : "-",
+					"SeSz" : "512B",
+					"Model" : "ST10000NM018B   ",
+					"Sp" : "U",
+					"LU/NS Count" : 1,
+					"Alt-EID" : "-"
+				},
+				"LU/NS Information" : [
+					{
+						"PID" : 302,
+						"LUN/NSID" : "0/-",
+						"Status" : "Online",
+						"Size" : "9.094 TiB"
+					}
+				],
+				"Drive Detailed Information" : {
+					"Shield Counter" : 0,
+					"Temperature(C)" : 43,
+					"Serial Number" : "WP00PXM80000E2424437",
+					"Vendor" : "SEAGATE ",
+					"Model" : "ST10000NM018B   ",
+					"WWN" : "5000C500EF72029C",
+					"Firmware Revision Level" : "E001",
+					"Firmware Release Number" : "01110618",
+					"Logical Sector Size" : "512B",
+					"Physical Sector Size" : "4 KiB",
+					"Raw size" : "9.095 TiB [0x48c400000 Sectors]",
+					"Coerced size" : "9.094 TiB [0x48c300000 Sectors]",
+					"Capable Speed" : "12.0Gb/s",
+					"Capable Link Width" : "x1",
+					"Negotiated Link Width" : "x1",
+					"Drive position" : "DriveGroup:9, Span:0, Row:0",
+					"Sequence Number" : 2,
+					"Commissioned Spare" : "No",
+					"Emergency Spare" : "No",
+					"Successful Shield Diagnostics completed on(Localtime yyyy/mm/dd hh:mm:sec)" : "NA",
+					"SED Capable" : "No",
+					"ISE Capable" : "No",
+					"Unmap Capable for Single Drive RAID 0 VDs" : "No",
+					"Unmap Capable for RAID 0 VDs" : "No",
+					"Unmap Capable for RAID 1 VDs" : "No",
+					"Unmap Capable for RAID 5/6 VDs" : "No",
+					"Unmap Capable" : "No",
+					"Writesame Unmap Capable for Single Drive RAID 0 VDs" : "No",
+					"Writesame Unmap Capable for RAID 0 VDs" : "No",
+					"Writesame Unmap Capable for RAID 1 VDs" : "No",
+					"Writesame Unmap Capable for RAID 5/6 VDs" : "No",
+					"Writesame Unmap Capable" : "No",
+					"T10 Power Mode" : "Yes",
+					"Needs EKM Attention" : "No",
+					"Secured By EKM" : "No",
+					"Certified" : "Yes",
+					"Supported Data Format" : "None",
+					"Hard Disk Drive RPM" : 7200,
+					"Device port count" : 1,
+					"Path Information" : [
+						{
+							"SASAddress" : "0x5000c500ef72029d",
+							"DevicePID" : 302,
+							"Path" : "Primary",
+							"ConnectorIndex" : 1,
+							"Negotiated Speed" : "12.0Gb/s",
+							"Num Phys/Lanes used" : 1
+						}
+					],
+					"Connector Information" : [
+						{
+							"ConnId" : 1,
+							"Name" : "C0.0",
+							"Location" : "Internal",
+							"Type" : "SFF-8654 8I"
+						},
+						{
+							"ConnId" : 1,
+							"Name" : "C0.1",
+							"Location" : "Internal",
+							"Type" : "SFF-8654 8I"
+						}
+					],
+					"LU/NS Properties" : {
+						"Media Error Count" : 0,
+						"Other Error Count" : 0,
+						"Predictive Failure Count" : 0,
+						"Last Predictive Failure Event Sequence Number" : 0,
+						"Logical Sector Size" : "512B",
+						"Physical Sector Size" : "4 KiB",
+						"Raw size" : "9.095 TiB [0x48c400000 Sectors]",
+						"Coerced size" : "9.094 TiB [0x48c300000 Sectors]",
+						"FW managed drive security" : "No",
+						"Secured" : "No",
+						"Locked" : "No",
+						"PI Formatted" : "No",
+						"PI type" : 1,
+						"Number of bytes of user data in LBA" : "512B",
+						"Current Write Cache" : "Off",
+						"Default Write Cache" : "On",
+						"Write Cache Changeable" : "Yes"
+					},
+					"Inquiry Data" : "00 00 07 12 8b 01 10 02 53 45 41 47 41 54 45 20 53 54 31 30 30 30 30 4e 4d 30 31 38 42 20 20 20 45 30 30 31 57 50 30 30 50 58 4d 38 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 a2 0c 60 20 e0 04 60 04 c0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 43 6f 70 79 72 69 67 68 74 20 28 63 29 20 32 30 32 31 20 53 65 61 67 61 74 65 20 41 6c 6c 20 "
+				}
+			},
+			{
+				"Drive Information" : {
+					"EID:Slt" : "306:10",
+					"PID" : 303,
+					"State" : "Conf",
+					"Status" : "Online",
+					"DG" : 10,
+					"Size" : "9.094 TiB",
+					"Intf" : "SAS",
+					"Med" : "HDD",
+					"SED_Type" : "-",
+					"SeSz" : "512B",
+					"Model" : "ST10000NM018B   ",
+					"Sp" : "U",
+					"LU/NS Count" : 1,
+					"Alt-EID" : "-"
+				},
+				"LU/NS Information" : [
+					{
+						"PID" : 303,
+						"LUN/NSID" : "0/-",
+						"Status" : "Online",
+						"Size" : "9.094 TiB"
+					}
+				],
+				"Drive Detailed Information" : {
+					"Shield Counter" : 0,
+					"Temperature(C)" : 45,
+					"Serial Number" : "WP00PXPC0000E2423BDE",
+					"Vendor" : "SEAGATE ",
+					"Model" : "ST10000NM018B   ",
+					"WWN" : "5000C500EF720568",
+					"Firmware Revision Level" : "E001",
+					"Firmware Release Number" : "01110618",
+					"Logical Sector Size" : "512B",
+					"Physical Sector Size" : "4 KiB",
+					"Raw size" : "9.095 TiB [0x48c400000 Sectors]",
+					"Coerced size" : "9.094 TiB [0x48c300000 Sectors]",
+					"Capable Speed" : "12.0Gb/s",
+					"Capable Link Width" : "x1",
+					"Negotiated Link Width" : "x1",
+					"Drive position" : "DriveGroup:10, Span:0, Row:0",
+					"Sequence Number" : 2,
+					"Commissioned Spare" : "No",
+					"Emergency Spare" : "No",
+					"Successful Shield Diagnostics completed on(Localtime yyyy/mm/dd hh:mm:sec)" : "NA",
+					"SED Capable" : "No",
+					"ISE Capable" : "No",
+					"Unmap Capable for Single Drive RAID 0 VDs" : "No",
+					"Unmap Capable for RAID 0 VDs" : "No",
+					"Unmap Capable for RAID 1 VDs" : "No",
+					"Unmap Capable for RAID 5/6 VDs" : "No",
+					"Unmap Capable" : "No",
+					"Writesame Unmap Capable for Single Drive RAID 0 VDs" : "No",
+					"Writesame Unmap Capable for RAID 0 VDs" : "No",
+					"Writesame Unmap Capable for RAID 1 VDs" : "No",
+					"Writesame Unmap Capable for RAID 5/6 VDs" : "No",
+					"Writesame Unmap Capable" : "No",
+					"T10 Power Mode" : "Yes",
+					"Needs EKM Attention" : "No",
+					"Secured By EKM" : "No",
+					"Certified" : "Yes",
+					"Supported Data Format" : "None",
+					"Hard Disk Drive RPM" : 7200,
+					"Device port count" : 1,
+					"Path Information" : [
+						{
+							"SASAddress" : "0x5000c500ef720569",
+							"DevicePID" : 303,
+							"Path" : "Primary",
+							"ConnectorIndex" : 1,
+							"Negotiated Speed" : "12.0Gb/s",
+							"Num Phys/Lanes used" : 1
+						}
+					],
+					"Connector Information" : [
+						{
+							"ConnId" : 1,
+							"Name" : "C0.0",
+							"Location" : "Internal",
+							"Type" : "SFF-8654 8I"
+						},
+						{
+							"ConnId" : 1,
+							"Name" : "C0.1",
+							"Location" : "Internal",
+							"Type" : "SFF-8654 8I"
+						}
+					],
+					"LU/NS Properties" : {
+						"Media Error Count" : 0,
+						"Other Error Count" : 0,
+						"Predictive Failure Count" : 0,
+						"Last Predictive Failure Event Sequence Number" : 0,
+						"Logical Sector Size" : "512B",
+						"Physical Sector Size" : "4 KiB",
+						"Raw size" : "9.095 TiB [0x48c400000 Sectors]",
+						"Coerced size" : "9.094 TiB [0x48c300000 Sectors]",
+						"FW managed drive security" : "No",
+						"Secured" : "No",
+						"Locked" : "No",
+						"PI Formatted" : "No",
+						"PI type" : 1,
+						"Number of bytes of user data in LBA" : "512B",
+						"Current Write Cache" : "Off",
+						"Default Write Cache" : "On",
+						"Write Cache Changeable" : "Yes"
+					},
+					"Inquiry Data" : "00 00 07 12 8b 01 10 02 53 45 41 47 41 54 45 20 53 54 31 30 30 30 30 4e 4d 30 31 38 42 20 20 20 45 30 30 31 57 50 30 30 50 58 50 43 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 a2 0c 60 20 e0 04 60 04 c0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 43 6f 70 79 72 69 67 68 74 20 28 63 29 20 32 30 32 31 20 53 65 61 67 61 74 65 20 41 6c 6c 20 "
+				}
+			},
+			{
+				"Drive Information" : {
+					"EID:Slt" : "306:11",
+					"PID" : 304,
+					"State" : "Conf",
+					"Status" : "Online",
+					"DG" : 11,
+					"Size" : "9.094 TiB",
+					"Intf" : "SAS",
+					"Med" : "HDD",
+					"SED_Type" : "-",
+					"SeSz" : "512B",
+					"Model" : "ST10000NM018B   ",
+					"Sp" : "U",
+					"LU/NS Count" : 1,
+					"Alt-EID" : "-"
+				},
+				"LU/NS Information" : [
+					{
+						"PID" : 304,
+						"LUN/NSID" : "0/-",
+						"Status" : "Online",
+						"Size" : "9.094 TiB"
+					}
+				],
+				"Drive Detailed Information" : {
+					"Shield Counter" : 0,
+					"Temperature(C)" : 40,
+					"Serial Number" : "WP00PYK40000E2423C4E",
+					"Vendor" : "SEAGATE ",
+					"Model" : "ST10000NM018B   ",
+					"WWN" : "5000C500EF71C014",
+					"Firmware Revision Level" : "E001",
+					"Firmware Release Number" : "01110618",
+					"Logical Sector Size" : "512B",
+					"Physical Sector Size" : "4 KiB",
+					"Raw size" : "9.095 TiB [0x48c400000 Sectors]",
+					"Coerced size" : "9.094 TiB [0x48c300000 Sectors]",
+					"Capable Speed" : "12.0Gb/s",
+					"Capable Link Width" : "x1",
+					"Negotiated Link Width" : "x1",
+					"Drive position" : "DriveGroup:11, Span:0, Row:0",
+					"Sequence Number" : 2,
+					"Commissioned Spare" : "No",
+					"Emergency Spare" : "No",
+					"Successful Shield Diagnostics completed on(Localtime yyyy/mm/dd hh:mm:sec)" : "NA",
+					"SED Capable" : "No",
+					"ISE Capable" : "No",
+					"Unmap Capable for Single Drive RAID 0 VDs" : "No",
+					"Unmap Capable for RAID 0 VDs" : "No",
+					"Unmap Capable for RAID 1 VDs" : "No",
+					"Unmap Capable for RAID 5/6 VDs" : "No",
+					"Unmap Capable" : "No",
+					"Writesame Unmap Capable for Single Drive RAID 0 VDs" : "No",
+					"Writesame Unmap Capable for RAID 0 VDs" : "No",
+					"Writesame Unmap Capable for RAID 1 VDs" : "No",
+					"Writesame Unmap Capable for RAID 5/6 VDs" : "No",
+					"Writesame Unmap Capable" : "No",
+					"T10 Power Mode" : "Yes",
+					"Needs EKM Attention" : "No",
+					"Secured By EKM" : "No",
+					"Certified" : "Yes",
+					"Supported Data Format" : "None",
+					"Hard Disk Drive RPM" : 7200,
+					"Device port count" : 1,
+					"Path Information" : [
+						{
+							"SASAddress" : "0x5000c500ef71c015",
+							"DevicePID" : 304,
+							"Path" : "Primary",
+							"ConnectorIndex" : 1,
+							"Negotiated Speed" : "12.0Gb/s",
+							"Num Phys/Lanes used" : 1
+						}
+					],
+					"Connector Information" : [
+						{
+							"ConnId" : 1,
+							"Name" : "C0.0",
+							"Location" : "Internal",
+							"Type" : "SFF-8654 8I"
+						},
+						{
+							"ConnId" : 1,
+							"Name" : "C0.1",
+							"Location" : "Internal",
+							"Type" : "SFF-8654 8I"
+						}
+					],
+					"LU/NS Properties" : {
+						"Media Error Count" : 0,
+						"Other Error Count" : 0,
+						"Predictive Failure Count" : 0,
+						"Last Predictive Failure Event Sequence Number" : 0,
+						"Logical Sector Size" : "512B",
+						"Physical Sector Size" : "4 KiB",
+						"Raw size" : "9.095 TiB [0x48c400000 Sectors]",
+						"Coerced size" : "9.094 TiB [0x48c300000 Sectors]",
+						"FW managed drive security" : "No",
+						"Secured" : "No",
+						"Locked" : "No",
+						"PI Formatted" : "No",
+						"PI type" : 1,
+						"Number of bytes of user data in LBA" : "512B",
+						"Current Write Cache" : "Off",
+						"Default Write Cache" : "On",
+						"Write Cache Changeable" : "Yes"
+					},
+					"Inquiry Data" : "00 00 07 12 8b 01 10 02 53 45 41 47 41 54 45 20 53 54 31 30 30 30 30 4e 4d 30 31 38 42 20 20 20 45 30 30 31 57 50 30 30 50 59 4b 34 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 a2 0c 60 20 e0 04 60 04 c0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 43 6f 70 79 72 69 67 68 74 20 28 63 29 20 32 30 32 31 20 53 65 61 67 61 74 65 20 41 6c 6c 20 "
+				}
+			},
+			{
+				"Drive Information" : {
+					"EID:Slt" : "320:0",
+					"PID" : 307,
+					"State" : "Conf",
+					"Status" : "Online",
+					"DG" : 12,
+					"Size" : "9.094 TiB",
+					"Intf" : "SAS",
+					"Med" : "HDD",
+					"SED_Type" : "-",
+					"SeSz" : "512B",
+					"Model" : "ST10000NM018B   ",
+					"Sp" : "U",
+					"LU/NS Count" : 1,
+					"Alt-EID" : "-"
+				},
+				"LU/NS Information" : [
+					{
+						"PID" : 307,
+						"LUN/NSID" : "0/-",
+						"Status" : "Online",
+						"Size" : "9.094 TiB"
+					}
+				],
+				"Drive Detailed Information" : {
+					"Shield Counter" : 0,
+					"Temperature(C)" : 41,
+					"Serial Number" : "WP00PYMY0000E24244RB",
+					"Vendor" : "SEAGATE ",
+					"Model" : "ST10000NM018B   ",
+					"WWN" : "5000C500EF71C7E8",
+					"Firmware Revision Level" : "E001",
+					"Firmware Release Number" : "01110618",
+					"Logical Sector Size" : "512B",
+					"Physical Sector Size" : "4 KiB",
+					"Raw size" : "9.095 TiB [0x48c400000 Sectors]",
+					"Coerced size" : "9.094 TiB [0x48c300000 Sectors]",
+					"Capable Speed" : "12.0Gb/s",
+					"Capable Link Width" : "x1",
+					"Negotiated Link Width" : "x1",
+					"Drive position" : "DriveGroup:12, Span:0, Row:0",
+					"Sequence Number" : 2,
+					"Commissioned Spare" : "No",
+					"Emergency Spare" : "No",
+					"Successful Shield Diagnostics completed on(Localtime yyyy/mm/dd hh:mm:sec)" : "NA",
+					"SED Capable" : "No",
+					"ISE Capable" : "No",
+					"Unmap Capable for Single Drive RAID 0 VDs" : "No",
+					"Unmap Capable for RAID 0 VDs" : "No",
+					"Unmap Capable for RAID 1 VDs" : "No",
+					"Unmap Capable for RAID 5/6 VDs" : "No",
+					"Unmap Capable" : "No",
+					"Writesame Unmap Capable for Single Drive RAID 0 VDs" : "No",
+					"Writesame Unmap Capable for RAID 0 VDs" : "No",
+					"Writesame Unmap Capable for RAID 1 VDs" : "No",
+					"Writesame Unmap Capable for RAID 5/6 VDs" : "No",
+					"Writesame Unmap Capable" : "No",
+					"T10 Power Mode" : "Yes",
+					"Needs EKM Attention" : "No",
+					"Secured By EKM" : "No",
+					"Certified" : "Yes",
+					"Supported Data Format" : "None",
+					"Hard Disk Drive RPM" : 7200,
+					"Device port count" : 1,
+					"Path Information" : [
+						{
+							"SASAddress" : "0x5000c500ef71c7e9",
+							"DevicePID" : 307,
+							"Path" : "Primary",
+							"ConnectorIndex" : 3,
+							"Negotiated Speed" : "12.0Gb/s",
+							"Num Phys/Lanes used" : 1
+						}
+					],
+					"Connector Information" : [
+						{
+							"ConnId" : 2,
+							"Name" : "C1.0",
+							"Location" : "Internal",
+							"Type" : "SFF-8654 8I"
+						},
+						{
+							"ConnId" : 2,
+							"Name" : "C1.1",
+							"Location" : "Internal",
+							"Type" : "SFF-8654 8I"
+						}
+					],
+					"LU/NS Properties" : {
+						"Media Error Count" : 0,
+						"Other Error Count" : 0,
+						"Predictive Failure Count" : 0,
+						"Last Predictive Failure Event Sequence Number" : 0,
+						"Logical Sector Size" : "512B",
+						"Physical Sector Size" : "4 KiB",
+						"Raw size" : "9.095 TiB [0x48c400000 Sectors]",
+						"Coerced size" : "9.094 TiB [0x48c300000 Sectors]",
+						"FW managed drive security" : "No",
+						"Secured" : "No",
+						"Locked" : "No",
+						"PI Formatted" : "No",
+						"PI type" : 1,
+						"Number of bytes of user data in LBA" : "512B",
+						"Current Write Cache" : "Off",
+						"Default Write Cache" : "On",
+						"Write Cache Changeable" : "Yes"
+					},
+					"Inquiry Data" : "00 00 07 12 8b 01 10 02 53 45 41 47 41 54 45 20 53 54 31 30 30 30 30 4e 4d 30 31 38 42 20 20 20 45 30 30 31 57 50 30 30 50 59 4d 59 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 a2 0c 60 20 e0 04 60 04 c0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 43 6f 70 79 72 69 67 68 74 20 28 63 29 20 32 30 32 31 20 53 65 61 67 61 74 65 20 41 6c 6c 20 "
+				}
+			},
+			{
+				"Drive Information" : {
+					"EID:Slt" : "320:1",
+					"PID" : 308,
+					"State" : "Conf",
+					"Status" : "Online",
+					"DG" : 13,
+					"Size" : "9.094 TiB",
+					"Intf" : "SAS",
+					"Med" : "HDD",
+					"SED_Type" : "-",
+					"SeSz" : "512B",
+					"Model" : "ST10000NM018B   ",
+					"Sp" : "U",
+					"LU/NS Count" : 1,
+					"Alt-EID" : "-"
+				},
+				"LU/NS Information" : [
+					{
+						"PID" : 308,
+						"LUN/NSID" : "0/-",
+						"Status" : "Online",
+						"Size" : "9.094 TiB"
+					}
+				],
+				"Drive Detailed Information" : {
+					"Shield Counter" : 0,
+					"Temperature(C)" : 46,
+					"Serial Number" : "WP00MNKY0000E2424HB4",
+					"Vendor" : "SEAGATE ",
+					"Model" : "ST10000NM018B   ",
+					"WWN" : "5000C500EF7D7D14",
+					"Firmware Revision Level" : "E001",
+					"Firmware Release Number" : "01110618",
+					"Logical Sector Size" : "512B",
+					"Physical Sector Size" : "4 KiB",
+					"Raw size" : "9.095 TiB [0x48c400000 Sectors]",
+					"Coerced size" : "9.094 TiB [0x48c300000 Sectors]",
+					"Capable Speed" : "12.0Gb/s",
+					"Capable Link Width" : "x1",
+					"Negotiated Link Width" : "x1",
+					"Drive position" : "DriveGroup:13, Span:0, Row:0",
+					"Sequence Number" : 2,
+					"Commissioned Spare" : "No",
+					"Emergency Spare" : "No",
+					"Successful Shield Diagnostics completed on(Localtime yyyy/mm/dd hh:mm:sec)" : "NA",
+					"SED Capable" : "No",
+					"ISE Capable" : "No",
+					"Unmap Capable for Single Drive RAID 0 VDs" : "No",
+					"Unmap Capable for RAID 0 VDs" : "No",
+					"Unmap Capable for RAID 1 VDs" : "No",
+					"Unmap Capable for RAID 5/6 VDs" : "No",
+					"Unmap Capable" : "No",
+					"Writesame Unmap Capable for Single Drive RAID 0 VDs" : "No",
+					"Writesame Unmap Capable for RAID 0 VDs" : "No",
+					"Writesame Unmap Capable for RAID 1 VDs" : "No",
+					"Writesame Unmap Capable for RAID 5/6 VDs" : "No",
+					"Writesame Unmap Capable" : "No",
+					"T10 Power Mode" : "Yes",
+					"Needs EKM Attention" : "No",
+					"Secured By EKM" : "No",
+					"Certified" : "Yes",
+					"Supported Data Format" : "None",
+					"Hard Disk Drive RPM" : 7200,
+					"Device port count" : 1,
+					"Path Information" : [
+						{
+							"SASAddress" : "0x5000c500ef7d7d15",
+							"DevicePID" : 308,
+							"Path" : "Primary",
+							"ConnectorIndex" : 3,
+							"Negotiated Speed" : "12.0Gb/s",
+							"Num Phys/Lanes used" : 1
+						}
+					],
+					"Connector Information" : [
+						{
+							"ConnId" : 2,
+							"Name" : "C1.0",
+							"Location" : "Internal",
+							"Type" : "SFF-8654 8I"
+						},
+						{
+							"ConnId" : 2,
+							"Name" : "C1.1",
+							"Location" : "Internal",
+							"Type" : "SFF-8654 8I"
+						}
+					],
+					"LU/NS Properties" : {
+						"Media Error Count" : 0,
+						"Other Error Count" : 0,
+						"Predictive Failure Count" : 0,
+						"Last Predictive Failure Event Sequence Number" : 0,
+						"Logical Sector Size" : "512B",
+						"Physical Sector Size" : "4 KiB",
+						"Raw size" : "9.095 TiB [0x48c400000 Sectors]",
+						"Coerced size" : "9.094 TiB [0x48c300000 Sectors]",
+						"FW managed drive security" : "No",
+						"Secured" : "No",
+						"Locked" : "No",
+						"PI Formatted" : "No",
+						"PI type" : 1,
+						"Number of bytes of user data in LBA" : "512B",
+						"Current Write Cache" : "Off",
+						"Default Write Cache" : "On",
+						"Write Cache Changeable" : "Yes"
+					},
+					"Inquiry Data" : "00 00 07 12 8b 01 10 02 53 45 41 47 41 54 45 20 53 54 31 30 30 30 30 4e 4d 30 31 38 42 20 20 20 45 30 30 31 57 50 30 30 4d 4e 4b 59 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 a2 0c 60 20 e0 04 60 04 c0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 43 6f 70 79 72 69 67 68 74 20 28 63 29 20 32 30 32 31 20 53 65 61 67 61 74 65 20 41 6c 6c 20 "
+				}
+			},
+			{
+				"Drive Information" : {
+					"EID:Slt" : "320:2",
+					"PID" : 309,
+					"State" : "Conf",
+					"Status" : "Online",
+					"DG" : 14,
+					"Size" : "9.094 TiB",
+					"Intf" : "SAS",
+					"Med" : "HDD",
+					"SED_Type" : "-",
+					"SeSz" : "512B",
+					"Model" : "ST10000NM018B   ",
+					"Sp" : "U",
+					"LU/NS Count" : 1,
+					"Alt-EID" : "-"
+				},
+				"LU/NS Information" : [
+					{
+						"PID" : 309,
+						"LUN/NSID" : "0/-",
+						"Status" : "Online",
+						"Size" : "9.094 TiB"
+					}
+				],
+				"Drive Detailed Information" : {
+					"Shield Counter" : 0,
+					"Temperature(C)" : 46,
+					"Serial Number" : "WP00PXHT0000E242442B",
+					"Vendor" : "SEAGATE ",
+					"Model" : "ST10000NM018B   ",
+					"WWN" : "5000C500EF720900",
+					"Firmware Revision Level" : "E001",
+					"Firmware Release Number" : "01110618",
+					"Logical Sector Size" : "512B",
+					"Physical Sector Size" : "4 KiB",
+					"Raw size" : "9.095 TiB [0x48c400000 Sectors]",
+					"Coerced size" : "9.094 TiB [0x48c300000 Sectors]",
+					"Capable Speed" : "12.0Gb/s",
+					"Capable Link Width" : "x1",
+					"Negotiated Link Width" : "x1",
+					"Drive position" : "DriveGroup:14, Span:0, Row:0",
+					"Sequence Number" : 2,
+					"Commissioned Spare" : "No",
+					"Emergency Spare" : "No",
+					"Successful Shield Diagnostics completed on(Localtime yyyy/mm/dd hh:mm:sec)" : "NA",
+					"SED Capable" : "No",
+					"ISE Capable" : "No",
+					"Unmap Capable for Single Drive RAID 0 VDs" : "No",
+					"Unmap Capable for RAID 0 VDs" : "No",
+					"Unmap Capable for RAID 1 VDs" : "No",
+					"Unmap Capable for RAID 5/6 VDs" : "No",
+					"Unmap Capable" : "No",
+					"Writesame Unmap Capable for Single Drive RAID 0 VDs" : "No",
+					"Writesame Unmap Capable for RAID 0 VDs" : "No",
+					"Writesame Unmap Capable for RAID 1 VDs" : "No",
+					"Writesame Unmap Capable for RAID 5/6 VDs" : "No",
+					"Writesame Unmap Capable" : "No",
+					"T10 Power Mode" : "Yes",
+					"Needs EKM Attention" : "No",
+					"Secured By EKM" : "No",
+					"Certified" : "Yes",
+					"Supported Data Format" : "None",
+					"Hard Disk Drive RPM" : 7200,
+					"Device port count" : 1,
+					"Path Information" : [
+						{
+							"SASAddress" : "0x5000c500ef720901",
+							"DevicePID" : 309,
+							"Path" : "Primary",
+							"ConnectorIndex" : 3,
+							"Negotiated Speed" : "12.0Gb/s",
+							"Num Phys/Lanes used" : 1
+						}
+					],
+					"Connector Information" : [
+						{
+							"ConnId" : 2,
+							"Name" : "C1.0",
+							"Location" : "Internal",
+							"Type" : "SFF-8654 8I"
+						},
+						{
+							"ConnId" : 2,
+							"Name" : "C1.1",
+							"Location" : "Internal",
+							"Type" : "SFF-8654 8I"
+						}
+					],
+					"LU/NS Properties" : {
+						"Media Error Count" : 0,
+						"Other Error Count" : 0,
+						"Predictive Failure Count" : 0,
+						"Last Predictive Failure Event Sequence Number" : 0,
+						"Logical Sector Size" : "512B",
+						"Physical Sector Size" : "4 KiB",
+						"Raw size" : "9.095 TiB [0x48c400000 Sectors]",
+						"Coerced size" : "9.094 TiB [0x48c300000 Sectors]",
+						"FW managed drive security" : "No",
+						"Secured" : "No",
+						"Locked" : "No",
+						"PI Formatted" : "No",
+						"PI type" : 1,
+						"Number of bytes of user data in LBA" : "512B",
+						"Current Write Cache" : "Off",
+						"Default Write Cache" : "On",
+						"Write Cache Changeable" : "Yes"
+					},
+					"Inquiry Data" : "00 00 07 12 8b 01 10 02 53 45 41 47 41 54 45 20 53 54 31 30 30 30 30 4e 4d 30 31 38 42 20 20 20 45 30 30 31 57 50 30 30 50 58 48 54 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 a2 0c 60 20 e0 04 60 04 c0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 43 6f 70 79 72 69 67 68 74 20 28 63 29 20 32 30 32 31 20 53 65 61 67 61 74 65 20 41 6c 6c 20 "
+				}
+			},
+			{
+				"Drive Information" : {
+					"EID:Slt" : "320:3",
+					"PID" : 310,
+					"State" : "Conf",
+					"Status" : "Online",
+					"DG" : 15,
+					"Size" : "9.094 TiB",
+					"Intf" : "SAS",
+					"Med" : "HDD",
+					"SED_Type" : "-",
+					"SeSz" : "512B",
+					"Model" : "ST10000NM018B   ",
+					"Sp" : "U",
+					"LU/NS Count" : 1,
+					"Alt-EID" : "-"
+				},
+				"LU/NS Information" : [
+					{
+						"PID" : 310,
+						"LUN/NSID" : "0/-",
+						"Status" : "Online",
+						"Size" : "9.094 TiB"
+					}
+				],
+				"Drive Detailed Information" : {
+					"Shield Counter" : 0,
+					"Temperature(C)" : 41,
+					"Serial Number" : "WP00MLKP0000E2426F8Q",
+					"Vendor" : "SEAGATE ",
+					"Model" : "ST10000NM018B   ",
+					"WWN" : "5000C500EF7DDF74",
+					"Firmware Revision Level" : "E001",
+					"Firmware Release Number" : "01110618",
+					"Logical Sector Size" : "512B",
+					"Physical Sector Size" : "4 KiB",
+					"Raw size" : "9.095 TiB [0x48c400000 Sectors]",
+					"Coerced size" : "9.094 TiB [0x48c300000 Sectors]",
+					"Capable Speed" : "12.0Gb/s",
+					"Capable Link Width" : "x1",
+					"Negotiated Link Width" : "x1",
+					"Drive position" : "DriveGroup:15, Span:0, Row:0",
+					"Sequence Number" : 2,
+					"Commissioned Spare" : "No",
+					"Emergency Spare" : "No",
+					"Successful Shield Diagnostics completed on(Localtime yyyy/mm/dd hh:mm:sec)" : "NA",
+					"SED Capable" : "No",
+					"ISE Capable" : "No",
+					"Unmap Capable for Single Drive RAID 0 VDs" : "No",
+					"Unmap Capable for RAID 0 VDs" : "No",
+					"Unmap Capable for RAID 1 VDs" : "No",
+					"Unmap Capable for RAID 5/6 VDs" : "No",
+					"Unmap Capable" : "No",
+					"Writesame Unmap Capable for Single Drive RAID 0 VDs" : "No",
+					"Writesame Unmap Capable for RAID 0 VDs" : "No",
+					"Writesame Unmap Capable for RAID 1 VDs" : "No",
+					"Writesame Unmap Capable for RAID 5/6 VDs" : "No",
+					"Writesame Unmap Capable" : "No",
+					"T10 Power Mode" : "Yes",
+					"Needs EKM Attention" : "No",
+					"Secured By EKM" : "No",
+					"Certified" : "Yes",
+					"Supported Data Format" : "None",
+					"Hard Disk Drive RPM" : 7200,
+					"Device port count" : 1,
+					"Path Information" : [
+						{
+							"SASAddress" : "0x5000c500ef7ddf75",
+							"DevicePID" : 310,
+							"Path" : "Primary",
+							"ConnectorIndex" : 3,
+							"Negotiated Speed" : "12.0Gb/s",
+							"Num Phys/Lanes used" : 1
+						}
+					],
+					"Connector Information" : [
+						{
+							"ConnId" : 2,
+							"Name" : "C1.0",
+							"Location" : "Internal",
+							"Type" : "SFF-8654 8I"
+						},
+						{
+							"ConnId" : 2,
+							"Name" : "C1.1",
+							"Location" : "Internal",
+							"Type" : "SFF-8654 8I"
+						}
+					],
+					"LU/NS Properties" : {
+						"Media Error Count" : 0,
+						"Other Error Count" : 0,
+						"Predictive Failure Count" : 0,
+						"Last Predictive Failure Event Sequence Number" : 0,
+						"Logical Sector Size" : "512B",
+						"Physical Sector Size" : "4 KiB",
+						"Raw size" : "9.095 TiB [0x48c400000 Sectors]",
+						"Coerced size" : "9.094 TiB [0x48c300000 Sectors]",
+						"FW managed drive security" : "No",
+						"Secured" : "No",
+						"Locked" : "No",
+						"PI Formatted" : "No",
+						"PI type" : 1,
+						"Number of bytes of user data in LBA" : "512B",
+						"Current Write Cache" : "Off",
+						"Default Write Cache" : "On",
+						"Write Cache Changeable" : "Yes"
+					},
+					"Inquiry Data" : "00 00 07 12 8b 01 10 02 53 45 41 47 41 54 45 20 53 54 31 30 30 30 30 4e 4d 30 31 38 42 20 20 20 45 30 30 31 57 50 30 30 4d 4c 4b 50 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 a2 0c 60 20 e0 04 60 04 c0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 43 6f 70 79 72 69 67 68 74 20 28 63 29 20 32 30 32 31 20 53 65 61 67 61 74 65 20 41 6c 6c 20 "
+				}
+			},
+			{
+				"Drive Information" : {
+					"EID:Slt" : "320:4",
+					"PID" : 311,
+					"State" : "Conf",
+					"Status" : "Online",
+					"DG" : 16,
+					"Size" : "9.094 TiB",
+					"Intf" : "SAS",
+					"Med" : "HDD",
+					"SED_Type" : "-",
+					"SeSz" : "512B",
+					"Model" : "ST10000NM018B   ",
+					"Sp" : "U",
+					"LU/NS Count" : 1,
+					"Alt-EID" : "-"
+				},
+				"LU/NS Information" : [
+					{
+						"PID" : 311,
+						"LUN/NSID" : "0/-",
+						"Status" : "Online",
+						"Size" : "9.094 TiB"
+					}
+				],
+				"Drive Detailed Information" : {
+					"Shield Counter" : 0,
+					"Temperature(C)" : 39,
+					"Serial Number" : "WP00PYFT0000E24244EV",
+					"Vendor" : "SEAGATE ",
+					"Model" : "ST10000NM018B   ",
+					"WWN" : "5000C500EF71BAF8",
+					"Firmware Revision Level" : "E001",
+					"Firmware Release Number" : "01110618",
+					"Logical Sector Size" : "512B",
+					"Physical Sector Size" : "4 KiB",
+					"Raw size" : "9.095 TiB [0x48c400000 Sectors]",
+					"Coerced size" : "9.094 TiB [0x48c300000 Sectors]",
+					"Capable Speed" : "12.0Gb/s",
+					"Capable Link Width" : "x1",
+					"Negotiated Link Width" : "x1",
+					"Drive position" : "DriveGroup:16, Span:0, Row:0",
+					"Sequence Number" : 2,
+					"Commissioned Spare" : "No",
+					"Emergency Spare" : "No",
+					"Successful Shield Diagnostics completed on(Localtime yyyy/mm/dd hh:mm:sec)" : "NA",
+					"SED Capable" : "No",
+					"ISE Capable" : "No",
+					"Unmap Capable for Single Drive RAID 0 VDs" : "No",
+					"Unmap Capable for RAID 0 VDs" : "No",
+					"Unmap Capable for RAID 1 VDs" : "No",
+					"Unmap Capable for RAID 5/6 VDs" : "No",
+					"Unmap Capable" : "No",
+					"Writesame Unmap Capable for Single Drive RAID 0 VDs" : "No",
+					"Writesame Unmap Capable for RAID 0 VDs" : "No",
+					"Writesame Unmap Capable for RAID 1 VDs" : "No",
+					"Writesame Unmap Capable for RAID 5/6 VDs" : "No",
+					"Writesame Unmap Capable" : "No",
+					"T10 Power Mode" : "Yes",
+					"Needs EKM Attention" : "No",
+					"Secured By EKM" : "No",
+					"Certified" : "Yes",
+					"Supported Data Format" : "None",
+					"Hard Disk Drive RPM" : 7200,
+					"Device port count" : 1,
+					"Path Information" : [
+						{
+							"SASAddress" : "0x5000c500ef71baf9",
+							"DevicePID" : 311,
+							"Path" : "Primary",
+							"ConnectorIndex" : 3,
+							"Negotiated Speed" : "12.0Gb/s",
+							"Num Phys/Lanes used" : 1
+						}
+					],
+					"Connector Information" : [
+						{
+							"ConnId" : 2,
+							"Name" : "C1.0",
+							"Location" : "Internal",
+							"Type" : "SFF-8654 8I"
+						},
+						{
+							"ConnId" : 2,
+							"Name" : "C1.1",
+							"Location" : "Internal",
+							"Type" : "SFF-8654 8I"
+						}
+					],
+					"LU/NS Properties" : {
+						"Media Error Count" : 0,
+						"Other Error Count" : 0,
+						"Predictive Failure Count" : 0,
+						"Last Predictive Failure Event Sequence Number" : 0,
+						"Logical Sector Size" : "512B",
+						"Physical Sector Size" : "4 KiB",
+						"Raw size" : "9.095 TiB [0x48c400000 Sectors]",
+						"Coerced size" : "9.094 TiB [0x48c300000 Sectors]",
+						"FW managed drive security" : "No",
+						"Secured" : "No",
+						"Locked" : "No",
+						"PI Formatted" : "No",
+						"PI type" : 1,
+						"Number of bytes of user data in LBA" : "512B",
+						"Current Write Cache" : "Off",
+						"Default Write Cache" : "On",
+						"Write Cache Changeable" : "Yes"
+					},
+					"Inquiry Data" : "00 00 07 12 8b 01 10 02 53 45 41 47 41 54 45 20 53 54 31 30 30 30 30 4e 4d 30 31 38 42 20 20 20 45 30 30 31 57 50 30 30 50 59 46 54 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 a2 0c 60 20 e0 04 60 04 c0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 43 6f 70 79 72 69 67 68 74 20 28 63 29 20 32 30 32 31 20 53 65 61 67 61 74 65 20 41 6c 6c 20 "
+				}
+			},
+			{
+				"Drive Information" : {
+					"EID:Slt" : "320:5",
+					"PID" : 312,
+					"State" : "Conf",
+					"Status" : "Online",
+					"DG" : 17,
+					"Size" : "9.094 TiB",
+					"Intf" : "SAS",
+					"Med" : "HDD",
+					"SED_Type" : "-",
+					"SeSz" : "512B",
+					"Model" : "ST10000NM018B   ",
+					"Sp" : "U",
+					"LU/NS Count" : 1,
+					"Alt-EID" : "-"
+				},
+				"LU/NS Information" : [
+					{
+						"PID" : 312,
+						"LUN/NSID" : "0/-",
+						"Status" : "Online",
+						"Size" : "9.094 TiB"
+					}
+				],
+				"Drive Detailed Information" : {
+					"Shield Counter" : 0,
+					"Temperature(C)" : 48,
+					"Serial Number" : "WP00MNP80000E2424JSK",
+					"Vendor" : "SEAGATE ",
+					"Model" : "ST10000NM018B   ",
+					"WWN" : "5000C500EF7D7954",
+					"Firmware Revision Level" : "E001",
+					"Firmware Release Number" : "01110618",
+					"Logical Sector Size" : "512B",
+					"Physical Sector Size" : "4 KiB",
+					"Raw size" : "9.095 TiB [0x48c400000 Sectors]",
+					"Coerced size" : "9.094 TiB [0x48c300000 Sectors]",
+					"Capable Speed" : "12.0Gb/s",
+					"Capable Link Width" : "x1",
+					"Negotiated Link Width" : "x1",
+					"Drive position" : "DriveGroup:17, Span:0, Row:0",
+					"Sequence Number" : 2,
+					"Commissioned Spare" : "No",
+					"Emergency Spare" : "No",
+					"Successful Shield Diagnostics completed on(Localtime yyyy/mm/dd hh:mm:sec)" : "NA",
+					"SED Capable" : "No",
+					"ISE Capable" : "No",
+					"Unmap Capable for Single Drive RAID 0 VDs" : "No",
+					"Unmap Capable for RAID 0 VDs" : "No",
+					"Unmap Capable for RAID 1 VDs" : "No",
+					"Unmap Capable for RAID 5/6 VDs" : "No",
+					"Unmap Capable" : "No",
+					"Writesame Unmap Capable for Single Drive RAID 0 VDs" : "No",
+					"Writesame Unmap Capable for RAID 0 VDs" : "No",
+					"Writesame Unmap Capable for RAID 1 VDs" : "No",
+					"Writesame Unmap Capable for RAID 5/6 VDs" : "No",
+					"Writesame Unmap Capable" : "No",
+					"T10 Power Mode" : "Yes",
+					"Needs EKM Attention" : "No",
+					"Secured By EKM" : "No",
+					"Certified" : "Yes",
+					"Supported Data Format" : "None",
+					"Hard Disk Drive RPM" : 7200,
+					"Device port count" : 1,
+					"Path Information" : [
+						{
+							"SASAddress" : "0x5000c500ef7d7955",
+							"DevicePID" : 312,
+							"Path" : "Primary",
+							"ConnectorIndex" : 3,
+							"Negotiated Speed" : "12.0Gb/s",
+							"Num Phys/Lanes used" : 1
+						}
+					],
+					"Connector Information" : [
+						{
+							"ConnId" : 2,
+							"Name" : "C1.0",
+							"Location" : "Internal",
+							"Type" : "SFF-8654 8I"
+						},
+						{
+							"ConnId" : 2,
+							"Name" : "C1.1",
+							"Location" : "Internal",
+							"Type" : "SFF-8654 8I"
+						}
+					],
+					"LU/NS Properties" : {
+						"Media Error Count" : 0,
+						"Other Error Count" : 0,
+						"Predictive Failure Count" : 0,
+						"Last Predictive Failure Event Sequence Number" : 0,
+						"Logical Sector Size" : "512B",
+						"Physical Sector Size" : "4 KiB",
+						"Raw size" : "9.095 TiB [0x48c400000 Sectors]",
+						"Coerced size" : "9.094 TiB [0x48c300000 Sectors]",
+						"FW managed drive security" : "No",
+						"Secured" : "No",
+						"Locked" : "No",
+						"PI Formatted" : "No",
+						"PI type" : 1,
+						"Number of bytes of user data in LBA" : "512B",
+						"Current Write Cache" : "Off",
+						"Default Write Cache" : "On",
+						"Write Cache Changeable" : "Yes"
+					},
+					"Inquiry Data" : "00 00 07 12 8b 01 10 02 53 45 41 47 41 54 45 20 53 54 31 30 30 30 30 4e 4d 30 31 38 42 20 20 20 45 30 30 31 57 50 30 30 4d 4e 50 38 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 a2 0c 60 20 e0 04 60 04 c0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 43 6f 70 79 72 69 67 68 74 20 28 63 29 20 32 30 32 31 20 53 65 61 67 61 74 65 20 41 6c 6c 20 "
+				}
+			},
+			{
+				"Drive Information" : {
+					"EID:Slt" : "320:6",
+					"PID" : 313,
+					"State" : "Conf",
+					"Status" : "Online",
+					"DG" : 18,
+					"Size" : "9.094 TiB",
+					"Intf" : "SAS",
+					"Med" : "HDD",
+					"SED_Type" : "-",
+					"SeSz" : "512B",
+					"Model" : "ST10000NM018B   ",
+					"Sp" : "U",
+					"LU/NS Count" : 1,
+					"Alt-EID" : "-"
+				},
+				"LU/NS Information" : [
+					{
+						"PID" : 313,
+						"LUN/NSID" : "0/-",
+						"Status" : "Online",
+						"Size" : "9.094 TiB"
+					}
+				],
+				"Drive Detailed Information" : {
+					"Shield Counter" : 0,
+					"Temperature(C)" : 46,
+					"Serial Number" : "WP00MNHG0000E2424GXG",
+					"Vendor" : "SEAGATE ",
+					"Model" : "ST10000NM018B   ",
+					"WWN" : "5000C500EF7D7FE4",
+					"Firmware Revision Level" : "E001",
+					"Firmware Release Number" : "01110618",
+					"Logical Sector Size" : "512B",
+					"Physical Sector Size" : "4 KiB",
+					"Raw size" : "9.095 TiB [0x48c400000 Sectors]",
+					"Coerced size" : "9.094 TiB [0x48c300000 Sectors]",
+					"Capable Speed" : "12.0Gb/s",
+					"Capable Link Width" : "x1",
+					"Negotiated Link Width" : "x1",
+					"Drive position" : "DriveGroup:18, Span:0, Row:0",
+					"Sequence Number" : 2,
+					"Commissioned Spare" : "No",
+					"Emergency Spare" : "No",
+					"Successful Shield Diagnostics completed on(Localtime yyyy/mm/dd hh:mm:sec)" : "NA",
+					"SED Capable" : "No",
+					"ISE Capable" : "No",
+					"Unmap Capable for Single Drive RAID 0 VDs" : "No",
+					"Unmap Capable for RAID 0 VDs" : "No",
+					"Unmap Capable for RAID 1 VDs" : "No",
+					"Unmap Capable for RAID 5/6 VDs" : "No",
+					"Unmap Capable" : "No",
+					"Writesame Unmap Capable for Single Drive RAID 0 VDs" : "No",
+					"Writesame Unmap Capable for RAID 0 VDs" : "No",
+					"Writesame Unmap Capable for RAID 1 VDs" : "No",
+					"Writesame Unmap Capable for RAID 5/6 VDs" : "No",
+					"Writesame Unmap Capable" : "No",
+					"T10 Power Mode" : "Yes",
+					"Needs EKM Attention" : "No",
+					"Secured By EKM" : "No",
+					"Certified" : "Yes",
+					"Supported Data Format" : "None",
+					"Hard Disk Drive RPM" : 7200,
+					"Device port count" : 1,
+					"Path Information" : [
+						{
+							"SASAddress" : "0x5000c500ef7d7fe5",
+							"DevicePID" : 313,
+							"Path" : "Primary",
+							"ConnectorIndex" : 3,
+							"Negotiated Speed" : "12.0Gb/s",
+							"Num Phys/Lanes used" : 1
+						}
+					],
+					"Connector Information" : [
+						{
+							"ConnId" : 2,
+							"Name" : "C1.0",
+							"Location" : "Internal",
+							"Type" : "SFF-8654 8I"
+						},
+						{
+							"ConnId" : 2,
+							"Name" : "C1.1",
+							"Location" : "Internal",
+							"Type" : "SFF-8654 8I"
+						}
+					],
+					"LU/NS Properties" : {
+						"Media Error Count" : 0,
+						"Other Error Count" : 0,
+						"Predictive Failure Count" : 0,
+						"Last Predictive Failure Event Sequence Number" : 0,
+						"Logical Sector Size" : "512B",
+						"Physical Sector Size" : "4 KiB",
+						"Raw size" : "9.095 TiB [0x48c400000 Sectors]",
+						"Coerced size" : "9.094 TiB [0x48c300000 Sectors]",
+						"FW managed drive security" : "No",
+						"Secured" : "No",
+						"Locked" : "No",
+						"PI Formatted" : "No",
+						"PI type" : 1,
+						"Number of bytes of user data in LBA" : "512B",
+						"Current Write Cache" : "Off",
+						"Default Write Cache" : "On",
+						"Write Cache Changeable" : "Yes"
+					},
+					"Inquiry Data" : "00 00 07 12 8b 01 10 02 53 45 41 47 41 54 45 20 53 54 31 30 30 30 30 4e 4d 30 31 38 42 20 20 20 45 30 30 31 57 50 30 30 4d 4e 48 47 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 a2 0c 60 20 e0 04 60 04 c0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 43 6f 70 79 72 69 67 68 74 20 28 63 29 20 32 30 32 31 20 53 65 61 67 61 74 65 20 41 6c 6c 20 "
+				}
+			},
+			{
+				"Drive Information" : {
+					"EID:Slt" : "320:7",
+					"PID" : 314,
+					"State" : "Conf",
+					"Status" : "Online",
+					"DG" : 19,
+					"Size" : "9.094 TiB",
+					"Intf" : "SAS",
+					"Med" : "HDD",
+					"SED_Type" : "-",
+					"SeSz" : "512B",
+					"Model" : "ST10000NM018B   ",
+					"Sp" : "U",
+					"LU/NS Count" : 1,
+					"Alt-EID" : "-"
+				},
+				"LU/NS Information" : [
+					{
+						"PID" : 314,
+						"LUN/NSID" : "0/-",
+						"Status" : "Online",
+						"Size" : "9.094 TiB"
+					}
+				],
+				"Drive Detailed Information" : {
+					"Shield Counter" : 0,
+					"Temperature(C)" : 41,
+					"Serial Number" : "WP00MN7N0000E2424J74",
+					"Vendor" : "SEAGATE ",
+					"Model" : "ST10000NM018B   ",
+					"WWN" : "5000C500EF7D903C",
+					"Firmware Revision Level" : "E001",
+					"Firmware Release Number" : "01110618",
+					"Logical Sector Size" : "512B",
+					"Physical Sector Size" : "4 KiB",
+					"Raw size" : "9.095 TiB [0x48c400000 Sectors]",
+					"Coerced size" : "9.094 TiB [0x48c300000 Sectors]",
+					"Capable Speed" : "12.0Gb/s",
+					"Capable Link Width" : "x1",
+					"Negotiated Link Width" : "x1",
+					"Drive position" : "DriveGroup:19, Span:0, Row:0",
+					"Sequence Number" : 2,
+					"Commissioned Spare" : "No",
+					"Emergency Spare" : "No",
+					"Successful Shield Diagnostics completed on(Localtime yyyy/mm/dd hh:mm:sec)" : "NA",
+					"SED Capable" : "No",
+					"ISE Capable" : "No",
+					"Unmap Capable for Single Drive RAID 0 VDs" : "No",
+					"Unmap Capable for RAID 0 VDs" : "No",
+					"Unmap Capable for RAID 1 VDs" : "No",
+					"Unmap Capable for RAID 5/6 VDs" : "No",
+					"Unmap Capable" : "No",
+					"Writesame Unmap Capable for Single Drive RAID 0 VDs" : "No",
+					"Writesame Unmap Capable for RAID 0 VDs" : "No",
+					"Writesame Unmap Capable for RAID 1 VDs" : "No",
+					"Writesame Unmap Capable for RAID 5/6 VDs" : "No",
+					"Writesame Unmap Capable" : "No",
+					"T10 Power Mode" : "Yes",
+					"Needs EKM Attention" : "No",
+					"Secured By EKM" : "No",
+					"Certified" : "Yes",
+					"Supported Data Format" : "None",
+					"Hard Disk Drive RPM" : 7200,
+					"Device port count" : 1,
+					"Path Information" : [
+						{
+							"SASAddress" : "0x5000c500ef7d903d",
+							"DevicePID" : 314,
+							"Path" : "Primary",
+							"ConnectorIndex" : 3,
+							"Negotiated Speed" : "12.0Gb/s",
+							"Num Phys/Lanes used" : 1
+						}
+					],
+					"Connector Information" : [
+						{
+							"ConnId" : 2,
+							"Name" : "C1.0",
+							"Location" : "Internal",
+							"Type" : "SFF-8654 8I"
+						},
+						{
+							"ConnId" : 2,
+							"Name" : "C1.1",
+							"Location" : "Internal",
+							"Type" : "SFF-8654 8I"
+						}
+					],
+					"LU/NS Properties" : {
+						"Media Error Count" : 0,
+						"Other Error Count" : 0,
+						"Predictive Failure Count" : 0,
+						"Last Predictive Failure Event Sequence Number" : 0,
+						"Logical Sector Size" : "512B",
+						"Physical Sector Size" : "4 KiB",
+						"Raw size" : "9.095 TiB [0x48c400000 Sectors]",
+						"Coerced size" : "9.094 TiB [0x48c300000 Sectors]",
+						"FW managed drive security" : "No",
+						"Secured" : "No",
+						"Locked" : "No",
+						"PI Formatted" : "No",
+						"PI type" : 1,
+						"Number of bytes of user data in LBA" : "512B",
+						"Current Write Cache" : "Off",
+						"Default Write Cache" : "On",
+						"Write Cache Changeable" : "Yes"
+					},
+					"Inquiry Data" : "00 00 07 12 8b 01 10 02 53 45 41 47 41 54 45 20 53 54 31 30 30 30 30 4e 4d 30 31 38 42 20 20 20 45 30 30 31 57 50 30 30 4d 4e 37 4e 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 a2 0c 60 20 e0 04 60 04 c0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 43 6f 70 79 72 69 67 68 74 20 28 63 29 20 32 30 32 31 20 53 65 61 67 61 74 65 20 41 6c 6c 20 "
+				}
+			},
+			{
+				"Drive Information" : {
+					"EID:Slt" : "320:8",
+					"PID" : 315,
+					"State" : "Conf",
+					"Status" : "Online",
+					"DG" : 20,
+					"Size" : "9.094 TiB",
+					"Intf" : "SAS",
+					"Med" : "HDD",
+					"SED_Type" : "-",
+					"SeSz" : "512B",
+					"Model" : "ST10000NM018B   ",
+					"Sp" : "U",
+					"LU/NS Count" : 1,
+					"Alt-EID" : "-"
+				},
+				"LU/NS Information" : [
+					{
+						"PID" : 315,
+						"LUN/NSID" : "0/-",
+						"Status" : "Online",
+						"Size" : "9.094 TiB"
+					}
+				],
+				"Drive Detailed Information" : {
+					"Shield Counter" : 0,
+					"Temperature(C)" : 39,
+					"Serial Number" : "WP00PYBT0000E24242MD",
+					"Vendor" : "SEAGATE ",
+					"Model" : "ST10000NM018B   ",
+					"WWN" : "5000C500EF71CFCC",
+					"Firmware Revision Level" : "E001",
+					"Firmware Release Number" : "01110618",
+					"Logical Sector Size" : "512B",
+					"Physical Sector Size" : "4 KiB",
+					"Raw size" : "9.095 TiB [0x48c400000 Sectors]",
+					"Coerced size" : "9.094 TiB [0x48c300000 Sectors]",
+					"Capable Speed" : "12.0Gb/s",
+					"Capable Link Width" : "x1",
+					"Negotiated Link Width" : "x1",
+					"Drive position" : "DriveGroup:20, Span:0, Row:0",
+					"Sequence Number" : 2,
+					"Commissioned Spare" : "No",
+					"Emergency Spare" : "No",
+					"Successful Shield Diagnostics completed on(Localtime yyyy/mm/dd hh:mm:sec)" : "NA",
+					"SED Capable" : "No",
+					"ISE Capable" : "No",
+					"Unmap Capable for Single Drive RAID 0 VDs" : "No",
+					"Unmap Capable for RAID 0 VDs" : "No",
+					"Unmap Capable for RAID 1 VDs" : "No",
+					"Unmap Capable for RAID 5/6 VDs" : "No",
+					"Unmap Capable" : "No",
+					"Writesame Unmap Capable for Single Drive RAID 0 VDs" : "No",
+					"Writesame Unmap Capable for RAID 0 VDs" : "No",
+					"Writesame Unmap Capable for RAID 1 VDs" : "No",
+					"Writesame Unmap Capable for RAID 5/6 VDs" : "No",
+					"Writesame Unmap Capable" : "No",
+					"T10 Power Mode" : "Yes",
+					"Needs EKM Attention" : "No",
+					"Secured By EKM" : "No",
+					"Certified" : "Yes",
+					"Supported Data Format" : "None",
+					"Hard Disk Drive RPM" : 7200,
+					"Device port count" : 1,
+					"Path Information" : [
+						{
+							"SASAddress" : "0x5000c500ef71cfcd",
+							"DevicePID" : 315,
+							"Path" : "Primary",
+							"ConnectorIndex" : 3,
+							"Negotiated Speed" : "12.0Gb/s",
+							"Num Phys/Lanes used" : 1
+						}
+					],
+					"Connector Information" : [
+						{
+							"ConnId" : 2,
+							"Name" : "C1.0",
+							"Location" : "Internal",
+							"Type" : "SFF-8654 8I"
+						},
+						{
+							"ConnId" : 2,
+							"Name" : "C1.1",
+							"Location" : "Internal",
+							"Type" : "SFF-8654 8I"
+						}
+					],
+					"LU/NS Properties" : {
+						"Media Error Count" : 0,
+						"Other Error Count" : 0,
+						"Predictive Failure Count" : 0,
+						"Last Predictive Failure Event Sequence Number" : 0,
+						"Logical Sector Size" : "512B",
+						"Physical Sector Size" : "4 KiB",
+						"Raw size" : "9.095 TiB [0x48c400000 Sectors]",
+						"Coerced size" : "9.094 TiB [0x48c300000 Sectors]",
+						"FW managed drive security" : "No",
+						"Secured" : "No",
+						"Locked" : "No",
+						"PI Formatted" : "No",
+						"PI type" : 1,
+						"Number of bytes of user data in LBA" : "512B",
+						"Current Write Cache" : "Off",
+						"Default Write Cache" : "On",
+						"Write Cache Changeable" : "Yes"
+					},
+					"Inquiry Data" : "00 00 07 12 8b 01 10 02 53 45 41 47 41 54 45 20 53 54 31 30 30 30 30 4e 4d 30 31 38 42 20 20 20 45 30 30 31 57 50 30 30 50 59 42 54 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 a2 0c 60 20 e0 04 60 04 c0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 43 6f 70 79 72 69 67 68 74 20 28 63 29 20 32 30 32 31 20 53 65 61 67 61 74 65 20 41 6c 6c 20 "
+				}
+			},
+			{
+				"Drive Information" : {
+					"EID:Slt" : "320:9",
+					"PID" : 316,
+					"State" : "Conf",
+					"Status" : "Online",
+					"DG" : 21,
+					"Size" : "9.094 TiB",
+					"Intf" : "SAS",
+					"Med" : "HDD",
+					"SED_Type" : "-",
+					"SeSz" : "512B",
+					"Model" : "ST10000NM018B   ",
+					"Sp" : "U",
+					"LU/NS Count" : 1,
+					"Alt-EID" : "-"
+				},
+				"LU/NS Information" : [
+					{
+						"PID" : 316,
+						"LUN/NSID" : "0/-",
+						"Status" : "Online",
+						"Size" : "9.094 TiB"
+					}
+				],
+				"Drive Detailed Information" : {
+					"Shield Counter" : 0,
+					"Temperature(C)" : 46,
+					"Serial Number" : "WP00PY4T0000E2423EGQ",
+					"Vendor" : "SEAGATE ",
+					"Model" : "ST10000NM018B   ",
+					"WWN" : "5000C500EF71DD34",
+					"Firmware Revision Level" : "E001",
+					"Firmware Release Number" : "01110618",
+					"Logical Sector Size" : "512B",
+					"Physical Sector Size" : "4 KiB",
+					"Raw size" : "9.095 TiB [0x48c400000 Sectors]",
+					"Coerced size" : "9.094 TiB [0x48c300000 Sectors]",
+					"Capable Speed" : "12.0Gb/s",
+					"Capable Link Width" : "x1",
+					"Negotiated Link Width" : "x1",
+					"Drive position" : "DriveGroup:21, Span:0, Row:0",
+					"Sequence Number" : 2,
+					"Commissioned Spare" : "No",
+					"Emergency Spare" : "No",
+					"Successful Shield Diagnostics completed on(Localtime yyyy/mm/dd hh:mm:sec)" : "NA",
+					"SED Capable" : "No",
+					"ISE Capable" : "No",
+					"Unmap Capable for Single Drive RAID 0 VDs" : "No",
+					"Unmap Capable for RAID 0 VDs" : "No",
+					"Unmap Capable for RAID 1 VDs" : "No",
+					"Unmap Capable for RAID 5/6 VDs" : "No",
+					"Unmap Capable" : "No",
+					"Writesame Unmap Capable for Single Drive RAID 0 VDs" : "No",
+					"Writesame Unmap Capable for RAID 0 VDs" : "No",
+					"Writesame Unmap Capable for RAID 1 VDs" : "No",
+					"Writesame Unmap Capable for RAID 5/6 VDs" : "No",
+					"Writesame Unmap Capable" : "No",
+					"T10 Power Mode" : "Yes",
+					"Needs EKM Attention" : "No",
+					"Secured By EKM" : "No",
+					"Certified" : "Yes",
+					"Supported Data Format" : "None",
+					"Hard Disk Drive RPM" : 7200,
+					"Device port count" : 1,
+					"Path Information" : [
+						{
+							"SASAddress" : "0x5000c500ef71dd35",
+							"DevicePID" : 316,
+							"Path" : "Primary",
+							"ConnectorIndex" : 3,
+							"Negotiated Speed" : "12.0Gb/s",
+							"Num Phys/Lanes used" : 1
+						}
+					],
+					"Connector Information" : [
+						{
+							"ConnId" : 2,
+							"Name" : "C1.0",
+							"Location" : "Internal",
+							"Type" : "SFF-8654 8I"
+						},
+						{
+							"ConnId" : 2,
+							"Name" : "C1.1",
+							"Location" : "Internal",
+							"Type" : "SFF-8654 8I"
+						}
+					],
+					"LU/NS Properties" : {
+						"Media Error Count" : 0,
+						"Other Error Count" : 0,
+						"Predictive Failure Count" : 0,
+						"Last Predictive Failure Event Sequence Number" : 0,
+						"Logical Sector Size" : "512B",
+						"Physical Sector Size" : "4 KiB",
+						"Raw size" : "9.095 TiB [0x48c400000 Sectors]",
+						"Coerced size" : "9.094 TiB [0x48c300000 Sectors]",
+						"FW managed drive security" : "No",
+						"Secured" : "No",
+						"Locked" : "No",
+						"PI Formatted" : "No",
+						"PI type" : 1,
+						"Number of bytes of user data in LBA" : "512B",
+						"Current Write Cache" : "Off",
+						"Default Write Cache" : "On",
+						"Write Cache Changeable" : "Yes"
+					},
+					"Inquiry Data" : "00 00 07 12 8b 01 10 02 53 45 41 47 41 54 45 20 53 54 31 30 30 30 30 4e 4d 30 31 38 42 20 20 20 45 30 30 31 57 50 30 30 50 59 34 54 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 a2 0c 60 20 e0 04 60 04 c0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 43 6f 70 79 72 69 67 68 74 20 28 63 29 20 32 30 32 31 20 53 65 61 67 61 74 65 20 41 6c 6c 20 "
+				}
+			},
+			{
+				"Drive Information" : {
+					"EID:Slt" : "320:10",
+					"PID" : 317,
+					"State" : "Conf",
+					"Status" : "Online",
+					"DG" : 22,
+					"Size" : "9.094 TiB",
+					"Intf" : "SAS",
+					"Med" : "HDD",
+					"SED_Type" : "-",
+					"SeSz" : "512B",
+					"Model" : "ST10000NM018B   ",
+					"Sp" : "U",
+					"LU/NS Count" : 1,
+					"Alt-EID" : "-"
+				},
+				"LU/NS Information" : [
+					{
+						"PID" : 317,
+						"LUN/NSID" : "0/-",
+						"Status" : "Online",
+						"Size" : "9.094 TiB"
+					}
+				],
+				"Drive Detailed Information" : {
+					"Shield Counter" : 0,
+					"Temperature(C)" : 45,
+					"Serial Number" : "WP00MNMZ0000E2424H9R",
+					"Vendor" : "SEAGATE ",
+					"Model" : "ST10000NM018B   ",
+					"WWN" : "5000C500EF7D7AE4",
+					"Firmware Revision Level" : "E001",
+					"Firmware Release Number" : "01110618",
+					"Logical Sector Size" : "512B",
+					"Physical Sector Size" : "4 KiB",
+					"Raw size" : "9.095 TiB [0x48c400000 Sectors]",
+					"Coerced size" : "9.094 TiB [0x48c300000 Sectors]",
+					"Capable Speed" : "12.0Gb/s",
+					"Capable Link Width" : "x1",
+					"Negotiated Link Width" : "x1",
+					"Drive position" : "DriveGroup:22, Span:0, Row:0",
+					"Sequence Number" : 2,
+					"Commissioned Spare" : "No",
+					"Emergency Spare" : "No",
+					"Successful Shield Diagnostics completed on(Localtime yyyy/mm/dd hh:mm:sec)" : "NA",
+					"SED Capable" : "No",
+					"ISE Capable" : "No",
+					"Unmap Capable for Single Drive RAID 0 VDs" : "No",
+					"Unmap Capable for RAID 0 VDs" : "No",
+					"Unmap Capable for RAID 1 VDs" : "No",
+					"Unmap Capable for RAID 5/6 VDs" : "No",
+					"Unmap Capable" : "No",
+					"Writesame Unmap Capable for Single Drive RAID 0 VDs" : "No",
+					"Writesame Unmap Capable for RAID 0 VDs" : "No",
+					"Writesame Unmap Capable for RAID 1 VDs" : "No",
+					"Writesame Unmap Capable for RAID 5/6 VDs" : "No",
+					"Writesame Unmap Capable" : "No",
+					"T10 Power Mode" : "Yes",
+					"Needs EKM Attention" : "No",
+					"Secured By EKM" : "No",
+					"Certified" : "Yes",
+					"Supported Data Format" : "None",
+					"Hard Disk Drive RPM" : 7200,
+					"Device port count" : 1,
+					"Path Information" : [
+						{
+							"SASAddress" : "0x5000c500ef7d7ae5",
+							"DevicePID" : 317,
+							"Path" : "Primary",
+							"ConnectorIndex" : 3,
+							"Negotiated Speed" : "12.0Gb/s",
+							"Num Phys/Lanes used" : 1
+						}
+					],
+					"Connector Information" : [
+						{
+							"ConnId" : 2,
+							"Name" : "C1.0",
+							"Location" : "Internal",
+							"Type" : "SFF-8654 8I"
+						},
+						{
+							"ConnId" : 2,
+							"Name" : "C1.1",
+							"Location" : "Internal",
+							"Type" : "SFF-8654 8I"
+						}
+					],
+					"LU/NS Properties" : {
+						"Media Error Count" : 0,
+						"Other Error Count" : 0,
+						"Predictive Failure Count" : 0,
+						"Last Predictive Failure Event Sequence Number" : 0,
+						"Logical Sector Size" : "512B",
+						"Physical Sector Size" : "4 KiB",
+						"Raw size" : "9.095 TiB [0x48c400000 Sectors]",
+						"Coerced size" : "9.094 TiB [0x48c300000 Sectors]",
+						"FW managed drive security" : "No",
+						"Secured" : "No",
+						"Locked" : "No",
+						"PI Formatted" : "No",
+						"PI type" : 1,
+						"Number of bytes of user data in LBA" : "512B",
+						"Current Write Cache" : "Off",
+						"Default Write Cache" : "On",
+						"Write Cache Changeable" : "Yes"
+					},
+					"Inquiry Data" : "00 00 07 12 8b 01 10 02 53 45 41 47 41 54 45 20 53 54 31 30 30 30 30 4e 4d 30 31 38 42 20 20 20 45 30 30 31 57 50 30 30 4d 4e 4d 5a 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 a2 0c 60 20 e0 04 60 04 c0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 43 6f 70 79 72 69 67 68 74 20 28 63 29 20 32 30 32 31 20 53 65 61 67 61 74 65 20 41 6c 6c 20 "
+				}
+			},
+			{
+				"Drive Information" : {
+					"EID:Slt" : "320:11",
+					"PID" : 318,
+					"State" : "Conf",
+					"Status" : "Online",
+					"DG" : 23,
+					"Size" : "9.094 TiB",
+					"Intf" : "SAS",
+					"Med" : "HDD",
+					"SED_Type" : "-",
+					"SeSz" : "512B",
+					"Model" : "ST10000NM018B   ",
+					"Sp" : "U",
+					"LU/NS Count" : 1,
+					"Alt-EID" : "-"
+				},
+				"LU/NS Information" : [
+					{
+						"PID" : 318,
+						"LUN/NSID" : "0/-",
+						"Status" : "Online",
+						"Size" : "9.094 TiB"
+					}
+				],
+				"Drive Detailed Information" : {
+					"Shield Counter" : 0,
+					"Temperature(C)" : 41,
+					"Serial Number" : "WP00MNP00000E2424KFH",
+					"Vendor" : "SEAGATE ",
+					"Model" : "ST10000NM018B   ",
+					"WWN" : "5000C500EF7D7988",
+					"Firmware Revision Level" : "E001",
+					"Firmware Release Number" : "01110618",
+					"Logical Sector Size" : "512B",
+					"Physical Sector Size" : "4 KiB",
+					"Raw size" : "9.095 TiB [0x48c400000 Sectors]",
+					"Coerced size" : "9.094 TiB [0x48c300000 Sectors]",
+					"Capable Speed" : "12.0Gb/s",
+					"Capable Link Width" : "x1",
+					"Negotiated Link Width" : "x1",
+					"Drive position" : "DriveGroup:23, Span:0, Row:0",
+					"Sequence Number" : 6,
+					"Commissioned Spare" : "No",
+					"Emergency Spare" : "No",
+					"Successful Shield Diagnostics completed on(Localtime yyyy/mm/dd hh:mm:sec)" : "NA",
+					"SED Capable" : "No",
+					"ISE Capable" : "No",
+					"Unmap Capable for Single Drive RAID 0 VDs" : "No",
+					"Unmap Capable for RAID 0 VDs" : "No",
+					"Unmap Capable for RAID 1 VDs" : "No",
+					"Unmap Capable for RAID 5/6 VDs" : "No",
+					"Unmap Capable" : "No",
+					"Writesame Unmap Capable for Single Drive RAID 0 VDs" : "No",
+					"Writesame Unmap Capable for RAID 0 VDs" : "No",
+					"Writesame Unmap Capable for RAID 1 VDs" : "No",
+					"Writesame Unmap Capable for RAID 5/6 VDs" : "No",
+					"Writesame Unmap Capable" : "No",
+					"T10 Power Mode" : "Yes",
+					"Needs EKM Attention" : "No",
+					"Secured By EKM" : "No",
+					"Certified" : "Yes",
+					"Supported Data Format" : "None",
+					"Hard Disk Drive RPM" : 7200,
+					"Device port count" : 1,
+					"Path Information" : [
+						{
+							"SASAddress" : "0x5000c500ef7d7989",
+							"DevicePID" : 318,
+							"Path" : "Primary",
+							"ConnectorIndex" : 3,
+							"Negotiated Speed" : "12.0Gb/s",
+							"Num Phys/Lanes used" : 1
+						}
+					],
+					"Connector Information" : [
+						{
+							"ConnId" : 2,
+							"Name" : "C1.0",
+							"Location" : "Internal",
+							"Type" : "SFF-8654 8I"
+						},
+						{
+							"ConnId" : 2,
+							"Name" : "C1.1",
+							"Location" : "Internal",
+							"Type" : "SFF-8654 8I"
+						}
+					],
+					"LU/NS Properties" : {
+						"Media Error Count" : 0,
+						"Other Error Count" : 0,
+						"Predictive Failure Count" : 0,
+						"Last Predictive Failure Event Sequence Number" : 0,
+						"Logical Sector Size" : "512B",
+						"Physical Sector Size" : "4 KiB",
+						"Raw size" : "9.095 TiB [0x48c400000 Sectors]",
+						"Coerced size" : "9.094 TiB [0x48c300000 Sectors]",
+						"FW managed drive security" : "No",
+						"Secured" : "No",
+						"Locked" : "No",
+						"PI Formatted" : "No",
+						"PI type" : 1,
+						"Number of bytes of user data in LBA" : "512B",
+						"Current Write Cache" : "Off",
+						"Default Write Cache" : "On",
+						"Write Cache Changeable" : "Yes"
+					},
+					"Inquiry Data" : "00 00 07 12 8b 01 10 02 53 45 41 47 41 54 45 20 53 54 31 30 30 30 30 4e 4d 30 31 38 42 20 20 20 45 30 30 31 57 50 30 30 4d 4e 50 30 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 a2 0c 60 20 e0 04 60 04 c0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 43 6f 70 79 72 69 67 68 74 20 28 63 29 20 32 30 32 31 20 53 65 61 67 61 74 65 20 41 6c 6c 20 "
+				}
+			}
+		]
+	}
+}
+]
+}
+

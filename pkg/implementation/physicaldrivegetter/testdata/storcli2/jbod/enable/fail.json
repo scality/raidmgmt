@@ -1,0 +1,24 @@
+{
+"Controllers":[
+{
+	"Command Status" : {
+		"CLI Version" : "008.0005.0000.0010 Feb 22, 2023",
+		"Operating system" : "Linux4.18.0-553.115.1.el8_10.x86_64",
+		"Controller" : "0",
+		"Status" : "Failure",
+		"Description" : "Set PD JBOD Failed.",
+		"Detailed Status" : [
+			{
+				"EID:Slt" : "306:0",
+				"PID" : 293,
+				"Status" : "Failure",
+				"ErrType" : "DCMD",
+				"ErrCd" : 9,
+				"ErrMsg" : "The requested operation is not possible because the PD is in the wrong state. Enclosure Persistent Id:306, Slot Number:0"
+			}
+		]
+	}
+}
+]
+}
+
