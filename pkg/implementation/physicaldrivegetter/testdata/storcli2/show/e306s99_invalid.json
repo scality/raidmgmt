@@ -1,0 +1,24 @@
+{
+"Controllers":[
+{
+	"Command Status" : {
+		"CLI Version" : "008.0005.0000.0010 Feb 22, 2023",
+		"Operating system" : "Linux4.18.0-553.115.1.el8_10.x86_64",
+		"Controller" : "0",
+		"Status" : "Failure",
+		"Description" : "No PD found.",
+		"Detailed Status" : [
+			{
+				"EID:Slt" : "306:99",
+				"PID" : "-",
+				"Status" : "Failure",
+				"ErrType" : "CLI",
+				"ErrCd" : 255,
+				"ErrMsg" : "Drive not found"
+			}
+		]
+	}
+}
+]
+}
+

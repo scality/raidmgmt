@@ -31,6 +31,9 @@ toward the shared goals of the project.
 - Tests should go in `_test.go` files alongside the code they test.
 - Use testdata fixtures for CLI output parsing tests (see
   `pkg/implementation/raidcontroller/megaraid/testdata/` for examples).
+- For storcli2 / perccli2 fixtures, capture them with the helper script in
+  `tests/testdata-tools/` and copy the result into each component package's
+  `testdata/storcli2/` directory (see `tests/testdata-tools/README.md`).
 - Run the full test suite with `make tests` and ensure all tests pass.
 - Run `make lint` to verify your code passes all linter checks.
 
