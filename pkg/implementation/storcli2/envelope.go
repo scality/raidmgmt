@@ -1,6 +1,7 @@
 // Package storcli2 models the shared envelope of the storcli2/perccli2 JSON
-// output and decodes it, surfacing the in-JSON errors these CLIs report at
-// exit code 0. It holds only the parts every storcli2 getter needs: the
+// output and decodes it, surfacing the in-JSON errors these CLIs report
+// regardless of their unreliable process exit code (some failures exit 0,
+// others exit non-zero). It holds only the parts every storcli2 getter needs: the
 // command envelope and the decoder. The per-section structs (controllers,
 // physical drives, virtual drives) live in their respective getter packages,
 // the same way the mdadm/ssacli adapters keep their parsing structs in their
