@@ -134,7 +134,9 @@ func (s *StorCLI2) Controllers() ([]*raidcontroller.RAIDController, error) {
 // capability and state are read from dedicated commands ("show aso" and "show
 // autoconfig") rather than from "show all": storcli2 dropped storcli1's
 // controller-level "Support JBOD"/"Enable JBOD" fields, exposing JBOD as a
-// licensed Advanced Software Option applied per drive instead.
+// licensed Advanced Software Option applied per drive instead. Both fields are
+// informational, so firmware that does not expose this data degrades them to
+// false instead of failing the inventory.
 func (s *StorCLI2) Controller(metadata *raidcontroller.Metadata) (
 	*raidcontroller.RAIDController,
 	error,
@@ -191,16 +193,19 @@ func (s *StorCLI2) jbodSupported(id int) (bool, error) {
 		return false, errors.Wrap(err, "failed to show advanced software options")
 	}
 
+	// IsJBODSupported is informational only: firmware that rejects the "show
+	// aso" subcommand or omits the Advanced Software Options section (possible
+	// on perccli2 / Dell PERC) must not fail the whole controller inventory.
 	cmd, err := storcli2.Decode(output)
 	if err != nil {
-		return false, errors.Wrap(err, "failed to decode advanced software options")
+		return false, nil //nolint:nilerr // informational, see above.
 	}
 
 	options, err := utils.UnmarshalToSlice[storcli2AdvancedSoftwareOption](
 		cmd.Controllers[0].ResponseData, storcli2AdvancedSoftwareOptionsKey,
 	)
 	if err != nil {
-		return false, errors.Wrap(err, "failed to unmarshal advanced software options")
+		return false, nil //nolint:nilerr // informational, see above.
 	}
 
 	for _, option := range options {
@@ -226,16 +231,20 @@ func (s *StorCLI2) jbodEnabled(id int) (bool, error) {
 		return false, errors.Wrap(err, "failed to show auto-configure behavior")
 	}
 
+	// IsJBODEnabled is informational only: firmware that rejects the "show
+	// autoconfig" subcommand or omits the Auto-config Information section
+	// (possible on perccli2 / Dell PERC) must not fail the whole controller
+	// inventory.
 	cmd, err := storcli2.Decode(output)
 	if err != nil {
-		return false, errors.Wrap(err, "failed to decode auto-configure behavior")
+		return false, nil //nolint:nilerr // informational, see above.
 	}
 
 	entries, err := utils.UnmarshalToSlice[storcli2AutoConfigEntry](
 		cmd.Controllers[0].ResponseData, storcli2AutoConfigKey,
 	)
 	if err != nil {
-		return false, errors.Wrap(err, "failed to unmarshal auto-configure behavior")
+		return false, nil //nolint:nilerr // informational, see above.
 	}
 
 	for _, entry := range entries {

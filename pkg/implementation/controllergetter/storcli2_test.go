@@ -183,6 +183,35 @@ func TestStorCLI2ControllerJBOD(t *testing.T) {
 			expectedJBODSup: false,
 			expectedJBODEn:  false,
 		},
+		// Both fields are informational: firmware that rejects the probe
+		// subcommands or omits their sections (possible on perccli2 / Dell
+		// PERC) degrades them to false instead of failing the inventory.
+		{
+			name: "probe subcommands rejected by firmware",
+			aso: []byte(`{"Controllers":[{"Command Status":` +
+				`{"Status":"Failure","Description":"Un-supported command"}}]}`),
+			autoConfig: []byte(`{"Controllers":[{"Command Status":` +
+				`{"Status":"Failure","Description":"Un-supported command"}}]}`),
+			expectedJBODSup: false,
+			expectedJBODEn:  false,
+		},
+		{
+			name: "probe sections missing from response data",
+			aso: []byte(`{"Controllers":[{"Command Status":{"Status":"Success"},` +
+				`"Response Data":{}}]}`),
+			autoConfig: []byte(`{"Controllers":[{"Command Status":{"Status":"Success"},` +
+				`"Response Data":{}}]}`),
+			expectedJBODSup: false,
+			expectedJBODEn:  false,
+		},
+		{
+			name: "primary auto-configure property absent",
+			aso:  asoPayload("JBOD", "Unlimited"),
+			autoConfig: []byte(`{"Controllers":[{"Command Status":{"Status":"Success"},` +
+				`"Response Data":{"Auto-config Information":[]}}]}`),
+			expectedJBODSup: true,
+			expectedJBODEn:  false,
+		},
 	}
 
 	for _, tt := range tests {
