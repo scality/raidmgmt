@@ -1,0 +1,34 @@
+{
+"Controllers":[
+{
+	"Command Status" : {
+		"CLI Version" : "008.0005.0000.0010 Feb 22, 2023",
+		"Operating system" : "Linux4.18.0-553.124.1.el8_10.x86_64",
+		"Controller" : "0",
+		"Status" : "Success",
+		"Description" : "None"
+	},
+	"Response Data" : {
+		"Auto-config Information" : [
+			{
+				"Auto-config property" : "Primary Auto-configure behavior",
+				"Value" : "UGood"
+			},
+			{
+				"Auto-config property" : "Secondary Auto-configure behavior",
+				"Value" : "UGood"
+			},
+			{
+				"Auto-config property" : "Supported Primary Auto-configure behavior",
+				"Value" : "UGood, JBOD, R0, R0WB, SecureJBOD, SecureR0, SecureR0WB"
+			},
+			{
+				"Auto-config property" : "Supported Secondary Auto-configure behavior",
+				"Value" : "UGood"
+			}
+		]
+	}
+}
+]
+}
+

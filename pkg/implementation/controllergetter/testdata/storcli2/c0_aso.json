@@ -1,0 +1,83 @@
+{
+"Controllers":[
+{
+	"Command Status" : {
+		"CLI Version" : "008.0005.0000.0010 Feb 22, 2023",
+		"Operating system" : "Linux4.18.0-553.124.1.el8_10.x86_64",
+		"Controller" : "0",
+		"Status" : "Success",
+		"Description" : "None"
+	},
+	"Response Data" : {
+		"Advanced Software options" : [
+			{
+				"Software option" : "RAID Personality",
+				"Time Remaining" : "Unlimited",
+				"Location" : "Factory Installed"
+			},
+			{
+				"Software option" : "RAID 0",
+				"Time Remaining" : "Unlimited",
+				"Location" : "Factory Installed"
+			},
+			{
+				"Software option" : "RAID 1/10",
+				"Time Remaining" : "Unlimited",
+				"Location" : "Factory Installed"
+			},
+			{
+				"Software option" : "RAID 6/60",
+				"Time Remaining" : "Unlimited",
+				"Location" : "Factory Installed"
+			},
+			{
+				"Software option" : "RAID 5/50",
+				"Time Remaining" : "Unlimited",
+				"Location" : "Factory Installed"
+			},
+			{
+				"Software option" : "JBOD",
+				"Time Remaining" : "Unlimited",
+				"Location" : "Factory Installed"
+			},
+			{
+				"Software option" : "Max RAID Capable Drives 240",
+				"Time Remaining" : "Unlimited",
+				"Location" : "Factory Installed"
+			},
+			{
+				"Software option" : "Max Drives 240",
+				"Time Remaining" : "Unlimited",
+				"Location" : "Factory Installed"
+			},
+			{
+				"Software option" : "Max SAS/SATA drives 240",
+				"Time Remaining" : "Unlimited",
+				"Location" : "Factory Installed"
+			},
+			{
+				"Software option" : "Max NVMe Drives 32",
+				"Time Remaining" : "Unlimited",
+				"Location" : "Factory Installed"
+			},
+			{
+				"Software option" : "Max Virtual Drives 240",
+				"Time Remaining" : "Unlimited",
+				"Location" : "Factory Installed"
+			}
+		],
+		"Key Information" : [
+			{
+				"Prop" : "SafeID",
+				"Description" : "LBRJH9R4H9B4A6SA4ICUJVP7A222PMNPI36KCXTASF4313SA8GVNBDR9HSH26FDTME722KAMC64A8"
+			},
+			{
+				"Prop" : "KeyID",
+				"Description" : "V56AI6A9SBR8BUW9QHBHSDWMKD2SVB461Q3FTNEBCWA8XA9SQB2R"
+			}
+		]
+	}
+}
+]
+}
+

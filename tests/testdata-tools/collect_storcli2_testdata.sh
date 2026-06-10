@@ -193,6 +193,24 @@ run_and_save \
     "${OUTPUT_DIR}/controllergetter/testdata/storcli2/c0.json" \
     "${C}" show all
 
+# controllergetter/testdata/storcli2/c0_aso.json
+# Command: storcli2 /c0 show aso J
+# Used by: StorCLI2.jbodSupported("/c0") → runner.Run(["/c0", "show", "aso"])
+# JBOD capability = a non-expired "JBOD" Advanced Software Option (license).
+run_and_save \
+    "Controller ${CONTROLLER_INDEX} advanced software options" \
+    "${OUTPUT_DIR}/controllergetter/testdata/storcli2/c0_aso.json" \
+    "${C}" show aso
+
+# controllergetter/testdata/storcli2/c0_autoconfig.json
+# Command: storcli2 /c0 show autoconfig J
+# Used by: StorCLI2.jbodEnabled("/c0") → runner.Run(["/c0", "show", "autoconfig"])
+# JBOD active = Primary Auto-configure behavior is JBOD or SecureJBOD.
+run_and_save \
+    "Controller ${CONTROLLER_INDEX} auto-configure behavior" \
+    "${OUTPUT_DIR}/controllergetter/testdata/storcli2/c0_autoconfig.json" \
+    "${C}" show autoconfig
+
 # controllergetter/testdata/storcli2/c5_invalid.json
 # Command: storcli2 /c5 show all J
 # Used by: error case when controller doesn't exist
