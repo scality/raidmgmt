@@ -117,25 +117,68 @@ func TestStorCLI2PhysicalDrive(t *testing.T) {
 	}
 }
 
-// TestStorCLI2PhysicalDriveEmptyList covers the not-found guard reached when the
-// command succeeds but reports no drive (distinct from a storcli2 failure
-// payload, which is rejected earlier by Decode).
+// TestStorCLI2PhysicalDriveEmptyList covers the not-found guard reached when
+// the command succeeds but reports no drive (distinct from a storcli2 failure
+// payload, which is rejected earlier by Decode). Per the User Guide, showing a
+// nonexistent object reports success, and the "Drives List" section may be
+// present-but-empty or absent altogether.
 func TestStorCLI2PhysicalDriveEmptyList(t *testing.T) {
 	t.Parallel()
 
-	mockRunner := new(MockCommandRunner)
-	mockRunner.On("Run", []string{"/c0/e306/s0", "show", "all"}).
-		Return([]byte(`{"Controllers":[{"Command Status":{"Status":"Success"},"Response Data":{"Drives List":[]}}]}`), nil)
+	payloads := map[string][]byte{
+		"empty section": []byte(`{"Controllers":[{"Command Status":{"Status":"Success"},` +
+			`"Response Data":{"Drives List":[]}}]}`),
+		"absent section": []byte(`{"Controllers":[{"Command Status":{"Status":"Success"},` +
+			`"Response Data":{}}]}`),
+	}
 
-	s := NewStorCLI2(mockRunner)
+	for name, payload := range payloads {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 
-	drive, err := s.PhysicalDrive(&physicaldrive.Metadata{
-		CtrlMetadata: &raidcontroller.Metadata{ID: 0},
-		ID:           "306:0",
-	})
-	require.Error(t, err)
-	require.ErrorContains(t, err, "not found")
-	assert.Nil(t, drive)
+			mockRunner := new(MockCommandRunner)
+			mockRunner.On("Run", []string{"/c0/e306/s0", "show", "all"}).Return(payload, nil)
+
+			s := NewStorCLI2(mockRunner)
+
+			drive, err := s.PhysicalDrive(&physicaldrive.Metadata{
+				CtrlMetadata: &raidcontroller.Metadata{ID: 0},
+				ID:           "306:0",
+			})
+			require.Error(t, err)
+			require.ErrorContains(t, err, "not found")
+			assert.Nil(t, drive)
+		})
+	}
+}
+
+// TestStorCLI2PhysicalDrivesEmptyInventory pins the empty-inventory contract:
+// a controller without drives yields an empty list rather than an error,
+// whether the "Drives List" section is empty or absent.
+func TestStorCLI2PhysicalDrivesEmptyInventory(t *testing.T) {
+	t.Parallel()
+
+	payloads := map[string][]byte{
+		"empty section": []byte(`{"Controllers":[{"Command Status":{"Status":"Success"},` +
+			`"Response Data":{"Drives List":[]}}]}`),
+		"absent section": []byte(`{"Controllers":[{"Command Status":{"Status":"Success"},` +
+			`"Response Data":{}}]}`),
+	}
+
+	for name, payload := range payloads {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			mockRunner := new(MockCommandRunner)
+			mockRunner.On("Run", []string{"/c0/eall/sall", "show", "all"}).Return(payload, nil)
+
+			s := NewStorCLI2(mockRunner)
+
+			drives, err := s.PhysicalDrives(&raidcontroller.Metadata{ID: 0})
+			require.NoError(t, err)
+			assert.Empty(t, drives)
+		})
+	}
 }
 
 // TestStorCLI2PhysicalDrivesJBOD pins the JBOD mapping at the entity level
@@ -184,9 +227,11 @@ func TestStorCLI2PDStatus(t *testing.T) {
 		{"shielded jbod", "Shld", "Online", physicaldrive.PDStatusUsed},
 		{"global hot spare", "GHS", "Online", physicaldrive.PDStatusUsed},
 		{"dedicated hot spare shielded", "DHSShld", "Online", physicaldrive.PDStatusUsed},
+		{"configured being replaced", "Conf", "Replace", physicaldrive.PDStatusUsed},
 		{"unconfigured good", "UConf", "Good", physicaldrive.PDStatusUnassignedGood},
 		{"unconfigured shielded", "UConfShld", "Good", physicaldrive.PDStatusUnassignedGood},
 		{"unconfigured bad", "UConf", "Bad", physicaldrive.PDStatusUnassignedBad},
+		{"unconfigured unusable", "UConf", "Unusable", physicaldrive.PDStatusUnassignedBad},
 		{"unconfigured unsupported", "UConfUnsp", "Good", physicaldrive.PDStatusUnassignedBad},
 		// A "Failed", "Offline" or "Missing" status wins over any state: a drive
 		// that is not functioning must never be reported as in use or available.
@@ -236,20 +281,25 @@ func TestStorCLI2DiskType(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
+		name     string
+		intf     string
 		med      string
 		expected physicaldrive.DiskType
 	}{
-		{"HDD", physicaldrive.DiskTypeHDD},
-		{"SSD", physicaldrive.DiskTypeSSD},
-		{"NVMe", physicaldrive.DiskTypeNVMe},
-		{"nvme", physicaldrive.DiskTypeNVMe},
-		{"weird", physicaldrive.DiskTypeUnknown},
+		{"sas hdd", "SAS", "HDD", physicaldrive.DiskTypeHDD},
+		{"sata ssd", "SATA", "SSD", physicaldrive.DiskTypeSSD},
+		// storcli2 reports NVMe drives with "SSD" media and the transport in
+		// "Intf" (User Guide sample: Intf "NVMe", Med "SSD").
+		{"nvme reported as ssd media", "NVMe", "SSD", physicaldrive.DiskTypeNVMe},
+		{"nvme lowercase", "nvme", "ssd", physicaldrive.DiskTypeNVMe},
+		{"nvme media guard", "", "NVMe", physicaldrive.DiskTypeNVMe},
+		{"unknown", "SAS", "weird", physicaldrive.DiskTypeUnknown},
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.med, func(t *testing.T) {
+		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			assert.Equal(t, tt.expected, diskType(tt.med))
+			assert.Equal(t, tt.expected, diskType(tt.intf, tt.med))
 		})
 	}
 }

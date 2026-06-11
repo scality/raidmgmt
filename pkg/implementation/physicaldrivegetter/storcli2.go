@@ -52,6 +52,13 @@ const (
 	// describe a drive that is not functioning.
 	storcli2OfflineStatus = "Offline"
 	storcli2MissingStatus = "Missing"
+	// storcli2UnusableStatus is the "Status" of a drive the controller cannot
+	// use at all.
+	storcli2UnusableStatus = "Unusable"
+	// storcli2NVMeInterface is the "Intf" value of an NVMe drive. storcli2
+	// reports the media of an NVMe drive as "SSD" and its transport in "Intf",
+	// so the disk type is derived from the interface first.
+	storcli2NVMeInterface = "NVMe"
 )
 
 type (
@@ -73,6 +80,7 @@ type (
 	storcli2DriveInformation struct {
 		EIDSlot string `json:"EID:Slt"`
 		Model   string `json:"Model"`
+		Intf    string `json:"Intf"`
 		Med     string `json:"Med"`
 		Size    string `json:"Size"`
 		State   string `json:"State"`
@@ -165,6 +173,9 @@ func (s *StorCLI2) PhysicalDrive(metadata *physicaldrive.Metadata) (
 }
 
 // decodeDrivesList decodes a storcli2 envelope and extracts its "Drives List".
+// Per the StorCLI2 User Guide, showing a nonexistent object reports success,
+// so an absent section means an empty inventory, not an error;
+// PhysicalDrive()'s not-found guard then handles the single-drive case.
 func decodeDrivesList(output []byte) ([]storcli2DrivesListEntry, error) {
 	cmd, err := storcli2.Decode(output)
 	if err != nil {
@@ -175,6 +186,10 @@ func decodeDrivesList(output []byte) ([]storcli2DrivesListEntry, error) {
 		cmd.Controllers[0].ResponseData, "Drives List",
 	)
 	if err != nil {
+		if errors.Is(err, utils.ErrKeyNotFound) {
+			return nil, nil
+		}
+
 		return nil, errors.Wrap(err, "failed to unmarshal drives list")
 	}
 
@@ -211,7 +226,7 @@ func parseDrive(entry storcli2DrivesListEntry, ctrl *raidcontroller.Metadata) (
 		Serial: strings.TrimSpace(detailed.SerialNumber),
 		WWN:    formatWWN(detailed.WWN),
 		Size:   size,
-		Type:   diskType(info.Med),
+		Type:   diskType(info.Intf, info.Med),
 		Status: pdStatus(info.State, info.Status),
 		JBOD:   isJBODState(info.State),
 		// Reason carries the raw drive status, mirroring the ssacli getter.
@@ -260,8 +275,15 @@ func formatWWN(wwn string) string {
 	return "0x" + trimmed
 }
 
-// diskType maps a storcli2 "Med" value to a DiskType.
-func diskType(med string) physicaldrive.DiskType {
+// diskType maps a storcli2 "Intf"/"Med" pair to a DiskType. storcli2 reports
+// an NVMe drive with "SSD" media and the NVMe transport in its interface
+// (Intf "NVMe", Med "SSD" in the User Guide sample), so the interface is
+// checked before the media.
+func diskType(intf, med string) physicaldrive.DiskType {
+	if strings.EqualFold(intf, storcli2NVMeInterface) {
+		return physicaldrive.DiskTypeNVMe
+	}
+
 	switch strings.ToUpper(med) {
 	case "HDD":
 		return physicaldrive.DiskTypeHDD
@@ -298,7 +320,8 @@ func pdStatus(state, status string) physicaldrive.PDStatus {
 		return physicaldrive.PDStatusUnassignedBad
 
 	case hasStateFamily(state, storcli2UnconfState):
-		if strings.EqualFold(status, storcli2BadStatus) {
+		if strings.EqualFold(status, storcli2BadStatus) ||
+			strings.EqualFold(status, storcli2UnusableStatus) {
 			return physicaldrive.PDStatusUnassignedBad
 		}
 
