@@ -37,8 +37,14 @@ const (
 	// storcli2SecureJBODBehavior is the secure variant of the JBOD auto-configure
 	// behavior.
 	storcli2SecureJBODBehavior = "SecureJBOD"
+	// storcli2OptionUnsupported is the "Time Remaining" marker of an Advanced
+	// Software Option the controller cannot use: per the StorCLI2 User Guide
+	// v1.1 the value is "Unlimited" or a days-and-hours countdown, optionally
+	// suffixed with "(unsupported)".
+	storcli2OptionUnsupported = "unsupported"
 	// storcli2OptionExpired is the "Time Remaining" value of an expired Advanced
-	// Software Option license.
+	// Software Option license. It is not in the User Guide v1.1 vocabulary
+	// (storcli1 had it) but is kept as a defensive guard.
 	storcli2OptionExpired = "Expired"
 	// storcli2PrimaryAutoConfigProp is the auto-configure property that holds the
 	// behavior applied to new drives.
@@ -182,7 +188,7 @@ func (s *StorCLI2) Controller(metadata *raidcontroller.Metadata) (
 // jbodSupported reports whether the controller is JBOD-capable, read from the
 // licensed Advanced Software Options. storcli2 has no controller-level JBOD
 // enable flag; JBOD is a licensed feature applied per drive, so capability is
-// the presence of a non-expired "JBOD" license.
+// the presence of a usable (neither unsupported nor expired) "JBOD" license.
 func (s *StorCLI2) jbodSupported(id int) (bool, error) {
 	output, err := s.runner.Run([]string{
 		fmt.Sprintf(storcli2ControllerSelector, id),
@@ -210,11 +216,21 @@ func (s *StorCLI2) jbodSupported(id int) (bool, error) {
 
 	for _, option := range options {
 		if strings.EqualFold(option.SoftwareOption, storcli2JBODOption) {
-			return !strings.EqualFold(strings.TrimSpace(option.TimeRemaining), storcli2OptionExpired), nil
+			return isOptionUsable(option.TimeRemaining), nil
 		}
 	}
 
 	return false, nil
+}
+
+// isOptionUsable reports whether an Advanced Software Option is usable from
+// its "Time Remaining" value: an "(unsupported)"-marked option is listed but
+// cannot be used by the controller, and an expired one no longer can.
+func isOptionUsable(timeRemaining string) bool {
+	trimmed := strings.TrimSpace(timeRemaining)
+
+	return !strings.Contains(strings.ToLower(trimmed), storcli2OptionUnsupported) &&
+		!strings.EqualFold(trimmed, storcli2OptionExpired)
 }
 
 // jbodEnabled reports whether the controller currently operates in JBOD mode.
