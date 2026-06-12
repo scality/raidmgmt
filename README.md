@@ -21,7 +21,9 @@ setup.
 
 ## Features
 
-- **Hardware RAID** -- MegaRAID, Dell PERC, and HPE Smart Array controllers.
+- **Hardware RAID** -- MegaRAID and Dell PERC controllers, including the SAS4
+  generation (MegaRAID 96xx / PERC 12 via `storcli2`/`perccli2`), and HPE
+  Smart Array controllers.
 - **Software RAID** -- `mdadm`-based RAID on RHEL8-family systems.
 - **Unified interface** -- A single set of ports covers controller listing,
   physical drive and logical volume management, cache options, JBOD, and drive
@@ -93,13 +95,14 @@ pkg/
 │   └── ports/                   # Port interfaces
 ├── implementation/
 │   ├── blinker/                 # Drive blinking adapters
-│   ├── commandrunner/           # CLI tool wrappers (storcli, ssacli, mdadm, ...)
+│   ├── commandrunner/           # CLI tool wrappers (storcli2, ssacli, mdadm, ...)
 │   ├── controllergetter/        # Controller listing adapters
 │   ├── logicalvolumegetter/     # Logical volume listing adapters
 │   ├── logicalvolumemanager/    # Logical volume CRUD adapters
 │   ├── physicaldrivegetter/     # Physical drive listing adapters
-│   └── raidcontroller/          # Full RAIDController adapter compositions
-│       └── megaraid/            # MegaRAID/PERC-specific implementation
+│   ├── raidcontroller/          # Full RAIDController adapter compositions
+│   │   └── megaraid/            # MegaRAID/PERC (storcli, perccli) implementation
+│   └── storcli2/                # storcli2/perccli2 shared JSON envelope + decoder
 └── utils/                       # Shared utilities
 ```
 

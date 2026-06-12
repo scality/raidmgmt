@@ -114,10 +114,11 @@ Not all adapters support every operation. Unsupported operations return
 
 ### Adapters
 
-#### MegaRAID / PERC
+#### MegaRAID / PERC (storcli, perccli)
 
-Adapter for Broadcom MegaRAID and Dell PERC controllers. Interacts with
-hardware via `storcli`/`perccli`, which provides JSON output for easy parsing.
+Adapter for Broadcom MegaRAID and Dell PERC controllers up to the SAS3.5
+generation (MegaRAID 94xx/95xx). Interacts with hardware via
+`storcli`/`perccli`, which provides JSON output for easy parsing.
 
 Supports all port operations: controller listing, physical drives, logical
 volumes (CRUD), cache options, JBOD, and drive blinking.
@@ -128,6 +129,49 @@ volumes (CRUD), cache options, JBOD, and drive blinking.
 > same pattern -- splitting into separate `commandrunner`, `controllergetter`,
 > `physicaldrivegetter`, `logicalvolumegetter`, and `logicalvolumemanager`
 > packages, and composing them in a top-level adapter.
+
+#### MegaRAID 96xx / PERC 12 (storcli2, perccli2)
+
+Adapter for the SAS4 ("MegaRAID 8" / tri-mode) generation: Broadcom MegaRAID
+96xx and Dell PERC 12 controllers, driven through `storcli2`/`perccli2`.
+
+It is built directly on the decomposed pattern: one component package per
+port (`controllergetter`, `physicaldrivegetter`, `logicalvolumegetter`, ...),
+each named `StorCLI2` and taking a `commandrunner.CommandRunner`. Both
+binaries emit the same JSON schema, so a single set of components serves
+both; the concrete runner (`commandrunner.StorCLI2` or
+`commandrunner.PercCLI2`) is injected at construction time.
+
+Design notes, verified against the StorCLI2 User Guide and a live MegaRAID
+9660-16i:
+
+- All outputs share a JSON envelope decoded by `pkg/implementation/storcli2.Decode`.
+  The process exit code is **not** a reliable success signal (some failures
+  exit 0, others exit non-zero while still writing the JSON payload), so
+  errors are detected from each controller's `Command Status` instead, and
+  the runners return the payload as-is on a non-zero exit.
+- Showing a nonexistent object may report success with an absent section
+  (treated as an empty inventory) or an explicit failure payload: the User
+  Guide documents the former, while the binaries tested so far do the
+  latter. Both are handled.
+- storcli2 has no controller-level JBOD enable and no JBOD personality.
+  `IsJBODSupported` is derived from a usable `JBOD` Advanced Software Option
+  (`show aso`) and `IsJBODEnabled` from the primary auto-configure behavior
+  (`show autoconfig`); JBOD itself is a per-drive **state**, orthogonal to
+  the per-drive **status** (each `set` command changes only one of the two).
+- Drive states come in suffixed variants (`Shld`, `Sntz`, `Dgrd`), so they
+  are matched by family; a `Failed`/`Offline`/`Missing` status takes
+  precedence over any state.
+- storcli2 dropped some storcli operations: there is no RAID-level migration
+  (drive *removal* from a volume is not possible; adding drives goes through
+  `/cx/vx expand drives=`), and no IO policy (`Cached`/`Direct`) cache
+  option -- the IO policy of parsed volumes is always `Unknown`.
+
+The read path (controller, physical drive and logical volume getters), the
+shared envelope/decoder and both command runners are implemented. The write
+path (logical volume manager, cache and JBOD setters), the drive blinker and
+the top-level composition are in progress; until the composition lands the
+components are wired individually.
 
 #### Smart Array
 
