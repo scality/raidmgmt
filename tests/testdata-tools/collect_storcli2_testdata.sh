@@ -20,9 +20,12 @@
 #   - For create/delete tests: ability to create/delete a VD (destructive!)
 #
 # The script has two modes:
-#   - SAFE mode (default): Collects read-only outputs only
-#   - DESTRUCTIVE mode: Also collects create/delete/migrate outputs
-#     Set DESTRUCTIVE=true to enable
+#   - SAFE mode (default): Collects strictly read-only "show" outputs only.
+#   - DESTRUCTIVE mode: Also runs every state-changing verb (create / delete /
+#     migrate / cache / JBOD / locate), including the captures that are only
+#     expected to produce an error payload or toggle a drive LED — on another
+#     host their targets may exist, so they are never run in SAFE mode.
+#     Set DESTRUCTIVE=true to enable (use a scratch host).
 #
 # =============================================================================
 
@@ -47,10 +50,11 @@ ENCLOSURE_IDS="306 320"
 SLOTS="0 1 2 3 4 5 6 7 8 9 10 11"
 
 # Virtual Drive IDs to capture (space-separated)
-# From your setup: VDs 1-24 (NOTE: if a VD was deleted and not recreated,
-# storcli2 will still return exit 0 with "Invalid VD number" in JSON).
-# Consider removing deleted VD IDs from this list.
-VD_IDS="1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23"
+# From your setup: VDs 1-23 and 25 — the original v24 was sacrificed by a
+# DESTRUCTIVE run and recreated as v25. (NOTE: a deleted VD ID still returns
+# exit 0 with "Invalid VD number" in JSON; keep this list in sync with
+# "/c0/vall show".)
+VD_IDS="1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 25"
 
 # Invalid controller index (for error test cases)
 INVALID_CONTROLLER_INDEX=5
@@ -219,11 +223,11 @@ run_and_save \
     "${OUTPUT_DIR}/controllergetter/testdata/storcli2/c5_invalid.json" \
     "/c${INVALID_CONTROLLER_INDEX}" show all
 
-# controllergetter/testdata/storcli2/c0_s12_UGood.json
+# controllergetter/testdata/storcli2/c0_UGood.json
 # Command: storcli2 /c0 show all J (with one drive in UGood state)
 # Used by: createLV flow - controller must have an unconfigured drive
 # NOTE: Captured automatically in DESTRUCTIVE mode (delete VD → capture → recreate)
-echo "  [SKIP] c0_s12_UGood.json will be captured in DESTRUCTIVE mode"
+echo "  [SKIP] c0_UGood.json will be captured in DESTRUCTIVE mode"
 echo ""
 
 # =============================================================================
@@ -260,38 +264,6 @@ run_and_save \
     "${OUTPUT_DIR}/physicaldrivegetter/testdata/storcli2/show/e${FIRST_ENCLOSURE}s${INVALID_SLOT}_invalid.json" \
     "${C}/e${FIRST_ENCLOSURE}/s${INVALID_SLOT}" show all
 
-# Blink start
-# Command: storcli2 /c0/e306/s0 start locate J
-# Used by: adapter.blink(metadata, "start") → runner.Run(["/c0/e306/s0", "start", "locate"])
-run_and_save \
-    "Start blink on e${FIRST_ENCLOSURE}/s${FIRST_SLOT}" \
-    "${OUTPUT_DIR}/blinker/testdata/storcli2/start.json" \
-    "${C}/e${FIRST_ENCLOSURE}/s${FIRST_SLOT}" start locate
-
-# Blink stop
-# Command: storcli2 /c0/e306/s0 stop locate J
-# Used by: adapter.blink(metadata, "stop") → runner.Run(["/c0/e306/s0", "stop", "locate"])
-run_and_save \
-    "Stop blink on e${FIRST_ENCLOSURE}/s${FIRST_SLOT}" \
-    "${OUTPUT_DIR}/blinker/testdata/storcli2/stop.json" \
-    "${C}/e${FIRST_ENCLOSURE}/s${FIRST_SLOT}" stop locate
-
-# JBOD enable (expected failure when drive is in a VD)
-# Command: storcli2 /c0/e306/s0 set jbod J
-# Used by: adapter.setJBOD(metadata, "set") → runner.Run(["/c0/e306/s0", "set", "jbod"])
-run_and_save \
-    "Enable JBOD on e${FIRST_ENCLOSURE}/s${FIRST_SLOT} (expected failure - drive in VD)" \
-    "${OUTPUT_DIR}/physicaldrivegetter/testdata/storcli2/jbod/enable/fail.json" \
-    "${C}/e${FIRST_ENCLOSURE}/s${FIRST_SLOT}" set jbod
-
-# JBOD disable (expected failure when drive is in a VD)
-# Command: storcli2 /c0/e306/s0 delete jbod J
-# Used by: adapter.setJBOD(metadata, "delete") → runner.Run(["/c0/e306/s0", "delete", "jbod"])
-run_and_save \
-    "Disable JBOD on e${FIRST_ENCLOSURE}/s${FIRST_SLOT} (expected failure - drive in VD)" \
-    "${OUTPUT_DIR}/physicaldrivegetter/testdata/storcli2/jbod/disable/fail.json" \
-    "${C}/e${FIRST_ENCLOSURE}/s${FIRST_SLOT}" delete jbod
-
 # =============================================================================
 # 3. LOGICAL VOLUMES
 # =============================================================================
@@ -325,29 +297,67 @@ run_and_save \
     "${OUTPUT_DIR}/logicalvolumegetter/testdata/storcli2/show/v${INVALID_VD_ID}_invalid.json" \
     "${C}/v${INVALID_VD_ID}" show all
 
-# Delete VD - failure case (VD doesn't exist)
-# Command: storcli2 /c0/v999 delete J
-# Used by: adapter.deleteLV() error case
-run_and_save \
-    "Delete non-existent VD (expected failure)" \
-    "${OUTPUT_DIR}/logicalvolumemanager/testdata/storcli2/delete/fail_vdNotExist.json" \
-    "${C}/v${INVALID_VD_ID}" delete
-
-# Migrate - failure case (operation not supported/possible)
-# Command: storcli2 /c0/v1 start migrate type=raid0 option=add drives=306:99 J
-# Used by: adapter.migrate() error case
-run_and_save \
-    "Migrate VD (expected failure)" \
-    "${OUTPUT_DIR}/logicalvolumemanager/testdata/storcli2/migrate/fail.json" \
-    "${C}/v1" start migrate type=raid0 option=add "drives=${FIRST_ENCLOSURE}:${INVALID_SLOT}"
-
 # =============================================================================
 # 4. DESTRUCTIVE OPERATIONS (disabled by default)
-#    Flow: delete VD → capture UGood state → recreate VD → capture create/cache/delete
+#    State-changing error/LED captures, then:
+#    delete VD → capture UGood state → recreate VD → capture create/cache/delete
 # =============================================================================
 if [ "${DESTRUCTIVE}" = "true" ]; then
     echo "--- Destructive Operations ---"
     echo ""
+
+    # The captures below are only expected to fail or toggle a drive LED on the
+    # reference setup, but they all issue state-changing verbs: on a host where
+    # their target exists (an unconfigured slot 0, a VD 999) they would really
+    # change the configuration, so they are kept out of SAFE mode.
+
+    # Blink start
+    # Command: storcli2 /c0/e306/s0 start locate J
+    # Used by: adapter.blink(metadata, "start") → runner.Run(["/c0/e306/s0", "start", "locate"])
+    run_and_save \
+        "Start blink on e${FIRST_ENCLOSURE}/s${FIRST_SLOT}" \
+        "${OUTPUT_DIR}/blinker/testdata/storcli2/start.json" \
+        "${C}/e${FIRST_ENCLOSURE}/s${FIRST_SLOT}" start locate
+
+    # Blink stop
+    # Command: storcli2 /c0/e306/s0 stop locate J
+    # Used by: adapter.blink(metadata, "stop") → runner.Run(["/c0/e306/s0", "stop", "locate"])
+    run_and_save \
+        "Stop blink on e${FIRST_ENCLOSURE}/s${FIRST_SLOT}" \
+        "${OUTPUT_DIR}/blinker/testdata/storcli2/stop.json" \
+        "${C}/e${FIRST_ENCLOSURE}/s${FIRST_SLOT}" stop locate
+
+    # JBOD enable (expected failure when drive is in a VD)
+    # Command: storcli2 /c0/e306/s0 set jbod J
+    # Used by: adapter.setJBOD(metadata, "set") → runner.Run(["/c0/e306/s0", "set", "jbod"])
+    run_and_save \
+        "Enable JBOD on e${FIRST_ENCLOSURE}/s${FIRST_SLOT} (expected failure - drive in VD)" \
+        "${OUTPUT_DIR}/physicaldrivegetter/testdata/storcli2/jbod/enable/fail.json" \
+        "${C}/e${FIRST_ENCLOSURE}/s${FIRST_SLOT}" set jbod
+
+    # JBOD disable (expected failure when drive is in a VD)
+    # Command: storcli2 /c0/e306/s0 delete jbod J
+    # Used by: adapter.setJBOD(metadata, "delete") → runner.Run(["/c0/e306/s0", "delete", "jbod"])
+    run_and_save \
+        "Disable JBOD on e${FIRST_ENCLOSURE}/s${FIRST_SLOT} (expected failure - drive in VD)" \
+        "${OUTPUT_DIR}/physicaldrivegetter/testdata/storcli2/jbod/disable/fail.json" \
+        "${C}/e${FIRST_ENCLOSURE}/s${FIRST_SLOT}" delete jbod
+
+    # Delete VD - failure case (VD doesn't exist)
+    # Command: storcli2 /c0/v999 delete J
+    # Used by: adapter.deleteLV() error case
+    run_and_save \
+        "Delete non-existent VD (expected failure)" \
+        "${OUTPUT_DIR}/logicalvolumemanager/testdata/storcli2/delete/fail_vdNotExist.json" \
+        "${C}/v${INVALID_VD_ID}" delete
+
+    # Migrate - failure case (operation not supported/possible)
+    # Command: storcli2 /c0/v1 start migrate type=raid0 option=add drives=306:99 J
+    # Used by: adapter.migrate() error case
+    run_and_save \
+        "Migrate VD (expected failure)" \
+        "${OUTPUT_DIR}/logicalvolumemanager/testdata/storcli2/migrate/fail.json" \
+        "${C}/v1" start migrate type=raid0 option=add "drives=${FIRST_ENCLOSURE}:${INVALID_SLOT}"
 
     # --- Step 0: Auto-detect sacrifice VD if needed ---
     if [ "${SACRIFICE_VD_ID}" = "auto" ]; then
@@ -556,12 +566,13 @@ sys.exit(1)
         # --- Step 3: Capture UGood state ---
         echo "  [STEP 3] Capturing UGood state..."
 
-        # controllergetter/testdata/storcli2/c0_s12_UGood.json
+        # controllergetter/testdata/storcli2/c0_UGood.json
         # Command: storcli2 /c0 show all J (with drive in UGood/unconfigured state)
         # Used by: createLV flow - controller must show an unconfigured drive
+        # The freed drive is auto-detected, so the file name does not carry a slot.
         run_and_save \
             "Controller with UGood drive (c0 show all)" \
-            "${OUTPUT_DIR}/controllergetter/testdata/storcli2/c0_s12_UGood.json" \
+            "${OUTPUT_DIR}/controllergetter/testdata/storcli2/c0_UGood.json" \
             "${C}" show all
 
         # physicaldrivegetter/testdata/storcli2/show/e{EID}s{SLOT}_UGood.json
@@ -637,7 +648,7 @@ sys.exit(1)
             echo ""
 
             # --- Step 6: Cache options success ---
-            # logicalvolumemanager/testdata/storcli2/cacheoptions/success.json
+            # logicalvolumemanager/testdata/storcli2/cacheoptions/success_{wrcache,rdcache}.json
             # storcli2 uses separate commands for each cache option
             # (v1 combined syntax "set rdcache=RA wrcache=WT" does not work)
             # Try: storcli2 /c0/v{N} set wrcache=WT J
@@ -653,10 +664,11 @@ sys.exit(1)
                 "${OUTPUT_DIR}/logicalvolumemanager/testdata/storcli2/cacheoptions/success_rdcache.json" \
                 "${C}/v${NEWEST_VD}" set rdcache=RA
 
-            # Also try combined (may fail - for documentation purposes)
+            # Also try the v1 combined syntax, which storcli2 rejects with a
+            # plain-text syntax error — captured for documentation purposes.
             run_and_save \
-                "Set cache options combined on v${NEWEST_VD} (may fail in storcli2)" \
-                "${OUTPUT_DIR}/logicalvolumemanager/testdata/storcli2/cacheoptions/success.json" \
+                "Set cache options combined on v${NEWEST_VD} (expected syntax error in storcli2)" \
+                "${OUTPUT_DIR}/logicalvolumemanager/testdata/storcli2/cacheoptions/combined_syntax_error.json" \
                 "${C}/v${NEWEST_VD}" set rdcache=RA wrcache=WT
         else
             echo "  [ERROR] Could not determine newly created VD ID"
@@ -690,14 +702,19 @@ sys.exit(1)
 else
     echo "--- Destructive Operations SKIPPED (set DESTRUCTIVE=true to enable) ---"
     echo ""
-    echo "  The following files need destructive operations to capture:"
-    echo "    - controllergetter/testdata/storcli2/c0_s12_UGood.json (controller with UGood drive)"
+    echo "  The following files need DESTRUCTIVE mode to capture:"
+    echo "    - controllergetter/testdata/storcli2/c0_UGood.json (controller with UGood drive)"
     echo "    - physicaldrivegetter/testdata/storcli2/show/e{EID}s{SLOT}_UGood.json"
+    echo "    - physicaldrivegetter/testdata/storcli2/jbod/{enable,disable}/fail.json"
+    echo "    - blinker/testdata/storcli2/{start,stop}.json"
     echo "    - logicalvolumemanager/testdata/storcli2/create/success.json"
     echo "    - logicalvolumemanager/testdata/storcli2/create/fail.json"
     echo "    - logicalvolumemanager/testdata/storcli2/delete/success.json"
     echo "    - logicalvolumemanager/testdata/storcli2/delete/fail_invalid.json"
-    echo "    - logicalvolumemanager/testdata/storcli2/cacheoptions/success.json"
+    echo "    - logicalvolumemanager/testdata/storcli2/delete/fail_vdNotExist.json"
+    echo "    - logicalvolumemanager/testdata/storcli2/cacheoptions/success_{wrcache,rdcache}.json"
+    echo "    - logicalvolumemanager/testdata/storcli2/cacheoptions/combined_syntax_error.json"
+    echo "    - logicalvolumemanager/testdata/storcli2/migrate/fail.json"
     echo ""
 fi
 
