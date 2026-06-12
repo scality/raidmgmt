@@ -168,10 +168,36 @@ Design notes, verified against the StorCLI2 User Guide and a live MegaRAID
   option -- the IO policy of parsed volumes is always `Unknown`.
 
 The read path (controller, physical drive and logical volume getters), the
-shared envelope/decoder and both command runners are implemented. The write
-path (logical volume manager, cache and JBOD setters), the drive blinker and
-the top-level composition are in progress; until the composition lands the
-components are wired individually.
+shared envelope/decoder and both command runners are implemented. The
+remaining ports follow the same component pattern; the table below maps each
+port operation to its storcli2 command (verified against the StorCLI2 User
+Guide, the official storcli-to-storcli2 command map of the MegaRAID 8
+software guide, and the binary's own help -- the grammar differs from
+storcli in several places).
+
+| Port operation | storcli2 command | Notes |
+|---|---|---|
+| `CreateLV` | `/cx add vd r<level> [Size=<sz>] drives=e:s,... [WT\|WB\|AWB] [nora\|ra]` | Cache policies are bare tokens at creation time; storcli's `type=` / `wrcache=` / `rdpolicy=` forms are gone. |
+| `DeleteLV` | `/cx/vx delete [discardcache] [force]` | A nonexistent VD yields a failure payload surfaced by `Decode`. |
+| `AddPDsToLV` | `/cx/vx expand drives=e:s,...` | Online capacity expansion. Documented and present in the binary help, but not exercised on hardware yet; progress is visible through `/cx/vx show expansion` and `show ocedriveinfo`. |
+| `DeletePDsFromLV` | -- | Not supported: the official command map drops `start migrate` with no replacement for `option=remove`. Must return `ErrFunctionNotSupportedByImplementation`. |
+| `SetLVCacheOptions` | `/cx/vx set rdcache=RA\|NoRA` and `/cx/vx set wrcache=WT\|WB\|AWB` | Two separate commands: storcli's combined syntax is rejected. The IO policy cannot be set (see above); beware that `CacheOptions.Validate()` rejects an unknown IO policy, so a request cannot be round-tripped from getter output as-is. |
+| `EnableJBOD` | `/cx/ex/sx set jbod [force]` | Converts the drive **state**; the drive status is unchanged. |
+| `DisableJBOD` | `/cx/ex/sx set uconf [force]` | storcli's `delete jbod` no longer parses; `set good` would only change the status. |
+| `StartBlink` / `StopBlink` | `/cx/ex/sx start locate` / `stop locate` | Same grammar as storcli. |
+
+Once every port is covered, a top-level `raidcontroller.StorCLI2` composition
+embeds the seven components (no stubs: every operation except
+`DeletePDsFromLV` is supported); a single composition serves both binaries
+since only the injected runner differs. Until then the components are wired
+individually.
+
+> **Note:** Part of the pre-staged write-path fixtures under
+> `pkg/implementation/logicalvolumemanager/testdata/storcli2/` and
+> `pkg/implementation/physicaldrivegetter/testdata/storcli2/jbod/` were
+> captured with the storcli grammar and are plain-text syntax errors; they
+> must be regenerated with the commands above using
+> `tests/testdata-tools/collect_storcli2_testdata.sh` (DESTRUCTIVE mode).
 
 #### Smart Array
 

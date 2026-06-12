@@ -80,7 +80,10 @@ func main() {
 
 > **Note:** The example above is for software RAID. For hardware RAID
 > controllers (MegaRAID, Smart Array), see the adapter constructors in
-> `pkg/implementation/raidcontroller/`.
+> `pkg/implementation/raidcontroller/`. A `raidcontroller.StorCLI2`
+> composition for the MegaRAID 96xx / PERC 12 generation will join them once
+> the storcli2 write path lands; until then the storcli2 components are wired
+> individually.
 
 ## Project Structure
 
