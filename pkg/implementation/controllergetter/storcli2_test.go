@@ -183,6 +183,51 @@ func TestStorCLI2ControllerJBOD(t *testing.T) {
 			expectedJBODSup: false,
 			expectedJBODEn:  false,
 		},
+		{
+			// Per the User Guide, "Time Remaining" may be suffixed with
+			// "(unsupported)" when the controller cannot use the option.
+			name:            "JBOD license listed but unsupported",
+			aso:             asoPayload("JBOD", "Unlimited (unsupported)"),
+			autoConfig:      autoConfigPayload("UGood"),
+			expectedJBODSup: false,
+			expectedJBODEn:  false,
+		},
+		{
+			name:            "JBOD trial license counting down",
+			aso:             asoPayload("JBOD", "30 Days 4 Hours"),
+			autoConfig:      autoConfigPayload("UGood"),
+			expectedJBODSup: true,
+			expectedJBODEn:  false,
+		},
+		// Both fields are informational: firmware that rejects the probe
+		// subcommands or omits their sections (possible on perccli2 / Dell
+		// PERC) degrades them to false instead of failing the inventory.
+		{
+			name: "probe subcommands rejected by firmware",
+			aso: []byte(`{"Controllers":[{"Command Status":` +
+				`{"Status":"Failure","Description":"Un-supported command"}}]}`),
+			autoConfig: []byte(`{"Controllers":[{"Command Status":` +
+				`{"Status":"Failure","Description":"Un-supported command"}}]}`),
+			expectedJBODSup: false,
+			expectedJBODEn:  false,
+		},
+		{
+			name: "probe sections missing from response data",
+			aso: []byte(`{"Controllers":[{"Command Status":{"Status":"Success"},` +
+				`"Response Data":{}}]}`),
+			autoConfig: []byte(`{"Controllers":[{"Command Status":{"Status":"Success"},` +
+				`"Response Data":{}}]}`),
+			expectedJBODSup: false,
+			expectedJBODEn:  false,
+		},
+		{
+			name: "primary auto-configure property absent",
+			aso:  asoPayload("JBOD", "Unlimited"),
+			autoConfig: []byte(`{"Controllers":[{"Command Status":{"Status":"Success"},` +
+				`"Response Data":{"Auto-config Information":[]}}]}`),
+			expectedJBODSup: true,
+			expectedJBODEn:  false,
+		},
 	}
 
 	for _, tt := range tests {
