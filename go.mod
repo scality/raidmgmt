@@ -1,6 +1,6 @@
 module github.com/scality/raidmgmt
 
-go 1.25.6
+go 1.26.4
 
 require (
 	github.com/pkg/errors v0.9.1
