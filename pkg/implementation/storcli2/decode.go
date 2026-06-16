@@ -10,8 +10,10 @@ import (
 const statusSuccess = "Success"
 
 // Decode unmarshals the storcli2/perccli2 JSON envelope and surfaces in-JSON
-// errors. storcli2 exits 0 even on failure, so errors are detected from each
-// controller's "Command Status".Status rather than from the process exit code.
+// errors. The process exit code is not a reliable success signal (some
+// failures exit 0, others exit non-zero while still writing the JSON
+// payload), so errors are detected from each controller's
+// "Command Status".Status instead.
 func Decode(data []byte) (*CmdOutput, error) {
 	var out CmdOutput
 

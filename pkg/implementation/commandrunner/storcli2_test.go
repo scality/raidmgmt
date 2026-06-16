@@ -87,3 +87,44 @@ func TestMegaRAID2RunnerUsesCustomPath(t *testing.T) {
 		})
 	}
 }
+
+// storcli2/perccli2 exit non-zero for some failures (e.g. an invalid drive)
+// while still writing their JSON error payload to stdout. That payload must be
+// returned so the caller can decode the in-JSON error.
+func TestMegaRAID2RunnerReturnsStdoutOnNonZeroExit(t *testing.T) {
+	for _, tc := range megaRAID2RunnerCases() {
+		t.Run(tc.name, func(t *testing.T) {
+			original := *tc.execCommand
+			defer func() { *tc.execCommand = original }()
+
+			const payload = `{"Controllers":[{"Command Status":{"Status":"Failure"}}]}`
+
+			*tc.execCommand = func(_ string, _ ...string) *exec.Cmd {
+				return exec.Command("sh", "-c", "printf '%s' '"+payload+"'; exit 47")
+			}
+
+			output, err := tc.newRunner(nil).Run([]string{"/c0/e306/s99", "show", "all"})
+			require.NoError(t, err)
+			assert.Equal(t, payload, string(output))
+		})
+	}
+}
+
+// A non-zero exit with no stdout (or any other exec failure) stays a hard error:
+// there is no JSON payload for the caller to interpret.
+func TestMegaRAID2RunnerErrorsOnNonZeroExitWithoutStdout(t *testing.T) {
+	for _, tc := range megaRAID2RunnerCases() {
+		t.Run(tc.name, func(t *testing.T) {
+			original := *tc.execCommand
+			defer func() { *tc.execCommand = original }()
+
+			*tc.execCommand = func(_ string, _ ...string) *exec.Cmd {
+				return exec.Command("sh", "-c", "exit 1")
+			}
+
+			output, err := tc.newRunner(nil).Run([]string{"show"})
+			require.Error(t, err)
+			assert.Nil(t, output)
+		})
+	}
+}
