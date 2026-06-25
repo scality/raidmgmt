@@ -47,11 +47,18 @@ Flags: `-binary` (default `/opt/MegaRAID/storcli2/storcli2`, set to the
 > removal as a negative case (asserts `ErrFunctionNotSupportedByImplementation`)
 > rather than mutating the array.
 
-### Cross-compiling
+### Building for the RAID hosts
 
-The harness only shells out to the vendor binary, so it cross-compiles freely.
-Build for a Linux target host and copy the binary over:
+The harnesses only shell out to the vendor binaries, so they cross-compile
+freely. The Makefile builds them as **statically linked `linux/amd64`** binaries
+into `bin/`, which depend on no glibc and therefore run on both Rocky Linux 8
+(glibc 2.28) and Rocky Linux 9 (glibc 2.34):
 
 ```sh
-GOOS=linux GOARCH=amd64 go build -o storcli2-e2e ./tests/integration/storcli2
+make build-e2e            # both harnesses -> bin/{mdadm-e2e,storcli2-e2e}
+make build-e2e-storcli2   # storcli2 only
 ```
+
+Override the target for other hosts via the `E2E_GOOS` / `E2E_GOARCH` variables,
+e.g. `make build-e2e E2E_GOARCH=arm64`. Then copy the binary to the target host
+and run it there.
