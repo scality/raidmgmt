@@ -118,6 +118,14 @@ func (s *StorCLI2) Controllers() ([]*raidcontroller.RAIDController, error) {
 			cmd.Controllers[i].ResponseData, "System Overview",
 		)
 		if err != nil {
+			// storcli2 omits the "System Overview" section when the host has no
+			// controllers ("Number of Controllers": 0); that is an empty
+			// inventory, not an error, mirroring the logical-volume and
+			// physical-drive getters.
+			if errors.Is(err, utils.ErrKeyNotFound) {
+				continue
+			}
+
 			return nil, errors.Wrap(err, "failed to unmarshal system overview")
 		}
 
