@@ -177,10 +177,15 @@ Design notes, verified against the StorCLI2 User Guide and a live MegaRAID
 - Drive states come in suffixed variants (`Shld`, `Sntz`, `Dgrd`), so they
   are matched by family; a `Failed`/`Offline`/`Missing` status takes
   precedence over any state.
-- storcli2 dropped some storcli operations: there is no RAID-level migration
-  (drive *removal* from a volume is not possible; adding drives goes through
-  `/cx/vx expand drives=`), and no IO policy (`Cached`/`Direct`) cache
-  option -- the IO policy of parsed volumes is always `Unknown`.
+- storcli2 dropped some storcli operations: there is no RAID-level migration,
+  so a volume's member set can no longer be *shrunk* (storcli's `start migrate
+  option=remove`); growing a volume moves to `/cx/vx expand drives=`. This is
+  about reshaping the array's member **count** only -- replacing a *failed*
+  drive (rebuild onto a hot spare or a hot-swapped replacement, copyback) keeps
+  the member count unchanged, is a separate command family that storcli2 still
+  exposes, and is out of scope for raidmgmt regardless of controller. There is
+  also no IO policy (`Cached`/`Direct`) cache option -- the IO policy of parsed
+  volumes is always `Unknown`.
 
 The read path (controller, physical drive and logical volume getters), the
 cache and JBOD setters (`lvcachesetter`, `jbodsetter`), the shared
@@ -197,7 +202,7 @@ storcli in several places).
 | `CreateLV` | `/cx add vd r<level> [Size=<sz>] drives=e:s,... [WT\|WB\|AWB] [nora\|ra]` | Cache policies are bare tokens at creation time; storcli's `type=` / `wrcache=` / `rdpolicy=` forms are gone. |
 | `DeleteLV` | `/cx/vx delete [discardcache] [force]` | A nonexistent VD yields a failure payload surfaced by `Decode`. |
 | `AddPDsToLV` | `/cx/vx expand drives=e:s,...` | Online capacity expansion. Documented and present in the binary help, but not exercised on hardware yet; progress is visible through `/cx/vx show expansion` and `show ocedriveinfo`. |
-| `DeletePDsFromLV` | -- | Not supported: the official command map drops `start migrate` with no replacement for `option=remove`. Must return `ErrFunctionNotSupportedByImplementation`. |
+| `DeletePDsFromLV` | -- | Not supported: removing a member (shrinking a volume) used storcli's `start migrate option=remove`, which the storcli2 command map drops with no replacement. This is array *reshaping*, not failed-drive replacement (rebuild / hot-spare / copyback), which keeps the member count and is a separate, still-supported command family out of scope here. Returns `ErrFunctionNotSupportedByImplementation`. |
 | `SetLVCacheOptions` | `/cx/vx set rdcache=RA\|NoRA` and `/cx/vx set wrcache=WT\|WB\|AWB` | Two separate commands: storcli's combined syntax is rejected. The IO policy cannot be set (see above); beware that `CacheOptions.Validate()` rejects an unknown IO policy, so a request cannot be round-tripped from getter output as-is. |
 | `EnableJBOD` | `/cx/ex/sx set jbod [force]` | Converts the drive **state**; the drive status is unchanged. |
 | `DisableJBOD` | `/cx/ex/sx set uconf [force]` | storcli's `delete jbod` no longer parses; `set good` would only change the status. |
