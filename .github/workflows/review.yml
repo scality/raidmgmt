@@ -23,7 +23,7 @@ jobs:
       github.event_name == 'pull_request_target' &&
       (github.actor == 'dependabot[bot]' || github.actor == 'scality-renovate[bot]' ||
        github.event.pull_request.user.login == 'dependabot[bot]' || github.event.pull_request.user.login == 'scality-renovate[bot]')
-    uses: scality/workflows/.github/workflows/claude-code-dependency-review.yml@2a8e0f5478858e3a09fa5a407772eccd904ac31d # v2.8.3
+    uses: scality/workflows/.github/workflows/claude-code-dependency-review.yml@9f99d2d562fb6ed2e055c6b2e9a56175a830ed9e # v2.8.4
     with:
       ACTIONS_APP_ID: ${{ vars.ACTIONS_APP_ID }}
     secrets:
