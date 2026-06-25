@@ -203,11 +203,12 @@ storcli in several places).
 | `DisableJBOD` | `/cx/ex/sx set uconf [force]` | storcli's `delete jbod` no longer parses; `set good` would only change the status. |
 | `StartBlink` / `StopBlink` | `/cx/ex/sx start locate` / `stop locate` | Same grammar as storcli. |
 
-Once every port is covered, a top-level `raidcontroller.StorCLI2` composition
-embeds the seven components (no stubs: every operation except
-`DeletePDsFromLV` is supported); a single composition serves both binaries
-since only the injected runner differs. Until then the components are wired
-individually.
+The top-level `raidcontroller.StorCLI2` composition embeds the storcli2
+components across the full `ports.RAIDController` surface (no stubs: every
+operation except `DeletePDsFromLV` is supported, and that unsupported error is
+returned by the logical-volume manager itself, not by a composition-level
+override). A single composition serves both binaries since only the injected
+runner differs.
 
 > **Note:** Part of the pre-staged write-path fixtures under
 > `pkg/implementation/lvcachesetter/testdata/storcli2/cacheoptions/` and
