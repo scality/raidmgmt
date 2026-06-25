@@ -1,5 +1,0 @@
-CLI Version = 008.0005.0000.0010 Feb 22, 2023
-Operating system = Linux4.18.0-553.115.1.el8_10.x86_64
-Status = Failure
-Description = syntax error, unexpected TOKEN_MIGRATE, expecting TOKEN_ERASE or TOKEN_INIT or TOKEN_CC or TOKEN_LOCATE
-

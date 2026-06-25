@@ -20,6 +20,10 @@ const (
 	storcli2CmdVD  = "vd"
 	// storcli2CmdDelete deletes the virtual drive addressed by the selector.
 	storcli2CmdDelete = "delete"
+	// storcli2CmdExpand adds physical drives to a virtual drive (online capacity
+	// expansion). storcli2 dropped "start migrate", so this is the only way to
+	// grow a volume; the RAID level is preserved by the firmware.
+	storcli2CmdExpand = "expand"
 	// storcli2ControllerSelector addresses a whole controller (used by "add vd").
 	storcli2ControllerSelector = "/c%d"
 	// storcli2VolumeSelector addresses a single virtual drive by its number.
@@ -42,6 +46,8 @@ type StorCLI2 struct {
 
 	runner commandrunner.CommandRunner
 }
+
+var _ ports.LogicalVolumesManager = &StorCLI2{}
 
 // NewStorCLI2 returns a logical-volume manager backed by the given storcli2 /
 // perccli2 command runner and physical-drive and logical-volume getters.
@@ -130,6 +136,43 @@ func (s *StorCLI2) DeleteLV(metadata *logicalvolume.Metadata) error {
 	}
 
 	return nil
+}
+
+// AddPDsToLV grows a logical volume with the given physical drives through
+// "expand" (online capacity expansion). storcli2 dropped "start migrate", so
+// expansion is the only supported path; the RAID level is preserved by the
+// firmware. The drives must share a single enclosure.
+func (s *StorCLI2) AddPDsToLV(
+	lvMetadata *logicalvolume.Metadata,
+	pdsMetadata ...*physicaldrive.Metadata,
+) error {
+	drives, err := storcli2FormatDrives(pdsMetadata)
+	if err != nil {
+		return errors.Wrap(err, "failed to format drives")
+	}
+
+	selector := fmt.Sprintf(storcli2VolumeSelector, lvMetadata.CtrlMetadata.ID, lvMetadata.ID)
+
+	output, err := s.runner.Run([]string{selector, storcli2CmdExpand, drives})
+	if err != nil {
+		return errors.Wrapf(err, "failed to run expand command for logical volume %s", lvMetadata.ID)
+	}
+
+	if _, err := storcli2.Decode(output); err != nil {
+		return errors.Wrapf(err, "failed to expand logical volume %s", lvMetadata.ID)
+	}
+
+	return nil
+}
+
+// DeletePDsFromLV is not supported by storcli2: the storcli-to-storcli2 command
+// map drops "start migrate" with no replacement for removing drives from a
+// volume (see DESIGN.md).
+func (s *StorCLI2) DeletePDsFromLV(
+	_ *logicalvolume.Metadata,
+	_ ...*physicaldrive.Metadata,
+) error {
+	return ports.ErrFunctionNotSupportedByImplementation
 }
 
 // findNewLogicalVolume returns the volume whose physical-drive set is exactly
