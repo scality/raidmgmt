@@ -168,7 +168,7 @@ func (s *StorCLI2) AddPDsToLV(
 // DeletePDsFromLV is not supported by storcli2: the storcli-to-storcli2 command
 // map drops "start migrate" with no replacement for removing drives from a
 // volume (see DESIGN.md).
-func (s *StorCLI2) DeletePDsFromLV(
+func (*StorCLI2) DeletePDsFromLV(
 	_ *logicalvolume.Metadata,
 	_ ...*physicaldrive.Metadata,
 ) error {
