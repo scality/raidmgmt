@@ -157,9 +157,10 @@ func parseRAIDLevel(level string) (logicalvolume.RAIDLevel, error) {
 func parseDrives(arg string, controllerID int) []*physicaldrive.Metadata {
 	ctrlMetadata := &raidcontroller.Metadata{ID: controllerID}
 
-	var drives []*physicaldrive.Metadata
+	parts := strings.Split(arg, ",")
+	drives := make([]*physicaldrive.Metadata, 0, len(parts))
 
-	for _, id := range strings.Split(arg, ",") {
+	for _, id := range parts {
 		id = strings.TrimSpace(id)
 		if id == "" {
 			continue
