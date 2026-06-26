@@ -114,23 +114,48 @@ func (s *StorCLI2) Controllers() ([]*raidcontroller.RAIDController, error) {
 	controllers := make([]*raidcontroller.RAIDController, 0)
 
 	for i := range cmd.Controllers {
-		overview, err := utils.UnmarshalToSlice[storcli2SystemOverview](
-			cmd.Controllers[i].ResponseData, "System Overview",
-		)
+		found, err := s.controllersFromOverview(cmd.Controllers[i])
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to unmarshal system overview")
+			return nil, err
 		}
 
-		for j := range overview {
-			metadata := &raidcontroller.Metadata{ID: overview[j].Ctrl}
+		controllers = append(controllers, found...)
+	}
 
-			controller, err := s.Controller(metadata)
-			if err != nil {
-				return nil, errors.Wrapf(err, "failed to get controller %d", metadata.ID)
-			}
+	return controllers, nil
+}
 
-			controllers = append(controllers, controller)
+// controllersFromOverview resolves every controller listed in one "show all"
+// envelope's "System Overview" section. storcli2 omits that section when the
+// host has no controllers ("Number of Controllers": 0); that is an empty
+// inventory, not an error, mirroring the logical-volume and physical-drive
+// getters.
+func (s *StorCLI2) controllersFromOverview(controller storcli2.Controller) (
+	[]*raidcontroller.RAIDController,
+	error,
+) {
+	overview, err := utils.UnmarshalToSlice[storcli2SystemOverview](
+		controller.ResponseData, "System Overview",
+	)
+	if err != nil {
+		if errors.Is(err, utils.ErrKeyNotFound) {
+			return nil, nil
 		}
+
+		return nil, errors.Wrap(err, "failed to unmarshal system overview")
+	}
+
+	controllers := make([]*raidcontroller.RAIDController, 0, len(overview))
+
+	for j := range overview {
+		metadata := &raidcontroller.Metadata{ID: overview[j].Ctrl}
+
+		found, err := s.Controller(metadata)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to get controller %d", metadata.ID)
+		}
+
+		controllers = append(controllers, found)
 	}
 
 	return controllers, nil

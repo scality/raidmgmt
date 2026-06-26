@@ -52,6 +52,11 @@ func TestStorCLI2Controllers(t *testing.T) {
 			showAll:     []byte(`{"Controllers":[]}`),
 			expectError: true,
 		},
+		{
+			name:        "no managed controllers",
+			showAll:     storcli2Fixture(t, "all_no_controllers.json"),
+			expectedLen: 0,
+		},
 	}
 
 	for _, tt := range tests {
@@ -81,7 +86,10 @@ func TestStorCLI2Controllers(t *testing.T) {
 
 			require.NoError(t, err)
 			require.Len(t, controllers, tt.expectedLen)
-			assert.Equal(t, 0, controllers[0].ID)
+
+			if tt.expectedLen > 0 {
+				assert.Equal(t, 0, controllers[0].ID)
+			}
 		})
 	}
 }

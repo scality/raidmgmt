@@ -1,0 +1,19 @@
+{
+"Controllers":[
+{
+	"Command Status" : {
+		"CLI Version" : "008.0005.0000.0010 Feb 22, 2023",
+		"Operating system" : "Linux4.18.0-553.124.1.el8_10.x86_64",
+		"Status Code" : 0,
+		"Status" : "Success",
+		"Description" : "None"
+	},
+	"Response Data" : {
+		"Number of Controllers" : 0,
+		"Host Name" : "application-node",
+		"Operating System " : "Linux4.18.0-553.124.1.el8_10.x86_64",
+		"SL8 Library Version" : "08.0507.0000"
+	}
+}
+]
+}
