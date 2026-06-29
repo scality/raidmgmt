@@ -46,15 +46,15 @@ The script writes each fixture under its owning component package's
 | `physicaldrivegetter` | `testdata/storcli2/show/e3{06,20}sN.json` | `/c0/e3XX/sN show all` | safe |
 | `physicaldrivegetter` | `testdata/storcli2/show/e306s99_invalid.json` | drive not found | safe |
 | `physicaldrivegetter` | `testdata/storcli2/show/e320s11_UGood.json` | drive in unconfigured-good state | destructive |
-| `physicaldrivegetter` | `testdata/storcli2/jbod/{enable,disable}/fail.json` | `set jbod` / `delete jbod` | destructive |
+| `jbodsetter` | `testdata/storcli2/jbod/{enable,disable}/fail.json` | `set jbod` / `delete jbod` | destructive |
 | `logicalvolumegetter` | `testdata/storcli2/show/all.json` | `/c0/vall show all` | safe |
 | `logicalvolumegetter` | `testdata/storcli2/show/vN.json` | `/c0/vN show all` | safe |
 | `logicalvolumegetter` | `testdata/storcli2/show/v999_invalid.json` | VD not found | safe |
 | `logicalvolumemanager` | `testdata/storcli2/create/{success,fail}.json` | `add vd ...` | destructive |
 | `logicalvolumemanager` | `testdata/storcli2/delete/{success,fail_invalid,fail_vdNotExist}.json` | `delete` | destructive |
 | `logicalvolumemanager` | `testdata/storcli2/migrate/fail.json` | `start migrate ...` | destructive |
-| `logicalvolumemanager` | `testdata/storcli2/cacheoptions/success_{wrcache,rdcache}.json` | `set wrcache/rdcache` | destructive |
-| `logicalvolumemanager` | `testdata/storcli2/cacheoptions/combined_syntax_error.json` | v1 combined `set` syntax (rejected) | destructive |
+| `lvcachesetter` | `testdata/storcli2/cacheoptions/success_{wrcache,rdcache}.json` | `set wrcache/rdcache` | destructive |
+| `lvcachesetter` | `testdata/storcli2/cacheoptions/combined_syntax_error.json` | v1 combined `set` syntax (rejected) | destructive |
 | `blinker` | `testdata/storcli2/{start,stop}.json` | `start locate` / `stop locate` | destructive |
 
 The envelope / decoder unit tests in `pkg/implementation/storcli2` keep their own
@@ -66,11 +66,11 @@ The following fixtures were captured as plain-text syntax errors rather than
 JSON, because `storcli2` changed the CLI grammar for these commands relative to
 storcli v1 (the script still uses the v1 syntax):
 
-- `logicalvolumemanager/testdata/storcli2/cacheoptions/combined_syntax_error.json`
+- `lvcachesetter/testdata/storcli2/cacheoptions/combined_syntax_error.json`
   (`unexpected TOKEN_WRITE_CACHE`)
 - `logicalvolumemanager/testdata/storcli2/migrate/fail.json`
   (`unexpected TOKEN_MIGRATE`)
-- `physicaldrivegetter/testdata/storcli2/jbod/disable/fail.json`
+- `jbodsetter/testdata/storcli2/jbod/disable/fail.json`
   (`unexpected TOKEN_JBOD`)
 
 These must be regenerated with the correct storcli2 syntax when the

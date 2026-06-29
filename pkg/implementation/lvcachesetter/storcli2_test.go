@@ -1,16 +1,45 @@
-package logicalvolumemanager_test
+package lvcachesetter_test
 
 import (
 	"os"
 	"testing"
 
 	"github.com/pkg/errors"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
 	"github.com/scality/raidmgmt/pkg/domain/entities/logicalvolume"
 	"github.com/scality/raidmgmt/pkg/domain/entities/raidcontroller"
-	"github.com/scality/raidmgmt/pkg/implementation/logicalvolumemanager"
+	"github.com/scality/raidmgmt/pkg/implementation/lvcachesetter"
 )
+
+type (
+	MockCommandRunner struct {
+		mock.Mock
+	}
+
+	MockLogicalVolumesGetter struct {
+		mock.Mock
+	}
+)
+
+func (m *MockCommandRunner) Run(args []string) ([]byte, error) {
+	arguments := m.Called(args)
+
+	return arguments.Get(0).([]byte), arguments.Error(1)
+}
+
+func (m *MockLogicalVolumesGetter) LogicalVolumes(metadata *raidcontroller.Metadata) ([]*logicalvolume.LogicalVolume, error) {
+	arguments := m.Called(metadata)
+
+	return arguments.Get(0).([]*logicalvolume.LogicalVolume), arguments.Error(1)
+}
+
+func (m *MockLogicalVolumesGetter) LogicalVolume(metadata *logicalvolume.Metadata) (*logicalvolume.LogicalVolume, error) {
+	arguments := m.Called(metadata)
+
+	return arguments.Get(0).(*logicalvolume.LogicalVolume), arguments.Error(1)
+}
 
 // storcli2Fixture reads a storcli2 JSON fixture from the package testdata.
 func storcli2Fixture(t *testing.T, name string) []byte {
@@ -117,9 +146,9 @@ func TestStorCLI2SetLVCacheOptions(t *testing.T) {
 					Return(storcli2Fixture(t, fixture), nil)
 			}
 
-			manager := logicalvolumemanager.NewStorCLI2(mockRunner, mockGetter)
+			setter := lvcachesetter.NewStorCLI2(mockRunner, mockGetter)
 
-			err := manager.SetLVCacheOptions(metadata, tt.desired)
+			err := setter.SetLVCacheOptions(metadata, tt.desired)
 			require.NoError(t, err)
 
 			mockRunner.AssertExpectations(t)
@@ -140,9 +169,9 @@ func TestStorCLI2SetLVCacheOptionsGetterError(t *testing.T) {
 	mockGetter.On("LogicalVolume", metadata).
 		Return((*logicalvolume.LogicalVolume)(nil), errors.New("boom"))
 
-	manager := logicalvolumemanager.NewStorCLI2(mockRunner, mockGetter)
+	setter := lvcachesetter.NewStorCLI2(mockRunner, mockGetter)
 
-	err := manager.SetLVCacheOptions(metadata, &logicalvolume.CacheOptions{
+	err := setter.SetLVCacheOptions(metadata, &logicalvolume.CacheOptions{
 		ReadPolicy: logicalvolume.ReadPolicyReadAhead,
 	})
 	require.Error(t, err)
@@ -166,9 +195,9 @@ func TestStorCLI2SetLVCacheOptionsCommandError(t *testing.T) {
 	mockRunner.On("Run", []string{"/c0/v25", "set", "rdcache=RA"}).
 		Return(storcli2Fixture(t, "cacheoptions/combined_syntax_error.json"), nil)
 
-	manager := logicalvolumemanager.NewStorCLI2(mockRunner, mockGetter)
+	setter := lvcachesetter.NewStorCLI2(mockRunner, mockGetter)
 
-	err := manager.SetLVCacheOptions(metadata, &logicalvolume.CacheOptions{
+	err := setter.SetLVCacheOptions(metadata, &logicalvolume.CacheOptions{
 		ReadPolicy:  logicalvolume.ReadPolicyReadAhead,
 		WritePolicy: logicalvolume.WritePolicyWriteBack,
 	})
@@ -188,9 +217,9 @@ func TestStorCLI2SetLVCacheOptionsUnsettable(t *testing.T) {
 		ReadPolicy: logicalvolume.ReadPolicyReadAhead,
 	}), nil)
 
-	manager := logicalvolumemanager.NewStorCLI2(mockRunner, mockGetter)
+	setter := lvcachesetter.NewStorCLI2(mockRunner, mockGetter)
 
-	err := manager.SetLVCacheOptions(metadata, &logicalvolume.CacheOptions{
+	err := setter.SetLVCacheOptions(metadata, &logicalvolume.CacheOptions{
 		ReadPolicy: logicalvolume.ReadPolicyUnknown,
 	})
 	require.Error(t, err)

@@ -118,12 +118,12 @@ fi
 mkdir -p "${OUTPUT_DIR}/controllergetter/testdata/storcli2"
 mkdir -p "${OUTPUT_DIR}/physicaldrivegetter/testdata/storcli2/show"
 mkdir -p "${OUTPUT_DIR}/blinker/testdata/storcli2"
-mkdir -p "${OUTPUT_DIR}/physicaldrivegetter/testdata/storcli2/jbod/enable"
-mkdir -p "${OUTPUT_DIR}/physicaldrivegetter/testdata/storcli2/jbod/disable"
+mkdir -p "${OUTPUT_DIR}/jbodsetter/testdata/storcli2/jbod/enable"
+mkdir -p "${OUTPUT_DIR}/jbodsetter/testdata/storcli2/jbod/disable"
 mkdir -p "${OUTPUT_DIR}/logicalvolumegetter/testdata/storcli2/show"
 mkdir -p "${OUTPUT_DIR}/logicalvolumemanager/testdata/storcli2/create"
 mkdir -p "${OUTPUT_DIR}/logicalvolumemanager/testdata/storcli2/delete"
-mkdir -p "${OUTPUT_DIR}/logicalvolumemanager/testdata/storcli2/cacheoptions"
+mkdir -p "${OUTPUT_DIR}/lvcachesetter/testdata/storcli2/cacheoptions"
 mkdir -p "${OUTPUT_DIR}/logicalvolumemanager/testdata/storcli2/migrate"
 
 # Helper function to run a command and save output
@@ -332,7 +332,7 @@ if [ "${DESTRUCTIVE}" = "true" ]; then
     # Used by: adapter.setJBOD(metadata, "set") → runner.Run(["/c0/e306/s0", "set", "jbod"])
     run_and_save \
         "Enable JBOD on e${FIRST_ENCLOSURE}/s${FIRST_SLOT} (expected failure - drive in VD)" \
-        "${OUTPUT_DIR}/physicaldrivegetter/testdata/storcli2/jbod/enable/fail.json" \
+        "${OUTPUT_DIR}/jbodsetter/testdata/storcli2/jbod/enable/fail.json" \
         "${C}/e${FIRST_ENCLOSURE}/s${FIRST_SLOT}" set jbod
 
     # JBOD disable (expected failure when drive is in a VD)
@@ -340,7 +340,7 @@ if [ "${DESTRUCTIVE}" = "true" ]; then
     # Used by: adapter.setJBOD(metadata, "delete") → runner.Run(["/c0/e306/s0", "delete", "jbod"])
     run_and_save \
         "Disable JBOD on e${FIRST_ENCLOSURE}/s${FIRST_SLOT} (expected failure - drive in VD)" \
-        "${OUTPUT_DIR}/physicaldrivegetter/testdata/storcli2/jbod/disable/fail.json" \
+        "${OUTPUT_DIR}/jbodsetter/testdata/storcli2/jbod/disable/fail.json" \
         "${C}/e${FIRST_ENCLOSURE}/s${FIRST_SLOT}" delete jbod
 
     # Delete VD - failure case (VD doesn't exist)
@@ -648,7 +648,7 @@ sys.exit(1)
             echo ""
 
             # --- Step 6: Cache options success ---
-            # logicalvolumemanager/testdata/storcli2/cacheoptions/success_{wrcache,rdcache}.json
+            # lvcachesetter/testdata/storcli2/cacheoptions/success_{wrcache,rdcache}.json
             # storcli2 uses separate commands for each cache option
             # (v1 combined syntax "set rdcache=RA wrcache=WT" does not work)
             # Try: storcli2 /c0/v{N} set wrcache=WT J
@@ -656,19 +656,19 @@ sys.exit(1)
             # Used by: adapter.setLVCacheOptions()
             run_and_save \
                 "Set write cache on v${NEWEST_VD}" \
-                "${OUTPUT_DIR}/logicalvolumemanager/testdata/storcli2/cacheoptions/success_wrcache.json" \
+                "${OUTPUT_DIR}/lvcachesetter/testdata/storcli2/cacheoptions/success_wrcache.json" \
                 "${C}/v${NEWEST_VD}" set wrcache=WT
 
             run_and_save \
                 "Set read cache on v${NEWEST_VD}" \
-                "${OUTPUT_DIR}/logicalvolumemanager/testdata/storcli2/cacheoptions/success_rdcache.json" \
+                "${OUTPUT_DIR}/lvcachesetter/testdata/storcli2/cacheoptions/success_rdcache.json" \
                 "${C}/v${NEWEST_VD}" set rdcache=RA
 
             # Also try the v1 combined syntax, which storcli2 rejects with a
             # plain-text syntax error — captured for documentation purposes.
             run_and_save \
                 "Set cache options combined on v${NEWEST_VD} (expected syntax error in storcli2)" \
-                "${OUTPUT_DIR}/logicalvolumemanager/testdata/storcli2/cacheoptions/combined_syntax_error.json" \
+                "${OUTPUT_DIR}/lvcachesetter/testdata/storcli2/cacheoptions/combined_syntax_error.json" \
                 "${C}/v${NEWEST_VD}" set rdcache=RA wrcache=WT
         else
             echo "  [ERROR] Could not determine newly created VD ID"
@@ -705,15 +705,15 @@ else
     echo "  The following files need DESTRUCTIVE mode to capture:"
     echo "    - controllergetter/testdata/storcli2/c0_UGood.json (controller with UGood drive)"
     echo "    - physicaldrivegetter/testdata/storcli2/show/e{EID}s{SLOT}_UGood.json"
-    echo "    - physicaldrivegetter/testdata/storcli2/jbod/{enable,disable}/fail.json"
+    echo "    - jbodsetter/testdata/storcli2/jbod/{enable,disable}/fail.json"
     echo "    - blinker/testdata/storcli2/{start,stop}.json"
     echo "    - logicalvolumemanager/testdata/storcli2/create/success.json"
     echo "    - logicalvolumemanager/testdata/storcli2/create/fail.json"
     echo "    - logicalvolumemanager/testdata/storcli2/delete/success.json"
     echo "    - logicalvolumemanager/testdata/storcli2/delete/fail_invalid.json"
     echo "    - logicalvolumemanager/testdata/storcli2/delete/fail_vdNotExist.json"
-    echo "    - logicalvolumemanager/testdata/storcli2/cacheoptions/success_{wrcache,rdcache}.json"
-    echo "    - logicalvolumemanager/testdata/storcli2/cacheoptions/combined_syntax_error.json"
+    echo "    - lvcachesetter/testdata/storcli2/cacheoptions/success_{wrcache,rdcache}.json"
+    echo "    - lvcachesetter/testdata/storcli2/cacheoptions/combined_syntax_error.json"
     echo "    - logicalvolumemanager/testdata/storcli2/migrate/fail.json"
     echo ""
 fi

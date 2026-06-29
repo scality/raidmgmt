@@ -1,4 +1,4 @@
-package logicalvolumemanager
+package lvcachesetter
 
 import (
 	"fmt"
@@ -22,10 +22,11 @@ const (
 	storcli2WrCacheFlag = "wrcache="
 )
 
-// StorCLI2 manages logical volumes through a storcli2/perccli2 command runner.
-// A single implementation serves both binaries; the concrete runner is injected
-// at construction time. The current state is read through an injected
-// LogicalVolumesGetter so setters only emit the flags that actually change.
+// StorCLI2 sets cache options on a logical volume through a storcli2 /
+// perccli2 command runner. A single implementation serves both binaries; the
+// concrete runner is injected at construction time. The current state is read
+// through an injected LogicalVolumesGetter so setters only emit the flags that
+// actually change.
 type StorCLI2 struct {
 	ports.LogicalVolumesGetter
 
@@ -34,8 +35,8 @@ type StorCLI2 struct {
 
 var _ ports.LVCacheSetter = &StorCLI2{}
 
-// NewStorCLI2 returns a logical-volume manager backed by the given storcli2 /
-// perccli2 command runner and logical-volume getter.
+// NewStorCLI2 returns a cache setter backed by the given storcli2 / perccli2
+// command runner and logical-volume getter.
 func NewStorCLI2(
 	runner commandrunner.CommandRunner,
 	logicalVolumesGetter ports.LogicalVolumesGetter,
@@ -55,6 +56,11 @@ func (s *StorCLI2) SetLVCacheOptions(
 	metadata *logicalvolume.Metadata,
 	desired *logicalvolume.CacheOptions,
 ) error {
+	// Read-before-write is deliberate: it is not about idempotency (the "set"
+	// commands are idempotent) but about emitting only the changed flags. This
+	// minimizes real mutations and, crucially, skips fields the lossy getter
+	// reports as Unknown (which the token funcs reject as unsettable) when the
+	// caller did not actually change them. See DESIGN.md § Adapters.
 	current, err := s.LogicalVolume(metadata)
 	if err != nil {
 		return errors.Wrapf(err, "failed to get logical volume %s", metadata.ID)

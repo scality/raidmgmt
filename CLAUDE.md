@@ -13,6 +13,11 @@ It follows **Hexagonal Architecture** (see `DESIGN.md`):
   family (MegaRAID/storcli2, Dell PERC/perccli2, HPE Smart Array/ssacli, mdadm
   software RAID on RHEL8).
 
+**Package layout mirrors the ports.** Each fine-grained port interface gets one
+self-contained implementation package, named after it; a new operation goes in
+the package for its port, not folded into another. New adapters follow this
+decomposition rather than the older monolithic `raidcontroller/megaraid` package.
+
 Key characteristics:
 
 - Adapters **shell out to vendor CLI tools** and parse their JSON/text output

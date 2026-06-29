@@ -1,13 +1,35 @@
-package physicaldrivegetter
+package jbodsetter
 
 import (
+	"os"
 	"testing"
 
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
 	"github.com/scality/raidmgmt/pkg/domain/entities/physicaldrive"
 	"github.com/scality/raidmgmt/pkg/domain/entities/raidcontroller"
 )
+
+type MockCommandRunner struct {
+	mock.Mock
+}
+
+func (m *MockCommandRunner) Run(args []string) ([]byte, error) {
+	arguments := m.Called(args)
+
+	return arguments.Get(0).([]byte), arguments.Error(1)
+}
+
+// storcli2Fixture reads a storcli2 JSON fixture from the package testdata.
+func storcli2Fixture(t *testing.T, name string) []byte {
+	t.Helper()
+
+	data, err := os.ReadFile("testdata/storcli2/" + name)
+	require.NoError(t, err)
+
+	return data
+}
 
 // storcli2Success is a minimal success envelope; the captured JBOD fixtures are
 // failures only (a success needs hardware, see ARTESCA-17649).

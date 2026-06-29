@@ -112,6 +112,21 @@ The main port is `RAIDController`, which composes several fine-grained interface
 Not all adapters support every operation. Unsupported operations return
 `ErrFunctionNotSupportedByImplementation`.
 
+The same applies at the value level: an enum (e.g. `ReadPolicy`, `WritePolicy`)
+is the **union** of what all controllers support, so each adapter handles a
+**subset**. Adapters translate domain enum values to vendor CLI tokens through a
+small mapping function that returns an "unsettable" signal (e.g. `(token string,
+ok bool)`) for values it cannot express, failing closed via an exhaustive
+`switch` default. This is distinct from entity `Validate()` (which guards
+domain-level coherence): the mapping guards the adapter boundary, keeps vendor
+vocabulary out of the domain, and rejects values a controller cannot realize —
+including ones added later for other controllers.
+
+Relatedly, setters read current state before writing and emit only the changed
+flags. This is not for idempotency but to minimize real mutations and to skip
+fields the (lossy) getter reports as `Unknown` when the caller did not change
+them — avoiding a spurious "unsettable" rejection on an untouched field.
+
 ### Adapters
 
 #### MegaRAID / PERC (storcli, perccli)
@@ -168,9 +183,11 @@ Design notes, verified against the StorCLI2 User Guide and a live MegaRAID
   option -- the IO policy of parsed volumes is always `Unknown`.
 
 The read path (controller, physical drive and logical volume getters), the
-shared envelope/decoder and both command runners are implemented. The
-remaining ports follow the same component pattern; the table below maps each
-port operation to its storcli2 command (verified against the StorCLI2 User
+cache and JBOD setters (`lvcachesetter`, `jbodsetter`), the shared
+envelope/decoder and both command runners are implemented -- each in its own
+package named after its port. The remaining ports follow the same component
+pattern; the table below maps each port operation to its storcli2 command
+(verified against the StorCLI2 User
 Guide, the official storcli-to-storcli2 command map of the MegaRAID 8
 software guide, and the binary's own help -- the grammar differs from
 storcli in several places).
@@ -193,8 +210,8 @@ since only the injected runner differs. Until then the components are wired
 individually.
 
 > **Note:** Part of the pre-staged write-path fixtures under
-> `pkg/implementation/logicalvolumemanager/testdata/storcli2/` and
-> `pkg/implementation/physicaldrivegetter/testdata/storcli2/jbod/` were
+> `pkg/implementation/lvcachesetter/testdata/storcli2/cacheoptions/` and
+> `pkg/implementation/jbodsetter/testdata/storcli2/jbod/` were
 > captured with the storcli grammar and are plain-text syntax errors; they
 > must be regenerated with the commands above using
 > `tests/testdata-tools/collect_storcli2_testdata.sh` (DESTRUCTIVE mode).
