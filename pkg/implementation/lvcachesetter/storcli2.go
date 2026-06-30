@@ -43,7 +43,7 @@ func NewStorCLI2(
 ) *StorCLI2 {
 	return &StorCLI2{
 		LogicalVolumesGetter: logicalVolumesGetter,
-		StorCLI2:             runner,
+		runner:               runner,
 	}
 }
 
@@ -112,7 +112,7 @@ func storcli2CacheOptions(current, desired *logicalvolume.CacheOptions) ([]strin
 // set runs a single "set" command on a volume selector and surfaces the in-JSON
 // failure that storcli2 may report regardless of its exit code.
 func (s *StorCLI2) set(selector, option string) error {
-	output, err := s.StorCLI2.Run([]string{selector, storcli2CmdSet, option})
+	output, err := s.runner.Run([]string{selector, storcli2CmdSet, option})
 	if err != nil {
 		return errors.Wrap(err, "failed to run set command")
 	}
