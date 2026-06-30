@@ -39,13 +39,15 @@ type (
 	// DetailedStatus carries per-target error details. storcli2 adds an
 	// "ErrType" field and identifies the target either by "VD" or by
 	// "EID:Slt"/"PID" (PID may be the int persistent id or the string "-").
+	// ErrCd is likewise "any": an int error code on failure, the string "-" on
+	// success.
 	DetailedStatus struct {
 		VD      any    `json:"VD,omitempty"`
 		EIDSlot string `json:"EID:Slt,omitempty"`
 		PID     any    `json:"PID,omitempty"`
 		Status  string `json:"Status"`
 		ErrType string `json:"ErrType,omitempty"`
-		ErrCd   int    `json:"ErrCd"`
+		ErrCd   any    `json:"ErrCd"`
 		ErrMsg  string `json:"ErrMsg"`
 	}
 )
