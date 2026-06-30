@@ -30,7 +30,7 @@ const (
 type StorCLI2 struct {
 	ports.LogicalVolumesGetter
 
-	StorCLI2 commandrunner.CommandRunner
+	runner commandrunner.CommandRunner
 }
 
 var _ ports.LVCacheSetter = &StorCLI2{}

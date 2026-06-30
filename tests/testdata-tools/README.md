@@ -46,7 +46,7 @@ The script writes each fixture under its owning component package's
 | `physicaldrivegetter` | `testdata/storcli2/show/e3{06,20}sN.json` | `/c0/e3XX/sN show all` | safe |
 | `physicaldrivegetter` | `testdata/storcli2/show/e306s99_invalid.json` | drive not found | safe |
 | `physicaldrivegetter` | `testdata/storcli2/show/e320s11_UGood.json` | drive in unconfigured-good state | destructive |
-| `jbodsetter` | `testdata/storcli2/jbod/{enable,disable}/fail.json` | `set jbod` / `delete jbod` | destructive |
+| `jbodsetter` | `testdata/storcli2/jbod/{enable,disable}/fail.json` | `set jbod` / `set uconf` | destructive |
 | `logicalvolumegetter` | `testdata/storcli2/show/all.json` | `/c0/vall show all` | safe |
 | `logicalvolumegetter` | `testdata/storcli2/show/vN.json` | `/c0/vN show all` | safe |
 | `logicalvolumegetter` | `testdata/storcli2/show/v999_invalid.json` | VD not found | safe |

@@ -341,7 +341,7 @@ if [ "${DESTRUCTIVE}" = "true" ]; then
     run_and_save \
         "Disable JBOD on e${FIRST_ENCLOSURE}/s${FIRST_SLOT} (expected failure - drive in VD)" \
         "${OUTPUT_DIR}/jbodsetter/testdata/storcli2/jbod/disable/fail.json" \
-        "${C}/e${FIRST_ENCLOSURE}/s${FIRST_SLOT}" delete jbod
+        "${C}/e${FIRST_ENCLOSURE}/s${FIRST_SLOT}" set uconf
 
     # Delete VD - failure case (VD doesn't exist)
     # Command: storcli2 /c0/v999 delete J
