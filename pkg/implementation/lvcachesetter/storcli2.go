@@ -89,7 +89,7 @@ func storcli2CacheOptions(current, desired *logicalvolume.CacheOptions) ([]strin
 	var options []string
 
 	if desired.ReadPolicy != current.ReadPolicy {
-		token, ok := storcli2ReadCacheToken(desired.ReadPolicy)
+		token, ok := storcli2.ReadCacheToken(desired.ReadPolicy)
 		if !ok {
 			return nil, errors.Errorf("unsettable read policy %q", desired.ReadPolicy)
 		}
@@ -98,7 +98,7 @@ func storcli2CacheOptions(current, desired *logicalvolume.CacheOptions) ([]strin
 	}
 
 	if desired.WritePolicy != current.WritePolicy {
-		token, ok := storcli2WriteCacheToken(desired.WritePolicy)
+		token, ok := storcli2.WriteCacheToken(desired.WritePolicy)
 		if !ok {
 			return nil, errors.Errorf("unsettable write policy %q", desired.WritePolicy)
 		}
@@ -122,32 +122,4 @@ func (s *StorCLI2) set(selector, option string) error {
 	}
 
 	return nil
-}
-
-// storcli2ReadCacheToken maps a read policy to its "rdcache" token. An unknown
-// policy is not settable and yields ok=false.
-func storcli2ReadCacheToken(policy logicalvolume.ReadPolicy) (string, bool) {
-	switch policy { //nolint:exhaustive // unknown handled by the default
-	case logicalvolume.ReadPolicyReadAhead:
-		return "RA", true
-	case logicalvolume.ReadPolicyNoReadAhead:
-		return "NoRA", true
-	default:
-		return "", false
-	}
-}
-
-// storcli2WriteCacheToken maps a write policy to its "wrcache" token. An unknown
-// policy is not settable and yields ok=false.
-func storcli2WriteCacheToken(policy logicalvolume.WritePolicy) (string, bool) {
-	switch policy { //nolint:exhaustive // unknown handled by the default
-	case logicalvolume.WritePolicyWriteThrough:
-		return "WT", true
-	case logicalvolume.WritePolicyWriteBack:
-		return "WB", true
-	case logicalvolume.WritePolicyAlwaysWriteBack:
-		return "AWB", true
-	default:
-		return "", false
-	}
 }
