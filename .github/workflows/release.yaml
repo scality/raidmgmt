@@ -45,8 +45,16 @@ jobs:
           curl --fail -LO https://raw.githubusercontent.com/fsaintjacques/semver-tool/3.4.0/src/semver
           chmod +x ./semver
       - name: Compose release tag
+        # `--merged HEAD` scopes tag selection to the current branch's history,
+        # and `--sort=version:refname` orders by semantic version (not creation
+        # date). Today we only release from `main`, but this keeps the base-tag
+        # computation correct if we introduce per-minor release branches (e.g.
+        # `dev/1.0` for v1.0.x patches): tags from other lines live on other
+        # branches and are excluded by `--merged`.
+        # NOTE: when release branches are added, also relax the `main`-only guard
+        # above and constrain non-`main` branches to patch-scope releases.
         run: |
-          last_ga_tag=$(git tag --sort=taggerdate --list "v*" | grep -v '\-' | tail -n 1)
+          last_ga_tag=$(git tag --merged HEAD --sort=version:refname --list "v*" | grep -v '\-' | tail -n 1)
           if [[ -z "$last_ga_tag" ]]; then
             last_ga_tag="0.0.0"
           fi
@@ -54,7 +62,7 @@ jobs:
           new_version=$(./semver bump ${{ inputs.version-scope }} "$last_ga_tag")
 
           if [[ "${{ inputs.version-type }}" == "alpha" ]] || [[ "${{ inputs.version-type }}" == "beta" ]]; then
-            last_pre_tag=$(git tag --sort=taggerdate --list "v$new_version-${{ inputs.version-type }}.*" | tail -n 1)
+            last_pre_tag=$(git tag --merged HEAD --sort=version:refname --list "v$new_version-${{ inputs.version-type }}.*" | tail -n 1)
             if [[ -z "$last_pre_tag" ]]; then
               new_version=$new_version-${{ inputs.version-type }}.1
             else
