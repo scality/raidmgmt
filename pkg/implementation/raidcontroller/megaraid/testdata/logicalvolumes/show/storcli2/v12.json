@@ -1,0 +1,81 @@
+{
+"Controllers":[
+{
+	"Command Status" : {
+		"CLI Version" : "008.0005.0000.0010 Feb 22, 2023",
+		"Operating system" : "Linux4.18.0-553.115.1.el8_10.x86_64",
+		"Controller" : "0",
+		"Status" : "Success",
+		"Description" : "None"
+	},
+	"Response Data" : {
+		"Virtual Drives" : [
+			{
+				"VD Info" : {
+					"DG/VD" : "11/12",
+					"TYPE" : "RAID0",
+					"State" : "Optl",
+					"Access" : "RW",
+					"CurrentCache" : "NR,WB",
+					"DefaultCache" : "NR,WB",
+					"Size" : "9.094 TiB",
+					"Name" : ""
+				},
+				"PDs" : [
+					{
+						"EID:Slt" : "306:11",
+						"PID" : 304,
+						"State" : "Conf",
+						"Status" : "Online",
+						"DG" : 11,
+						"Size" : "9.094 TiB",
+						"Intf" : "SAS",
+						"Med" : "HDD",
+						"SED_Type" : "-",
+						"SeSz" : "512B",
+						"Model" : "ST10000NM018B   ",
+						"Sp" : "U",
+						"LU/NS Count" : 1,
+						"Alt-EID" : "-"
+					}
+				],
+				"VD Properties" : {
+					"Strip Size" : "256 KiB",
+					"Block Size" : 4096,
+					"Number of Blocks" : 2441478144,
+					"VD has Emulated PD" : "Yes",
+					"Span Depth" : 1,
+					"Number of Drives" : 1,
+					"Drive Write Cache Policy" : "Disabled",
+					"Default Power Save Policy" : "Default",
+					"Current Power Save Policy" : "Default",
+					"Access Policy Status" : "VD has desired access",
+					"Auto BGI" : "Off",
+					"Secured" : "No",
+					"Init State" : "No Init",
+					"Consistent" : "Yes",
+					"Morphing" : "No",
+					"Cache Preserved" : "No",
+					"Bad Block Exists" : "No",
+					"VD Ready for OS Requests" : "Yes",
+					"Reached LD BBM failure threshold" : "No",
+					"Supported Erase Types" : "Simple, Normal, Thorough",
+					"Exposed to OS" : "Yes",
+					"Creation Time(LocalTime yyyy/mm/dd hh:mm:sec)" : "2026/05/06 10:01:46",
+					"Default Cachebypass Mode" : "Cachebypass Not Performed For Any IOs",
+					"Current Cachebypass Mode" : "Cachebypass Not Performed For Any IOs",
+					"SCSI NAA Id" : "600062b22066d54069faf56a2d7815af",
+					"OS Drive Name" : "/dev/sdm",
+					"Current Unmap Status" : "No",
+					"Current WriteSame Unmap Status" : "No",
+					"LU/NS Count used per PD" : 1,
+					"Data Format for I/O" : "None",
+					"Serial Number" : "00af15782d6af5fa6940d56620b26200"
+				}
+			}
+		]
+	}
+}
+]
+}
+
