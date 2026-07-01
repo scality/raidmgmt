@@ -18,6 +18,12 @@ self-contained implementation package, named after it; a new operation goes in
 the package for its port, not folded into another. New adapters follow this
 decomposition rather than the older monolithic `raidcontroller/megaraid` package.
 
+**Injected command runner is an unexported `runner` field.** In the decomposed
+adapters the `commandrunner.CommandRunner` is stored as `runner` (e.g.
+`runner commandrunner.CommandRunner`), not an exported field shadowing the type
+name (`StorCLI2`/`SSACLI`). The legacy `ssacli`/`mdadm` adapters still use the
+old exported form; do not copy it.
+
 Key characteristics:
 
 - Adapters **shell out to vendor CLI tools** and parse their JSON/text output

@@ -52,7 +52,7 @@ The script writes each fixture under its owning component package's
 | `logicalvolumegetter` | `testdata/storcli2/show/v999_invalid.json` | VD not found | safe |
 | `logicalvolumemanager` | `testdata/storcli2/create/{success,fail}.json` | `add vd ...` | destructive |
 | `logicalvolumemanager` | `testdata/storcli2/delete/{success,fail_invalid,fail_vdNotExist}.json` | `delete` | destructive |
-| `logicalvolumemanager` | `testdata/storcli2/migrate/fail.json` | `start migrate ...` | destructive |
+| `logicalvolumemanager` | `testdata/storcli2/expand/{success,fail}.json` | `expand drives=...` | destructive |
 | `lvcachesetter` | `testdata/storcli2/cacheoptions/success_{wrcache,rdcache}.json` | `set wrcache/rdcache` | destructive |
 | `lvcachesetter` | `testdata/storcli2/cacheoptions/combined_syntax_error.json` | v1 combined `set` syntax (rejected) | destructive |
 | `blinker` | `testdata/storcli2/{start,stop}.json` | `start locate` / `stop locate` | destructive |
@@ -68,8 +68,6 @@ storcli v1 (the script still uses the v1 syntax):
 
 - `lvcachesetter/testdata/storcli2/cacheoptions/combined_syntax_error.json`
   (`unexpected TOKEN_WRITE_CACHE`)
-- `logicalvolumemanager/testdata/storcli2/migrate/fail.json`
-  (`unexpected TOKEN_MIGRATE`)
 - `jbodsetter/testdata/storcli2/jbod/disable/fail.json`
   (`unexpected TOKEN_JBOD`)
 

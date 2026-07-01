@@ -351,13 +351,14 @@ if [ "${DESTRUCTIVE}" = "true" ]; then
         "${OUTPUT_DIR}/logicalvolumemanager/testdata/storcli2/delete/fail_vdNotExist.json" \
         "${C}/v${INVALID_VD_ID}" delete
 
-    # Migrate - failure case (operation not supported/possible)
-    # Command: storcli2 /c0/v1 start migrate type=raid0 option=add drives=306:99 J
-    # Used by: adapter.migrate() error case
+    # Expand - failure case (invalid drive). storcli2 dropped "start migrate";
+    # AddPDsToLV goes through "expand".
+    # Command: storcli2 /c0/v1 expand drives=306:99 J
+    # Used by: StorCLI2.AddPDsToLV() error case
     run_and_save \
-        "Migrate VD (expected failure)" \
-        "${OUTPUT_DIR}/logicalvolumemanager/testdata/storcli2/migrate/fail.json" \
-        "${C}/v1" start migrate type=raid0 option=add "drives=${FIRST_ENCLOSURE}:${INVALID_SLOT}"
+        "Expand VD (expected failure)" \
+        "${OUTPUT_DIR}/logicalvolumemanager/testdata/storcli2/expand/fail.json" \
+        "${C}/v1" expand "drives=${FIRST_ENCLOSURE}:${INVALID_SLOT}"
 
     # --- Step 0: Auto-detect sacrifice VD if needed ---
     if [ "${SACRIFICE_VD_ID}" = "auto" ]; then
