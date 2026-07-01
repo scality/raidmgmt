@@ -9,6 +9,7 @@ import (
 	"github.com/scality/raidmgmt/pkg/domain/entities/logicalvolume"
 	"github.com/scality/raidmgmt/pkg/domain/entities/physicaldrive"
 	"github.com/scality/raidmgmt/pkg/domain/entities/raidcontroller"
+	"github.com/scality/raidmgmt/pkg/domain/ports"
 	"github.com/scality/raidmgmt/pkg/implementation/logicalvolumemanager"
 )
 
@@ -210,4 +211,93 @@ func TestStorCLI2DeleteLV(t *testing.T) {
 			mockRunner.AssertExpectations(t)
 		})
 	}
+}
+
+// TestStorCLI2AddPDsToLV covers the expand happy path: the drives are formatted
+// into a single-enclosure list and submitted through "expand".
+func TestStorCLI2AddPDsToLV(t *testing.T) {
+	t.Parallel()
+
+	ctrl := storcli2Ctrl()
+	metadata := &logicalvolume.Metadata{CtrlMetadata: ctrl, ID: "25"}
+	pds := []*physicaldrive.Metadata{
+		{CtrlMetadata: ctrl, ID: "252:3"},
+		{CtrlMetadata: ctrl, ID: "252:4"},
+	}
+
+	mockRunner := new(MockCommandRunner)
+	mockRunner.On("Run", []string{"/c0/v25", "expand", "drives=252:3,4"}).
+		Return(storcli2Fixture(t, "expand/success.json"), nil)
+
+	manager := logicalvolumemanager.NewStorCLI2(
+		mockRunner, new(MockPhysicalDrivesGetter), new(MockLogicalVolumesGetter),
+	)
+
+	err := manager.AddPDsToLV(metadata, pds...)
+	require.NoError(t, err)
+	mockRunner.AssertExpectations(t)
+}
+
+// TestStorCLI2AddPDsToLVCommandError pins that an "expand" failure payload is
+// surfaced.
+func TestStorCLI2AddPDsToLVCommandError(t *testing.T) {
+	t.Parallel()
+
+	ctrl := storcli2Ctrl()
+	metadata := &logicalvolume.Metadata{CtrlMetadata: ctrl, ID: "25"}
+	pd := &physicaldrive.Metadata{CtrlMetadata: ctrl, ID: "252:3"}
+
+	mockRunner := new(MockCommandRunner)
+	mockRunner.On("Run", []string{"/c0/v25", "expand", "drives=252:3"}).
+		Return(storcli2Fixture(t, "expand/fail.json"), nil)
+
+	manager := logicalvolumemanager.NewStorCLI2(
+		mockRunner, new(MockPhysicalDrivesGetter), new(MockLogicalVolumesGetter),
+	)
+
+	err := manager.AddPDsToLV(metadata, pd)
+	require.Error(t, err)
+}
+
+// TestStorCLI2AddPDsToLVMultipleEnclosures pins that drives spanning two
+// enclosures are rejected before "expand" is run.
+func TestStorCLI2AddPDsToLVMultipleEnclosures(t *testing.T) {
+	t.Parallel()
+
+	ctrl := storcli2Ctrl()
+	metadata := &logicalvolume.Metadata{CtrlMetadata: ctrl, ID: "25"}
+	pds := []*physicaldrive.Metadata{
+		{CtrlMetadata: ctrl, ID: "252:3"},
+		{CtrlMetadata: ctrl, ID: "253:4"},
+	}
+
+	mockRunner := new(MockCommandRunner)
+
+	manager := logicalvolumemanager.NewStorCLI2(
+		mockRunner, new(MockPhysicalDrivesGetter), new(MockLogicalVolumesGetter),
+	)
+
+	err := manager.AddPDsToLV(metadata, pds...)
+	require.Error(t, err)
+	mockRunner.AssertNotCalled(t, "Run")
+}
+
+// TestStorCLI2DeletePDsFromLV pins that drive removal is reported as unsupported:
+// storcli2 has no replacement for storcli's "start migrate option=remove".
+func TestStorCLI2DeletePDsFromLV(t *testing.T) {
+	t.Parallel()
+
+	ctrl := storcli2Ctrl()
+	metadata := &logicalvolume.Metadata{CtrlMetadata: ctrl, ID: "25"}
+	pd := &physicaldrive.Metadata{CtrlMetadata: ctrl, ID: "252:3"}
+
+	mockRunner := new(MockCommandRunner)
+
+	manager := logicalvolumemanager.NewStorCLI2(
+		mockRunner, new(MockPhysicalDrivesGetter), new(MockLogicalVolumesGetter),
+	)
+
+	err := manager.DeletePDsFromLV(metadata, pd)
+	require.ErrorIs(t, err, ports.ErrFunctionNotSupportedByImplementation)
+	mockRunner.AssertNotCalled(t, "Run")
 }
