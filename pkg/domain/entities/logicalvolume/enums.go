@@ -62,6 +62,19 @@ func (r RAIDLevel) Level() uint8 {
 	}
 }
 
+// IsValid reports whether the RAID level is one modelled by the domain
+// (RAID 0, 1 or 10). It rejects the zero value and any out-of-range level.
+func (r RAIDLevel) IsValid() bool {
+	switch r {
+	case RAIDLevel0, RAIDLevel1, RAIDLevel10:
+		return true
+	case RAIDLevelUnknown:
+		return false
+	default:
+		return false
+	}
+}
+
 func (r ReadPolicy) String() string {
 	switch r { //nolint:exhaustive // Not all cases are handled
 	case ReadPolicyReadAhead:
@@ -70,6 +83,17 @@ func (r ReadPolicy) String() string {
 		return "NoReadAhead"
 	default:
 		return string(ReadPolicyUnknown)
+	}
+}
+
+// IsValid reports whether the read policy is a known settable value. The
+// Unknown sentinel, the empty value and any unrecognized string are rejected.
+func (r ReadPolicy) IsValid() bool {
+	switch r { //nolint:exhaustive // unknown/empty handled by the default
+	case ReadPolicyReadAhead, ReadPolicyNoReadAhead:
+		return true
+	default:
+		return false
 	}
 }
 
@@ -86,6 +110,17 @@ func (w WritePolicy) String() string {
 	}
 }
 
+// IsValid reports whether the write policy is a known settable value. The
+// Unknown sentinel, the empty value and any unrecognized string are rejected.
+func (w WritePolicy) IsValid() bool {
+	switch w { //nolint:exhaustive // unknown/empty handled by the default
+	case WritePolicyWriteThrough, WritePolicyWriteBack, WritePolicyAlwaysWriteBack:
+		return true
+	default:
+		return false
+	}
+}
+
 func (i IOPolicy) String() string {
 	switch i { //nolint:exhaustive // Not all cases are handled
 	case IOPolicyDirect:
@@ -94,6 +129,19 @@ func (i IOPolicy) String() string {
 		return "Cached"
 	default:
 		return string(IOPolicyUnknown)
+	}
+}
+
+// IsValid reports whether the IO policy is a known settable value. The Unknown
+// sentinel, the empty value and any unrecognized string are rejected, matching
+// the read and write policies; the IO policy's optionality is handled by
+// CacheOptions.Validate, not here.
+func (i IOPolicy) IsValid() bool {
+	switch i { //nolint:exhaustive // unknown/empty handled by the default
+	case IOPolicyDirect, IOPolicyCached:
+		return true
+	default:
+		return false
 	}
 }
 

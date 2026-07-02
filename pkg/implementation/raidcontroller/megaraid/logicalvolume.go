@@ -303,12 +303,12 @@ func (a *Adapter) createLV(request *logicalvolume.Request) (
 		return nil, errors.Wrap(err, "failed to format drives string")
 	}
 
-	// Prepare the cache options
-	read := string("rdpolicy=" + request.CacheOptions.ReadPolicy)
-	write := string("wrcache=" + request.CacheOptions.WritePolicy)
-	io := string("iopolicy=" + request.CacheOptions.IOPolicy)
+	cacheFlags, err := megaraidCreateCacheFlags(request.CacheOptions)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to build cache flags")
+	}
 
-	args := []string{selector, "add", "vd", raidLevel, drives, read, write, io}
+	args := append([]string{selector, "add", "vd", raidLevel, drives}, cacheFlags...)
 
 	_, err = a.runner.Run(args)
 	if err != nil {
@@ -322,6 +322,38 @@ func (a *Adapter) createLV(request *logicalvolume.Request) (
 	}
 
 	return newLV, nil
+}
+
+// megaraidCreateCacheFlags returns the "add vd" cache flags. The request is
+// validated upstream (Request.Validate requires known read and write policies),
+// so a read or write policy that is not a valid value is treated as an error
+// rather than emitted verbatim (fail closed). The IO policy is optional -- not
+// every controller accepts it -- so it is only emitted when set to a valid value
+// and is otherwise left to the controller default.
+func megaraidCreateCacheFlags(cache *logicalvolume.CacheOptions) ([]string, error) {
+	if cache == nil {
+		return nil, nil
+	}
+
+	if !cache.ReadPolicy.IsValid() {
+		return nil, errors.Errorf("unsettable read policy %q", cache.ReadPolicy)
+	}
+
+	if !cache.WritePolicy.IsValid() {
+		return nil, errors.Errorf("unsettable write policy %q", cache.WritePolicy)
+	}
+
+	flags := []string{
+		"rdpolicy=" + string(cache.ReadPolicy),
+		"wrcache=" + string(cache.WritePolicy),
+	}
+
+	// The IO policy is optional: emit it only when set to a valid value.
+	if cache.IOPolicy.IsValid() {
+		flags = append(flags, "iopolicy="+string(cache.IOPolicy))
+	}
+
+	return flags, nil
 }
 
 func formatDrivesString(pdMetas []*physicaldrive.Metadata) (string, error) {
@@ -448,7 +480,9 @@ func (a *Adapter) setLVCacheOptions(
 		options = append(options, "wrcache="+string(cacheOpts.WritePolicy))
 	}
 
-	if cacheOpts.IOPolicy != lv.CacheOptions.IOPolicy {
+	// The IO policy is optional: only set it when the caller provided a valid
+	// value that differs; an unset or Unknown value is left unchanged.
+	if cacheOpts.IOPolicy != lv.CacheOptions.IOPolicy && cacheOpts.IOPolicy.IsValid() {
 		options = append(options, "iopolicy="+string(cacheOpts.IOPolicy))
 	}
 

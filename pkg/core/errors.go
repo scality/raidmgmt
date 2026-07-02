@@ -8,4 +8,6 @@ var (
 	ErrInvalidLogicalVolumeMetadata  = errors.New("invalid logical volume metadata")
 
 	ErrInvalidLogicalVolumeRequest = errors.New("invalid logical volume request")
+
+	ErrNoPhysicalDrives = errors.New("no physical drives provided")
 )
