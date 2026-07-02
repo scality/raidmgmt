@@ -159,6 +159,10 @@ func (r *RAIDController) AddPDsToLV(
 		return errors.Wrap(err, ErrInvalidLogicalVolumeMetadata.Error())
 	}
 
+	if len(pdsMetadata) == 0 {
+		return ErrNoPhysicalDrives
+	}
+
 	for _, pd := range pdsMetadata {
 		if err := pd.Validate(); err != nil {
 			return errors.Wrap(err, ErrInvalidPhysicalDriveMetadata.Error())
@@ -183,6 +187,10 @@ func (r *RAIDController) DeletePDsFromLV(
 ) error {
 	if err := lvMetadata.Validate(); err != nil {
 		return errors.Wrap(err, ErrInvalidLogicalVolumeMetadata.Error())
+	}
+
+	if len(pdsMetadata) == 0 {
+		return ErrNoPhysicalDrives
 	}
 
 	for _, pdMetadata := range pdsMetadata {
