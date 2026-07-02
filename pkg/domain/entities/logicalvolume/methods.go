@@ -8,18 +8,32 @@ import (
 	"github.com/scality/raidmgmt/pkg/domain/entities/physicaldrive"
 )
 
-// Validate checks if the CacheOptions instance is valid.
+// Validate checks if the CacheOptions instance is valid. It rejects a nil
+// receiver (rather than panicking) so callers that require cache options, such
+// as SetLVCacheOptions, surface a clean error. The read and write policies must
+// be known settable values. The IO policy is optional -- not every controller
+// supports it (storcli2 dropped it entirely) -- so it is only rejected when the
+// caller set it to an unrecognized value; an unset or Unknown IO policy is
+// accepted and left to the controller.
 func (co *CacheOptions) Validate() error {
-	if co.ReadPolicy == ReadPolicyUnknown {
-		return errors.New("read policy is unknown")
+	if co == nil {
+		return errors.New("cache options are nil")
 	}
 
-	if co.WritePolicy == WritePolicyUnknown {
-		return errors.New("write policy is unknown")
+	if !co.ReadPolicy.IsValid() {
+		return errors.Errorf("invalid read policy: %q", co.ReadPolicy)
 	}
 
-	if co.IOPolicy == IOPolicyUnknown {
-		return errors.New("io policy is unknown")
+	if !co.WritePolicy.IsValid() {
+		return errors.Errorf("invalid write policy: %q", co.WritePolicy)
+	}
+
+	// storcli2 dropped the IO policy, so an unset or Unknown value is accepted and
+	// left to the controller; only an unrecognized value is rejected.
+	switch co.IOPolicy {
+	case "", IOPolicyUnknown, IOPolicyDirect, IOPolicyCached:
+	default:
+		return errors.Errorf("invalid io policy: %q", co.IOPolicy)
 	}
 
 	return nil
@@ -43,6 +57,8 @@ func (m *Metadata) Validate() error {
 }
 
 // Validate checks if the Request instance is valid.
+//
+//nolint:funlen // this is a validation method
 func (r *Request) Validate() error {
 	if r == nil {
 		return errors.New("request is nil")
@@ -52,8 +68,8 @@ func (r *Request) Validate() error {
 		return errors.Wrap(err, "controller metadata is invalid")
 	}
 
-	if r.RAIDLevel == RAIDLevelUnknown {
-		return errors.New("raid level is unknown")
+	if !r.RAIDLevel.IsValid() {
+		return errors.Errorf("invalid raid level: %s", r.RAIDLevel)
 	}
 
 	if len(r.PDrivesMetadata) == 0 {
@@ -68,6 +84,10 @@ func (r *Request) Validate() error {
 		if err := pdm.Validate(); err != nil {
 			return errors.Wrap(err, "physical drive metadata is invalid")
 		}
+	}
+
+	if r.CacheOptions == nil {
+		return nil
 	}
 
 	if err := r.CacheOptions.Validate(); err != nil {
@@ -101,6 +121,8 @@ func (r *Request) checkRAIDRequirement() error {
 		}
 	case RAIDLevelUnknown:
 		return errors.New("unknown RAID level")
+	default:
+		return errors.Errorf("unsupported RAID level: %s", r.RAIDLevel)
 	}
 
 	return nil
@@ -117,8 +139,8 @@ func ValidateRAIDCreation(
 		return errors.New("no physical drives")
 	}
 
-	if raidLevel == RAIDLevelUnknown {
-		return errors.New("unknown RAID level")
+	if !raidLevel.IsValid() {
+		return errors.Errorf("invalid RAID level: %s", raidLevel)
 	}
 
 	// Check if there are unavailable drives
