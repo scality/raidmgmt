@@ -29,10 +29,8 @@ func (co *CacheOptions) Validate() error {
 	}
 
 	// storcli2 dropped the IO policy, so an unset or Unknown value is accepted and
-	// left to the controller; only an unrecognized value is rejected.
-	switch co.IOPolicy {
-	case "", IOPolicyUnknown, IOPolicyDirect, IOPolicyCached:
-	default:
+	// left to the controller; only a set-but-unrecognized value is rejected.
+	if co.IOPolicy != "" && co.IOPolicy != IOPolicyUnknown && !co.IOPolicy.IsValid() {
 		return errors.Errorf("invalid io policy: %q", co.IOPolicy)
 	}
 
@@ -57,8 +55,6 @@ func (m *Metadata) Validate() error {
 }
 
 // Validate checks if the Request instance is valid.
-//
-//nolint:funlen // this is a validation method
 func (r *Request) Validate() error {
 	if r == nil {
 		return errors.New("request is nil")
