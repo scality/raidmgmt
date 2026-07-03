@@ -23,9 +23,29 @@ on:
           - "minor"
           - "major"
 
+# The tag is created and pushed with the GitHub App token; the default
+# GITHUB_TOKEN only needs to read the repository.
+permissions:
+  contents: read
+
 jobs:
+  quality-gate:
+    # Releases are cut from `main` without re-running pre-merge, so run the
+    # test suite against the exact commit being tagged.
+    runs-on: ubuntu-24.04
+    if: github.ref_name == 'main'
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Setup Go
+        uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+        with:
+          go-version-file: go.mod
+      - name: Run tests
+        run: go test -v ./...
+
   prepare-version:
     runs-on: ubuntu-24.04
+    needs: quality-gate
     if: github.ref_name == 'main'
     steps:
       - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
@@ -54,7 +74,9 @@ jobs:
         # NOTE: when release branches are added, also relax the `main`-only guard
         # above and constrain non-`main` branches to patch-scope releases.
         run: |
-          last_ga_tag=$(git tag --merged HEAD --sort=version:refname --list "v*" | grep -v '\-' | tail -n 1)
+          # `|| true`: grep exits 1 when no GA tag matches (first release, or
+          # only pre-release tags); let the 0.0.0 fallback below handle it.
+          last_ga_tag=$(git tag --merged HEAD --sort=version:refname --list "v*" | { grep -v '\-' || true; } | tail -n 1)
           if [[ -z "$last_ga_tag" ]]; then
             last_ga_tag="0.0.0"
           fi
@@ -81,9 +103,6 @@ jobs:
 
       - name: Create and push `${{ env.RELEASE_TAG }}` tag
         run: |
-          git fsck
-          git gc
-
           git config --global user.email ${{ github.actor }}@scality.com
           git config --global user.name ${{ github.actor }}
 
