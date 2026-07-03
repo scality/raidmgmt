@@ -303,12 +303,12 @@ func (a *Adapter) createLV(request *logicalvolume.Request) (
 		return nil, errors.Wrap(err, "failed to format drives string")
 	}
 
-	// Prepare the cache options
-	read := string("rdpolicy=" + request.CacheOptions.ReadPolicy)
-	write := string("wrcache=" + request.CacheOptions.WritePolicy)
-	io := string("iopolicy=" + request.CacheOptions.IOPolicy)
+	cacheFlags, err := megaraidCreateCacheFlags(request.CacheOptions)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to build cache flags")
+	}
 
-	args := []string{selector, "add", "vd", raidLevel, drives, read, write, io}
+	args := append([]string{selector, "add", "vd", raidLevel, drives}, cacheFlags...)
 
 	_, err = a.runner.Run(args)
 	if err != nil {
@@ -322,6 +322,39 @@ func (a *Adapter) createLV(request *logicalvolume.Request) (
 	}
 
 	return newLV, nil
+}
+
+// megaraidCreateCacheFlags returns the "add vd" cache flags. Each policy is
+// mapped to its megaraid CLI token through the adapter-owned mappers rather than
+// emitted from the domain enum's string value (see cache.go). The megaraid v1
+// "add vd" command requires all three policies, so a read, write or IO policy
+// that does not map is an error (fail closed). A nil CacheOptions emits no flags
+// and leaves the controller to apply its own defaults.
+func megaraidCreateCacheFlags(cache *logicalvolume.CacheOptions) ([]string, error) {
+	if cache == nil {
+		return nil, nil
+	}
+
+	readToken, ok := megaraidReadCacheToken(cache.ReadPolicy)
+	if !ok {
+		return nil, errors.Errorf("unsettable read policy %q", cache.ReadPolicy)
+	}
+
+	writeToken, ok := megaraidWriteCacheToken(cache.WritePolicy)
+	if !ok {
+		return nil, errors.Errorf("unsettable write policy %q", cache.WritePolicy)
+	}
+
+	ioToken, ok := megaraidIOPolicyToken(cache.IOPolicy)
+	if !ok {
+		return nil, errors.Errorf("unsettable io policy %q", cache.IOPolicy)
+	}
+
+	return []string{
+		"rdpolicy=" + readToken,
+		"wrcache=" + writeToken,
+		"iopolicy=" + ioToken,
+	}, nil
 }
 
 func formatDrivesString(pdMetas []*physicaldrive.Metadata) (string, error) {
@@ -437,19 +470,11 @@ func (a *Adapter) setLVCacheOptions(
 		return errors.Wrapf(err, "failed to get logical volume %s", metadata.ID)
 	}
 
-	// Dynamically build the options slice
-	var options []string
-
-	if cacheOpts.ReadPolicy != lv.CacheOptions.ReadPolicy {
-		options = append(options, "rdcache="+string(cacheOpts.ReadPolicy))
-	}
-
-	if cacheOpts.WritePolicy != lv.CacheOptions.WritePolicy {
-		options = append(options, "wrcache="+string(cacheOpts.WritePolicy))
-	}
-
-	if cacheOpts.IOPolicy != lv.CacheOptions.IOPolicy {
-		options = append(options, "iopolicy="+string(cacheOpts.IOPolicy))
+	// Build the "set" options for the policies that changed, each mapped to its
+	// megaraid CLI token (see cache.go).
+	options, err := megaraidSetCacheFlags(cacheOpts, lv.CacheOptions)
+	if err != nil {
+		return errors.Wrap(err, "failed to resolve cache options")
 	}
 
 	// If no options need to be updated, return nil
