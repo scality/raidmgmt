@@ -34,6 +34,7 @@ type (
 		Reason        string   `json:"reason,omitempty"`         // Reason for the disk state
 		DevicePath    string   `json:"device_path,omitempty"`    // Device path of the disk
 		PermanentPath string   `json:"permanent_path,omitempty"` // Permanent path of the array (e.g.: /dev/disk/by-id/...)
+		IsPartition   bool     `json:"is_partition,omitempty"`   // True when this entry is a partition (lsblk TYPE=part) rather than a whole disk
 	}
 
 	// Slot identifies the slot of a disk.
