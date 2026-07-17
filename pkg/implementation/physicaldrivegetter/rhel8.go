@@ -14,6 +14,14 @@ import (
 	"github.com/scality/raidmgmt/pkg/implementation/commandrunner"
 )
 
+// lsblk TYPE values the getter cares about. Whole disks and partitions are both
+// returned as physical drives; the IsPartition flag lets callers tell them
+// apart. Every other type (raid*, lvm, loop...) is dropped in ParseLSBLKOutput.
+const (
+	diskDeviceType      = "disk"
+	partitionDeviceType = "part"
+)
+
 type (
 	RHEL8 struct {
 		UDevADM  commandrunner.CommandRunner
@@ -118,6 +126,7 @@ func (r *RHEL8) PhysicalDrive(
 
 	physicalDrive.Metadata = metadata
 	physicalDrive.Size = device.Size
+	physicalDrive.IsPartition = device.Type == partitionDeviceType
 
 	status, reason, err := r.physicalDriveStatus(device)
 	if err != nil {
@@ -357,7 +366,7 @@ func ParseLSBLKOutput(output []byte) ([]BlockDevice, error) {
 		}
 
 		// Skip non-disk and non-part devices
-		if device.Type != "disk" && device.Type != "part" {
+		if device.Type != diskDeviceType && device.Type != partitionDeviceType {
 			continue
 		}
 

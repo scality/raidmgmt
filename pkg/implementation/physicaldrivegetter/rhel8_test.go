@@ -480,6 +480,7 @@ SMART overall-health self-assessment test result: PASSED
 	assert.Equal(t, "/dev/nvme1n1", physicalDrives[0].DevicePath)
 	assert.Equal(t, physicaldrive.DiskTypeNVMe, physicalDrives[0].Type)
 	assert.Equal(t, physicaldrive.PDStatusUsed, physicalDrives[0].Status)
+	assert.False(t, physicalDrives[0].IsPartition)
 
 	// Partition of the first drive assertions
 	assert.Equal(t, "Amazon Elastic Block Store", physicalDrives[1].Model)
@@ -488,6 +489,7 @@ SMART overall-health self-assessment test result: PASSED
 	assert.Equal(t, "/dev/nvme1n1p1", physicalDrives[1].DevicePath)
 	assert.Equal(t, physicaldrive.DiskTypeNVMe, physicalDrives[1].Type)
 	assert.Equal(t, physicaldrive.PDStatusUsed, physicalDrives[1].Status)
+	assert.True(t, physicalDrives[1].IsPartition)
 
 	// Second drive assertions
 	assert.Equal(t, "Amazon Elastic Block Store", physicalDrives[2].Model)
@@ -496,6 +498,7 @@ SMART overall-health self-assessment test result: PASSED
 	assert.Equal(t, "/dev/nvme2n1", physicalDrives[2].DevicePath)
 	assert.Equal(t, physicaldrive.DiskTypeNVMe, physicalDrives[2].Type)
 	assert.Equal(t, physicaldrive.PDStatusUnassignedGood, physicalDrives[2].Status)
+	assert.False(t, physicalDrives[2].IsPartition)
 
 	mockLSBLK.AssertExpectations(t)
 	mockUDevADM.AssertExpectations(t)
