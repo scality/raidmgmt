@@ -32,7 +32,7 @@ func TestMegaraidCreateCacheFlags(t *testing.T) {
 				WritePolicy: logicalvolume.WritePolicyWriteBack,
 				IOPolicy:    logicalvolume.IOPolicyDirect,
 			},
-			want: []string{"rdpolicy=ra", "wrcache=wb", "iopolicy=direct"},
+			want: []string{"ra", "wb", "direct"},
 		},
 		{
 			name: "unset io policy fails closed (mandatory for v1 add vd)",
