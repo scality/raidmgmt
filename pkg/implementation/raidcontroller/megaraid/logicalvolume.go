@@ -351,9 +351,9 @@ func megaraidCreateCacheFlags(cache *logicalvolume.CacheOptions) ([]string, erro
 	}
 
 	return []string{
-		"rdpolicy=" + readToken,
-		"wrcache=" + writeToken,
-		"iopolicy=" + ioToken,
+		readToken,
+		writeToken,
+		ioToken,
 	}, nil
 }
 
