@@ -345,8 +345,8 @@ func (a *Adapter) createLV(request *logicalvolume.Request) (
 	}
 
 	// Get the newly created logical volume. storcli returns before the kernel
-	// has a block device for the new volume, so force a bus rescan and poll
-	// until it resolves instead of failing on the first attempt.
+	// has a block device for the new volume, so poll until it resolves (forcing
+	// a bus rescan between attempts) instead of failing on the first attempt.
 	newLV, err := a.findNewVolumeUntilSettled(request.PDrivesMetadata)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to find new logical volume")
@@ -355,12 +355,13 @@ func (a *Adapter) createLV(request *logicalvolume.Request) (
 	return newLV, nil
 }
 
-// findNewVolumeUntilSettled forces a SCSI bus rescan and retries
-// findNewLogicalVolume until the newly created volume's device node has been
-// discovered and its permanent path resolves, or newVolumeSettleTimeout
-// elapses. The rescan is required because the megaraid_sas driver stops
-// auto-announcing VDs after a few rapid creations, leaving later volumes with
-// no /dev node until the kernel is told to probe the bus.
+// findNewVolumeUntilSettled retries findNewLogicalVolume until the newly created
+// volume's device node has been discovered and its permanent path resolves, or
+// newVolumeSettleTimeout elapses. When a lookup fails it forces a SCSI bus
+// rescan before retrying: the megaraid_sas driver stops auto-announcing VDs
+// after a few rapid creations, leaving later volumes with no /dev node until the
+// kernel is told to probe the bus. Volumes the kernel discovers on its own
+// resolve on the first attempt with no rescan.
 func (a *Adapter) findNewVolumeUntilSettled(pds []*physicaldrive.Metadata) (
 	*logicalvolume.LogicalVolume,
 	error,
@@ -370,12 +371,6 @@ func (a *Adapter) findNewVolumeUntilSettled(pds []*physicaldrive.Metadata) (
 	var lastRescanErr error
 
 	for {
-		// Force discovery of the new VD. A failure here is not fatal on its own
-		// (auto-discovery may still succeed), but it is surfaced if we time out.
-		if rescanErr := CustomRescanSCSIHosts(); rescanErr != nil {
-			lastRescanErr = rescanErr
-		}
-
 		lv, err := a.findNewLogicalVolume(pds)
 		if err == nil {
 			return lv, nil
@@ -390,6 +385,13 @@ func (a *Adapter) findNewVolumeUntilSettled(pds []*physicaldrive.Metadata) (
 
 			return nil, errors.Wrapf(err, "device node not settled after %s",
 				newVolumeSettleTimeout)
+		}
+
+		// The volume did not resolve: the kernel may not have discovered its
+		// device node yet. Force a bus rescan, then wait before retrying. A
+		// rescan failure is not fatal on its own, but it is surfaced on timeout.
+		if rescanErr := CustomRescanSCSIHosts(); rescanErr != nil {
+			lastRescanErr = rescanErr
 		}
 
 		time.Sleep(newVolumeSettleInterval)
