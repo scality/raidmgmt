@@ -29,17 +29,17 @@ const (
 	megaraidSASDriver = "megaraid_sas"
 )
 
-// newVolumeSettleTimeout and newVolumeSettleInterval bound the wait for a
+// NewVolumeSettleTimeout and NewVolumeSettleInterval bound the wait for a
 // freshly created volume's device node to appear after "add vd". The kernel
 // only auto-discovers the first few VDs created in rapid succession (the
-// megaraid_sas driver stops emitting hotplug events), so createLV forces a bus
-// rescan and then polls until the new volume resolves. Package-level vars so
-// tests can shrink them.
+// megaraid_sas driver stops emitting hotplug events), so createLV polls until
+// the new volume resolves, forcing a bus rescan between failed attempts.
+// Exported so tests can shrink them (like CustomRescanSCSIHosts).
 //
 //nolint:gochecknoglobals // Tunables for the post-create device-settle poll.
 var (
-	newVolumeSettleTimeout  = 60 * time.Second
-	newVolumeSettleInterval = 1 * time.Second
+	NewVolumeSettleTimeout  = 60 * time.Second
+	NewVolumeSettleInterval = 1 * time.Second
 )
 
 // CustomRescanSCSIHosts forces the kernel to probe for newly created virtual
@@ -357,7 +357,7 @@ func (a *Adapter) createLV(request *logicalvolume.Request) (
 
 // findNewVolumeUntilSettled retries findNewLogicalVolume until the newly created
 // volume's device node has been discovered and its permanent path resolves, or
-// newVolumeSettleTimeout elapses. When a lookup fails it forces a SCSI bus
+// NewVolumeSettleTimeout elapses. When a lookup fails it forces a SCSI bus
 // rescan before retrying: the megaraid_sas driver stops auto-announcing VDs
 // after a few rapid creations, leaving later volumes with no /dev node until the
 // kernel is told to probe the bus. Volumes the kernel discovers on its own
@@ -366,7 +366,7 @@ func (a *Adapter) findNewVolumeUntilSettled(pds []*physicaldrive.Metadata) (
 	*logicalvolume.LogicalVolume,
 	error,
 ) {
-	deadline := time.Now().Add(newVolumeSettleTimeout)
+	deadline := time.Now().Add(NewVolumeSettleTimeout)
 
 	var lastRescanErr error
 
@@ -380,11 +380,11 @@ func (a *Adapter) findNewVolumeUntilSettled(pds []*physicaldrive.Metadata) (
 			if lastRescanErr != nil {
 				return nil, errors.Wrapf(err,
 					"device node not settled after %s (scsi rescan failing: %v)",
-					newVolumeSettleTimeout, lastRescanErr)
+					NewVolumeSettleTimeout, lastRescanErr)
 			}
 
 			return nil, errors.Wrapf(err, "device node not settled after %s",
-				newVolumeSettleTimeout)
+				NewVolumeSettleTimeout)
 		}
 
 		// The volume did not resolve: the kernel may not have discovered its
@@ -394,7 +394,7 @@ func (a *Adapter) findNewVolumeUntilSettled(pds []*physicaldrive.Metadata) (
 			lastRescanErr = rescanErr
 		}
 
-		time.Sleep(newVolumeSettleInterval)
+		time.Sleep(NewVolumeSettleInterval)
 	}
 }
 

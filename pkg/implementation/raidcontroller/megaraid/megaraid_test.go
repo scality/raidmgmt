@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/pkg/errors"
 
@@ -719,6 +720,17 @@ func (s *UnitTestSuite) TestCreateLV() {
 // device node is discovered instead of failing on the first try.
 func (s *UnitTestSuite) TestCreateLVForcesRescanAndSettles() {
 	s.wasCreateLVCalledOnce = false
+
+	// Shrink the settle poll so the retry does not add real wall-clock time.
+	origTimeout := megaraid2.NewVolumeSettleTimeout
+	origInterval := megaraid2.NewVolumeSettleInterval
+	megaraid2.NewVolumeSettleTimeout = 5 * time.Second
+	megaraid2.NewVolumeSettleInterval = time.Millisecond
+
+	defer func() {
+		megaraid2.NewVolumeSettleTimeout = origTimeout
+		megaraid2.NewVolumeSettleInterval = origInterval
+	}()
 
 	s.setupMockCallsCreateLV()
 
