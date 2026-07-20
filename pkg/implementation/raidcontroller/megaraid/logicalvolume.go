@@ -2,10 +2,12 @@ package megaraid
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/pkg/errors"
 
@@ -15,10 +17,37 @@ import (
 	"github.com/scality/raidmgmt/pkg/utils"
 )
 
-// patternLV is the pattern for the logical volume selector.
 const (
+	// patternLV is the pattern for the logical volume selector.
 	patternLV string = "/c%d/v%s"
+
+	// scsiHostRoot holds one sysfs directory per SCSI host adapter.
+	scsiHostRoot = "/sys/class/scsi_host"
+
+	// megaraidSASDriver is the proc_name of the MegaRAID kernel driver, used to
+	// select which SCSI hosts to rescan for newly created virtual drives.
+	megaraidSASDriver = "megaraid_sas"
 )
+
+// newVolumeSettleTimeout and newVolumeSettleInterval bound the wait for a
+// freshly created volume's device node to appear after "add vd". The kernel
+// only auto-discovers the first few VDs created in rapid succession (the
+// megaraid_sas driver stops emitting hotplug events), so createLV forces a bus
+// rescan and then polls until the new volume resolves. Package-level vars so
+// tests can shrink them.
+//
+//nolint:gochecknoglobals // Tunables for the post-create device-settle poll.
+var (
+	newVolumeSettleTimeout  = 60 * time.Second
+	newVolumeSettleInterval = 1 * time.Second
+)
+
+// CustomRescanSCSIHosts forces the kernel to probe for newly created virtual
+// drives. It is a package-level var so tests can stub the sysfs side effect,
+// mirroring CustomFileExists / CustomEvalSymlinks.
+//
+//nolint:gochecknoglobals // Test seam for the sysfs bus rescan.
+var CustomRescanSCSIHosts = rescanMegaraidHosts
 
 // logicalvolumes returns all logical volumes for a given controller.
 func (a *Adapter) logicalvolumes(metadata *raidcontroller.Metadata) (
@@ -315,13 +344,90 @@ func (a *Adapter) createLV(request *logicalvolume.Request) (
 		return nil, errors.Wrap(err, ErrCommandFailed.Error())
 	}
 
-	// Get the newly created logical volume
-	newLV, err := a.findNewLogicalVolume(request.PDrivesMetadata)
+	// Get the newly created logical volume. storcli returns before the kernel
+	// has a block device for the new volume, so force a bus rescan and poll
+	// until it resolves instead of failing on the first attempt.
+	newLV, err := a.findNewVolumeUntilSettled(request.PDrivesMetadata)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to find new logical volume")
 	}
 
 	return newLV, nil
+}
+
+// findNewVolumeUntilSettled forces a SCSI bus rescan and retries
+// findNewLogicalVolume until the newly created volume's device node has been
+// discovered and its permanent path resolves, or newVolumeSettleTimeout
+// elapses. The rescan is required because the megaraid_sas driver stops
+// auto-announcing VDs after a few rapid creations, leaving later volumes with
+// no /dev node until the kernel is told to probe the bus.
+func (a *Adapter) findNewVolumeUntilSettled(pds []*physicaldrive.Metadata) (
+	*logicalvolume.LogicalVolume,
+	error,
+) {
+	deadline := time.Now().Add(newVolumeSettleTimeout)
+
+	var lastRescanErr error
+
+	for {
+		// Force discovery of the new VD. A failure here is not fatal on its own
+		// (auto-discovery may still succeed), but it is surfaced if we time out.
+		if rescanErr := CustomRescanSCSIHosts(); rescanErr != nil {
+			lastRescanErr = rescanErr
+		}
+
+		lv, err := a.findNewLogicalVolume(pds)
+		if err == nil {
+			return lv, nil
+		}
+
+		if time.Now().After(deadline) {
+			if lastRescanErr != nil {
+				return nil, errors.Wrapf(err,
+					"device node not settled after %s (scsi rescan failing: %v)",
+					newVolumeSettleTimeout, lastRescanErr)
+			}
+
+			return nil, errors.Wrapf(err, "device node not settled after %s",
+				newVolumeSettleTimeout)
+		}
+
+		time.Sleep(newVolumeSettleInterval)
+	}
+}
+
+// rescanMegaraidHosts asks the kernel to probe the SCSI bus for newly created
+// virtual drives on the MegaRAID controller. Only megaraid_sas hosts are
+// scanned, to avoid the multi-second link-down timeouts of empty SATA ports.
+func rescanMegaraidHosts() error {
+	entries, err := os.ReadDir(scsiHostRoot)
+	if err != nil {
+		return errors.Wrap(err, "failed to list scsi hosts")
+	}
+
+	scanned := 0
+
+	for _, entry := range entries {
+		hostDir := filepath.Join(scsiHostRoot, entry.Name())
+
+		procName, err := os.ReadFile(filepath.Join(hostDir, "proc_name"))
+		if err != nil || strings.TrimSpace(string(procName)) != megaraidSASDriver {
+			continue
+		}
+
+		// "- - -" means "scan every channel, target and LUN" on this host.
+		if err := os.WriteFile(filepath.Join(hostDir, "scan"), []byte("- - -"), 0); err != nil {
+			return errors.Wrapf(err, "failed to rescan scsi host %s", entry.Name())
+		}
+
+		scanned++
+	}
+
+	if scanned == 0 {
+		return errors.New("no megaraid_sas scsi host found to rescan")
+	}
+
+	return nil
 }
 
 // megaraidCreateCacheFlags returns the "add vd" cache flags. Each policy is

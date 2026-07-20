@@ -49,6 +49,10 @@ func (s *UnitTestSuite) SetupTest() {
 	s.a = megaraid2.New(s.mockRunner)
 
 	s.mockPathResolver = mocks2.NewPathResolver(s.T())
+
+	// Never touch the real /sys during unit tests; createLV triggers a SCSI
+	// bus rescan, which tests override individually when they assert on it.
+	megaraid2.CustomRescanSCSIHosts = func() error { return nil }
 }
 
 // mockOutput reads the output from a file and returns it.
@@ -706,6 +710,67 @@ func (s *UnitTestSuite) TestCreateLV() {
 			s.Equal("/dev/disk/by-id/wwn-0x600062b212da5d402bd3b493e1699377", newLv.PermanentPath)
 		}
 	}
+}
+
+// TestCreateLVForcesRescanAndSettles reproduces the post-create discovery race:
+// storcli returns before the kernel has a block device for the new volume, so
+// the first path resolution fails ("failed to compute permanent path") while a
+// later one succeeds. createLV must force a SCSI bus rescan and poll until the
+// device node is discovered instead of failing on the first try.
+func (s *UnitTestSuite) TestCreateLVForcesRescanAndSettles() {
+	s.wasCreateLVCalledOnce = false
+
+	s.setupMockCallsCreateLV()
+
+	// Stub the sysfs bus rescan and count how often it runs (never touch the
+	// real /sys in unit tests).
+	rescanCalls := 0
+	origRescan := megaraid2.CustomRescanSCSIHosts
+	megaraid2.CustomRescanSCSIHosts = func() error {
+		rescanCalls++
+
+		return nil
+	}
+
+	defer func() { megaraid2.CustomRescanSCSIHosts = origRescan }()
+
+	// First resolution: device not yet discovered. For the single-drive volume
+	// this falls back to ComputePaths on the real filesystem, which fails. Every
+	// subsequent resolution finds the symlink.
+	s.mockPathResolver.On("FileExists", mock.Anything).Return(false).Once()
+	s.mockPathResolver.On("FileExists", mock.Anything).Return(true)
+	s.mockPathResolver.On(
+		"EvalSymlinks",
+		"/dev/disk/by-id/wwn-0x600062b212da5d402bd3b493e1699377",
+	).Return("/dev/sda", nil)
+
+	s.setupCustomFileExists()
+	defer s.restoreCustomFileExists()
+
+	s.setupCustomEvalSymlinks()
+	defer s.restoreCustomEvalSymlinks()
+
+	request := &logicalvolume.Request{
+		CtrlMetadata: &raidcontroller.Metadata{ID: 0},
+		RAIDLevel:    logicalvolume.RAIDLevel0,
+		PDrivesMetadata: []*physicaldrive.Metadata{
+			{CtrlMetadata: &raidcontroller.Metadata{ID: 0}, ID: "251:12"},
+		},
+		CacheOptions: &logicalvolume.CacheOptions{
+			ReadPolicy:  logicalvolume.ReadPolicyReadAhead,
+			WritePolicy: logicalvolume.WritePolicyWriteThrough,
+			IOPolicy:    logicalvolume.IOPolicyDirect,
+		},
+	}
+
+	newLv, err := s.a.CreateLV(request)
+
+	s.Require().NoError(err)
+	s.Require().NotNil(newLv)
+	s.Equal("228", newLv.ID)
+	s.Equal("/dev/sda", newLv.DevicePath)
+	s.Equal("/dev/disk/by-id/wwn-0x600062b212da5d402bd3b493e1699377", newLv.PermanentPath)
+	s.GreaterOrEqual(rescanCalls, 1, "createLV must force a SCSI rescan for the new volume")
 }
 
 func (s *UnitTestSuite) TestDeleteLV() {
