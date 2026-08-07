@@ -127,6 +127,16 @@ flags. This is not for idempotency but to minimize real mutations and to skip
 fields the (lossy) getter reports as `Unknown` when the caller did not change
 them — avoiding a spurious "unsettable" rejection on an untouched field.
 
+Getter read paths degrade gracefully. When a drive or volume in a multi-member
+array cannot be fully resolved — e.g. a degraded-but-online array whose udev
+`by-id` link is missing, or a failed JBOD drive whose device node is gone — the
+getter returns that entity with its status and empty `DevicePath`/`PermanentPath`
+rather than failing, so one unhealthy drive does not drop a controller's whole
+inventory. (The megaraid create/settle path is deliberately stricter: a
+just-created volume whose device node has not yet appeared is treated as
+not-ready and retried after a bus rescan, so there a failed path resolution is
+still an error.)
+
 ### Adapters
 
 #### MegaRAID / PERC (storcli, perccli)
