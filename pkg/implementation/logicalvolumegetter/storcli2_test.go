@@ -70,6 +70,39 @@ func TestStorCLI2LogicalVolumes(t *testing.T) {
 	assert.Equal(t, 0, first.PDrivesMetadata[0].CtrlMetadata.ID)
 }
 
+// TestStorCLI2LogicalVolumesDegraded guards the resilience property for
+// storcli2 RAID disks: a degraded volume (one member drive failed) is still
+// returned with its device and permanent path intact, and does not abort
+// discovery for the whole controller. Unlike the legacy megaraid getter,
+// storcli2 reads the OS drive name directly and never probes the filesystem,
+// so a not-optimal array keeps its path.
+func TestStorCLI2LogicalVolumesDegraded(t *testing.T) {
+	t.Parallel()
+
+	const payload = `{"Controllers":[{"Command Status":{"Status":"Success"},` +
+		`"Response Data":{"Virtual Drives":[{` +
+		`"VD Info":{"DG/VD":"0/1","TYPE":"RAID1","State":"Dgrd","CurrentCache":"NR,WB",` +
+		`"Size":"9.094 TiB"},` +
+		`"PDs":[{"EID:Slt":"306:0"},{"EID:Slt":"306:1"}],` +
+		`"VD Properties":{"OS Drive Name":"/dev/sdb",` +
+		`"SCSI NAA Id":"600062b22066d54069faf124ced57e62"}}]}}]}`
+
+	mockRunner := new(MockCommandRunner)
+	mockRunner.On("Run", []string{"/c0/vall", "show", "all"}).Return([]byte(payload), nil)
+
+	s := NewStorCLI2(mockRunner)
+
+	volumes, err := s.LogicalVolumes(&raidcontroller.Metadata{ID: 0})
+	require.NoError(t, err)
+	require.Len(t, volumes, 1)
+
+	vol := volumes[0]
+	assert.Equal(t, logicalvolume.LVStatusDegraded, vol.Status)
+	assert.Equal(t, "/dev/sdb", vol.DevicePath)
+	assert.Equal(t, "/dev/disk/by-id/wwn-0x600062b22066d54069faf124ced57e62", vol.PermanentPath)
+	assert.Len(t, vol.PDrivesMetadata, 2)
+}
+
 func TestStorCLI2LogicalVolume(t *testing.T) {
 	t.Parallel()
 
