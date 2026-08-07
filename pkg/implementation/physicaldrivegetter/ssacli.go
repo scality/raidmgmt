@@ -243,12 +243,12 @@ func (s *SSACLI) parsePDLine( //nolint:funlen // This function is long and not c
 	case "Disk Name":
 		physicalDrive.DevicePath = value
 
-		blockDevice, err := s.getBlockDevice(value)
-		if err != nil {
-			return errors.Wrapf(err, "failed to get block device for %s", value)
-		}
-
-		if isBlockDeviceUsed(blockDevice) {
+		// getBlockDevice only refines the status: a mounted or formatted device
+		// is in use. A drive whose device node has disappeared (e.g. a failed or
+		// pulled drive) makes the lsblk lookup fail; that must not abort
+		// discovery for the whole controller, so a lookup failure leaves the
+		// status ssacli already reported untouched.
+		if blockDevice, err := s.getBlockDevice(value); err == nil && isBlockDeviceUsed(blockDevice) {
 			physicalDrive.Status = physicaldrive.PDStatusUsed
 		}
 		// TODO miss permanent path

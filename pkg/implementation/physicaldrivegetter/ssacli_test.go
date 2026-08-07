@@ -1,6 +1,7 @@
 package physicaldrivegetter
 
 import (
+	"errors"
 	"os"
 	"strconv"
 	"testing"
@@ -270,4 +271,30 @@ func TestSSACLIPhysicalDriveStatus(t *testing.T) {
 			}
 		})
 	}
+}
+
+// TestSSACLIParsePDLineDiskNameLsblkFailureIsNotFatal checks that a failed or
+// pulled drive whose device node has disappeared makes the lsblk lookup fail.
+// That lookup only refines the status, so it must
+// not abort discovery for the whole controller. The drive keeps its device
+// path and the status ssacli already reported.
+func TestSSACLIParsePDLineDiskNameLsblkFailureIsNotFatal(t *testing.T) {
+	mockRunner := new(MockCommandRunner)
+	mockRunner.On("Run", mock.AnythingOfType("[]string")).
+		Return([]byte(nil), errors.New("lsblk: device not found"))
+
+	s := &SSACLI{LSBLK: mockRunner}
+
+	pd := &physicaldrive.PhysicalDrive{
+		Metadata: &physicaldrive.Metadata{CtrlMetadata: &raidcontroller.Metadata{}},
+		Slot:     &physicaldrive.Slot{},
+		Status:   physicaldrive.PDStatusFailed,
+		Reason:   "Failed",
+	}
+
+	err := s.parsePDLine(pd, "   Disk Name: /dev/sdz")
+
+	assert.NoError(t, err)
+	assert.Equal(t, "/dev/sdz", pd.DevicePath)
+	assert.Equal(t, physicaldrive.PDStatusFailed, pd.Status)
 }
