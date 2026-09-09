@@ -5,10 +5,13 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/scality/raidmgmt/pkg/domain/entities/logicalvolume"
 	"github.com/scality/raidmgmt/pkg/domain/entities/raidcontroller"
+	"github.com/scality/raidmgmt/pkg/implementation/commandrunner"
 	"github.com/scality/raidmgmt/pkg/implementation/logicalvolumegetter"
 )
 
@@ -175,4 +178,58 @@ func mockOutput(filename string) []byte {
 	}
 
 	return output
+}
+
+// A Smart Array controller with no logical drive makes "logicaldrive all show
+// detail" exit 1, which the runner reports as ErrNoLogicalDrives. The listing is
+// then an empty inventory, not a failure, and the controller config is not read.
+func TestLogicalVolumesRunnerOutcomes(t *testing.T) {
+	tests := []struct {
+		name          string
+		runnerError   error
+		expectedError bool
+	}{
+		{
+			name:          "no logical drive",
+			runnerError:   commandrunner.ErrNoLogicalDrives,
+			expectedError: false,
+		},
+		{
+			name:          "any other failure",
+			runnerError:   errors.New("failed to run ssacli command: exit status 1"),
+			expectedError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockRunner := new(MockCommandRunner)
+
+			s := &logicalvolumegetter.SSACLI{
+				SSACLI: mockRunner,
+			}
+
+			mockRunner.On("Run", []string{
+				"controller",
+				"slot=0",
+				"logicaldrive",
+				"all",
+				"show",
+				"detail",
+			}).Return(mockOutput("logicalvolumes/show/detail/none"), tt.runnerError)
+
+			logicalVolumes, err := s.LogicalVolumes(&raidcontroller.Metadata{ID: 0})
+
+			if tt.expectedError {
+				require.Error(t, err)
+				assert.Nil(t, logicalVolumes)
+
+				return
+			}
+
+			require.NoError(t, err)
+			assert.Empty(t, logicalVolumes)
+			mockRunner.AssertNumberOfCalls(t, "Run", 1)
+		})
+	}
 }
