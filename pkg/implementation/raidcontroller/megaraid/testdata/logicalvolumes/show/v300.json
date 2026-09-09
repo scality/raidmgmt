@@ -1,0 +1,66 @@
+{
+ "Controllers": [
+  {
+   "Command Status": {
+    "Controller": 0,
+    "Status": "Success",
+    "Description": "None"
+   },
+   "Response Data": {
+    "/c0/v300": [
+     {
+      "DG/VD": "12/300",
+      "TYPE": "RAID1",
+      "State": "Dgrd",
+      "Access": "RW",
+      "Consist": "Yes",
+      "Cache": "RWTD",
+      "Cac": "-",
+      "sCC": "ON",
+      "Size": "16.370 TB",
+      "Name": ""
+     }
+    ],
+    "PDs for VD 300": [
+     {
+      "EID:Slt": "251:1",
+      "DID": 1,
+      "State": "Onln",
+      "DG": 12,
+      "Size": "16.370 TB",
+      "Intf": "SAS",
+      "Med": "HDD",
+      "Model": "ST18000NM000D   ",
+      "Type": "-"
+     },
+     {
+      "EID:Slt": "251:2",
+      "DID": 2,
+      "State": "Failed",
+      "DG": 12,
+      "Size": "16.370 TB",
+      "Intf": "SAS",
+      "Med": "HDD",
+      "Model": "ST18000NM000D   ",
+      "Type": "-"
+     }
+    ],
+    "VD300 Properties": {
+     "Strip Size": "256 KB",
+     "Number of Blocks": 35155607552,
+     "VD has Emulated PD": "Yes",
+     "Span Depth": 1,
+     "Number of Drives Per Span": 2,
+     "Write Cache(initial setting)": "WriteThrough",
+     "Disk Cache Policy": "Disk's Default",
+     "Exposed to OS": "Yes",
+     "Emulation type": "default",
+     "Is LD Ready for OS Requests": "Yes",
+     "OS Drive Name": "/dev/sdb",
+     "SCSI NAA Id": "600062b212da5d402bd3b493e1699377",
+     "Unmap Enabled": "No"
+    }
+   }
+  }
+ ]
+}
