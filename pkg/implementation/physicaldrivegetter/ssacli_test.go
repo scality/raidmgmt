@@ -190,13 +190,112 @@ func mockOutput(filename string) []byte {
 }
 
 func TestSSACLIPhysicalDriveStatus(t *testing.T) {
+	// lsblk on a drive that carries nothing: no mountpoint, no filesystem, no
+	// partition type.
+	emptyDevice := []byte(`NAME ROTA SIZE TYPE TRAN MOUNTPOINT FSTYPE PARTTYPE
+/dev/sda    0 858993459200 disk sata                    `)
+
 	tests := []struct {
-		name          string
-		mocking       []byte
-		metadata      *physicaldrive.Metadata
-		expected      *physicaldrive.PhysicalDrive
-		expectedError bool
+		name              string
+		mocking           []byte
+		lsblk             []byte
+		metadata          *physicaldrive.Metadata
+		expected          *physicaldrive.PhysicalDrive
+		expectedAvailable bool
+		expectedError     bool
 	}{
+		{
+			// ssacli answers "Status: OK" for a healthy drive whether or not it
+			// belongs to an array, so "Drive Type: Unassigned Drive" is what
+			// makes the drive available. Without it every drive came back used
+			// and CreateLV rejected every request with "unavailable drives".
+			name:    "unassigned drive is available",
+			mocking: mockOutput("physicaldrives/1I.1.1_detail"),
+			metadata: &physicaldrive.Metadata{
+				CtrlMetadata: &raidcontroller.Metadata{
+					ID: 0,
+				},
+				ID: "1I:1:1",
+			},
+			expected: &physicaldrive.PhysicalDrive{
+				Status: physicaldrive.PDStatusUnassignedGood,
+				Reason: "OK",
+			},
+			expectedAvailable: true,
+			expectedError:     false,
+		},
+		{
+			// A drive serving an array stays used.
+			name:    "data drive is used",
+			mocking: mockOutput("physicaldrives/4I.6.1_detail"),
+			metadata: &physicaldrive.Metadata{
+				CtrlMetadata: &raidcontroller.Metadata{
+					ID: 0,
+				},
+				ID: "4I:6:1",
+			},
+			expected: &physicaldrive.PhysicalDrive{
+				Status: physicaldrive.PDStatusUsed,
+				Reason: "OK",
+			},
+			expectedAvailable: false,
+			expectedError:     false,
+		},
+		{
+			// ssacli reports a predictive (SMART) failure on a free drive too,
+			// and such a drive must not be offered for a new volume.
+			name:    "predictive failure on an unassigned drive stays used",
+			mocking: mockOutput("physicaldrives/predictive_failure_unassigned_detail"),
+			metadata: &physicaldrive.Metadata{
+				CtrlMetadata: &raidcontroller.Metadata{
+					ID: 0,
+				},
+				ID: "1I:1:1",
+			},
+			expected: &physicaldrive.PhysicalDrive{
+				Status: physicaldrive.PDStatusUsed,
+				Reason: "Predictive Failure",
+			},
+			expectedAvailable: false,
+			expectedError:     false,
+		},
+		{
+			// A free drive that still carries data is used: the lsblk verdict
+			// wins over "Unassigned Drive", whatever the order of the fields.
+			name:    "unassigned drive carrying a filesystem is used",
+			mocking: mockOutput("physicaldrives/1I.1.1_detail"),
+			lsblk: []byte(`NAME ROTA SIZE TYPE TRAN MOUNTPOINT FSTYPE PARTTYPE
+/dev/sda    0 858993459200 disk sata               xfs      `),
+			metadata: &physicaldrive.Metadata{
+				CtrlMetadata: &raidcontroller.Metadata{
+					ID: 0,
+				},
+				ID: "1I:1:1",
+			},
+			expected: &physicaldrive.PhysicalDrive{
+				Status: physicaldrive.PDStatusUsed,
+				Reason: "OK",
+			},
+			expectedAvailable: false,
+			expectedError:     false,
+		},
+		{
+			// "Unassigned Drive" never promotes a drive ssacli called failed.
+			name:    "failed unassigned drive stays failed",
+			mocking: mockOutput("physicaldrives/failed_unassigned_detail"),
+			metadata: &physicaldrive.Metadata{
+				CtrlMetadata: &raidcontroller.Metadata{
+					ID: 0,
+				},
+				ID: "1I:1:1",
+			},
+			expected: &physicaldrive.PhysicalDrive{
+				Status: physicaldrive.PDStatusFailed,
+				Reason: "Failed",
+			},
+			expectedAvailable: false,
+			expectedError:     false,
+		},
 		{
 			// "Predictive Failure" must not abort the inventory: the drive is
 			// still online and serving its array, so it is surfaced as used
@@ -213,7 +312,8 @@ func TestSSACLIPhysicalDriveStatus(t *testing.T) {
 				Status: physicaldrive.PDStatusUsed,
 				Reason: "Predictive Failure",
 			},
-			expectedError: false,
+			expectedAvailable: false,
+			expectedError:     false,
 		},
 		{
 			// An unmodeled status (here "Rebuilding") soft-fails to
@@ -231,7 +331,8 @@ func TestSSACLIPhysicalDriveStatus(t *testing.T) {
 				Status: physicaldrive.PDStatusUnknown,
 				Reason: "Rebuilding",
 			},
-			expectedError: false,
+			expectedAvailable: false,
+			expectedError:     false,
 		},
 	}
 
@@ -253,8 +354,11 @@ func TestSSACLIPhysicalDriveStatus(t *testing.T) {
 				"detail",
 			}).Return(tt.mocking, nil)
 
-			lsblkOutput := []byte(`NAME ROTA SIZE TYPE TRAN MOUNTPOINT FSTYPE PARTTYPE
-/dev/sda    0 858993459200 disk sata                    `)
+			lsblkOutput := tt.lsblk
+			if lsblkOutput == nil {
+				lsblkOutput = emptyDevice
+			}
+
 			mockRunner.On("Run", mock.AnythingOfType("[]string")).Return(lsblkOutput, nil)
 
 			physicalDrive, err := s.PhysicalDrive(tt.metadata)
@@ -267,6 +371,7 @@ func TestSSACLIPhysicalDriveStatus(t *testing.T) {
 				assert.NotEmpty(t, physicalDrive)
 				assert.Equal(t, tt.expected.Status, physicalDrive.Status)
 				assert.Equal(t, tt.expected.Reason, physicalDrive.Reason)
+				assert.Equal(t, tt.expectedAvailable, physicalDrive.IsAvailable())
 			}
 		})
 	}
