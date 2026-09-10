@@ -291,46 +291,63 @@ func formatDrives(pdsMetadata []*physicaldrive.Metadata) string {
 	return formattedDrives
 }
 
-// getLogicalDriveID finds the logical drive ID that contains one of the physical drives.
-// It returns the logical drive ID and an error if any.
-// nolint: gocognit // This function is not too complex.
+// getLogicalDriveID finds the logical drive holding the first physical drive of
+// the request, from a "controller show config" output. That output lists an
+// array as a block opening with its logical drives and closing with its member
+// drives, so the drive belongs to the logical drive declared in its own block.
+// A drive still sitting in the Unassigned block belongs to none, and an array
+// declaring several logical drives cannot be told apart by membership alone.
 func getLogicalDriveID(
 	request *logicalvolume.Request,
 	output []byte,
 ) (string, error) {
-	blocks := utils.SplitOutput(ssacliArrayOrUnassignedRegexp, output)
+	driveID := request.PDrivesMetadata[0].ID
 
-	var logicalDriveID string
+	var holders []string
 
-	for _, block := range blocks {
-		logicalDriveID = ""
+	for _, block := range utils.SplitOutput(ssacliArrayOrUnassignedRegexp, output) {
+		logicalDriveIDs, holdsDrive := parseArrayBlock(block, driveID)
+		if holdsDrive {
+			holders = append(holders, logicalDriveIDs...)
+		}
+	}
 
-		for line := range strings.SplitSeq(string(block), "\n") {
-			if strings.HasPrefix(strings.TrimSpace(line), "logicaldrive") {
-				// Extract the logical drive ID
-				parts := strings.Fields(line)
-				if len(parts) > 1 {
-					logicalDriveID = parts[1]
-				}
-			} else if strings.Contains(line, request.PDrivesMetadata[0].ID) {
-				// Check if line contains the physical drive slot
-				// If the logical drive ID is empty, return it
-				// If the logical drive ID is not empty, return an error
-				if logicalDriveID == "" {
-					// Found the physical drive in the logical drive, return the logical drive ID
-					return logicalDriveID, nil
-				}
+	switch len(holders) {
+	case 0:
+		return "", errors.Errorf("physical drive %s not found in any logical drive", driveID)
+	case 1:
+		return holders[0], nil
+	default:
+		return "", errors.Errorf("physical drive %s found in multiple logical drives: %s",
+			driveID, strings.Join(holders, ", "))
+	}
+}
 
-				return "", errors.Errorf(
-					"physical drive %s found in multiple logical drives",
-					request.PDrivesMetadata[0].ID,
-				)
+// parseArrayBlock reads one block of a "controller show config" output and
+// returns the logical drives it declares, along with whether the given physical
+// drive is one of its members.
+func parseArrayBlock(block []byte, driveID string) ([]string, bool) {
+	var (
+		logicalDriveIDs []string
+		holdsDrive      bool
+	)
+
+	for line := range strings.SplitSeq(string(block), "\n") {
+		trimmed := strings.TrimSpace(line)
+
+		switch {
+		case strings.HasPrefix(trimmed, "logicaldrive"):
+			if parts := strings.Fields(trimmed); len(parts) > 1 {
+				logicalDriveIDs = append(logicalDriveIDs, parts[1])
+			}
+		case strings.HasPrefix(trimmed, "physicaldrive"):
+			// The address is the second field, compared whole: a substring
+			// match would read bay 11 as bay 1.
+			if parts := strings.Fields(trimmed); len(parts) > 1 && parts[1] == driveID {
+				holdsDrive = true
 			}
 		}
 	}
 
-	return "", errors.Errorf(
-		"physical drive %s not found in any logical drive",
-		request.PDrivesMetadata[0].ID,
-	)
+	return logicalDriveIDs, holdsDrive
 }

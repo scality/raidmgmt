@@ -1,0 +1,112 @@
+
+HPE Smart Array P816i-a SR Gen10 in Slot 0 (Embedded)  (sn: PWXLA0CRHF10FM)
+
+
+
+   Internal Drive Cage at Port 1I, Box 1 (Index 0), OK
+
+
+
+   Internal Drive Cage at Port 2I, Box 2 (Index 1), OK
+
+
+
+   Internal Drive Cage at Port 3I, Box 3 (Index 2), OK
+
+
+
+   Internal Drive Cage at Port 4I, Box 6 (Index 3), OK
+
+
+   Port Name: 1I (Mixed)
+
+   Port Name: 2I (Mixed)
+
+   Port Name: 3I (Mixed)
+
+   Port Name: 4I (Mixed)
+
+   Array A (Solid State SAS, Unused Space: 0  MB)
+
+      logicaldrive 1 (745.18 GB, RAID 1, OK)
+
+      physicaldrive 4I:6:1 (port 4I:box 6:bay 1, SAS SSD, 800 GB, OK)
+      physicaldrive 4I:6:2 (port 4I:box 6:bay 2, SAS SSD, 800 GB, OK)
+
+
+   Array B (SAS, Unused Space: 0  MB)
+
+      logicaldrive 2 (5.46 TB, RAID 0, OK)
+
+      physicaldrive 1I:1:3 (port 1I:box 1:bay 3, SAS HDD, 6 TB, OK)
+
+
+   Array C (SAS, Unused Space: 0  MB)
+
+      logicaldrive 3 (5.46 TB, RAID 0, OK)
+
+      physicaldrive 1I:1:4 (port 1I:box 1:bay 4, SAS HDD, 6 TB, OK)
+
+
+   Array D (SAS, Unused Space: 0  MB)
+
+      logicaldrive 4 (5.46 TB, RAID 0, OK)
+
+      physicaldrive 2I:2:1 (port 2I:box 2:bay 1, SAS HDD, 6 TB, OK)
+
+
+   Array E (SAS, Unused Space: 0  MB)
+
+      logicaldrive 5 (5.46 TB, RAID 0, OK)
+
+      physicaldrive 2I:2:2 (port 2I:box 2:bay 2, SAS HDD, 6 TB, OK)
+
+
+   Array F (SAS, Unused Space: 0  MB)
+
+      logicaldrive 6 (5.46 TB, RAID 0, OK)
+
+      physicaldrive 2I:2:3 (port 2I:box 2:bay 3, SAS HDD, 6 TB, OK)
+
+
+   Array G (SAS, Unused Space: 0  MB)
+
+      logicaldrive 7 (5.46 TB, RAID 0, OK)
+
+      physicaldrive 2I:2:4 (port 2I:box 2:bay 4, SAS HDD, 6 TB, OK)
+
+
+   Array H (SAS, Unused Space: 0  MB)
+
+      logicaldrive 8 (5.46 TB, RAID 0, OK)
+
+      physicaldrive 3I:3:1 (port 3I:box 3:bay 1, SAS HDD, 6 TB, OK)
+
+
+   Array I (SAS, Unused Space: 0  MB)
+
+      logicaldrive 9 (5.46 TB, RAID 0, OK)
+
+      physicaldrive 3I:3:2 (port 3I:box 3:bay 2, SAS HDD, 6 TB, OK)
+
+
+   Array J (SAS, Unused Space: 0  MB)
+
+      logicaldrive 10 (5.46 TB, RAID 0, OK)
+
+      physicaldrive 3I:3:3 (port 3I:box 3:bay 3, SAS HDD, 6 TB, OK)
+
+
+   Array K (SAS, Unused Space: 0  MB)
+
+      logicaldrive 11 (5.46 TB, RAID 0, OK)
+
+      physicaldrive 3I:3:4 (port 3I:box 3:bay 4, SAS HDD, 6 TB, OK)
+
+   Unassigned
+
+      physicaldrive 1I:1:1 (port 1I:box 1:bay 1, SAS HDD, 2 TB, OK)
+      physicaldrive 1I:1:2 (port 1I:box 1:bay 2, SAS HDD, 2 TB, OK)
+
+   SEP (Vendor ID HPE, Model Smart Adapter) 379  (WWID: 51402EC0167C85F0)
+
