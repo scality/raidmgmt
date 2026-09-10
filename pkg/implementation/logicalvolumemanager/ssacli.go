@@ -72,10 +72,9 @@ func (s *SSACLI) CreateLV(request *logicalvolume.Request) (*logicalvolume.Logica
 	// Format the physical drives
 	drives := formatDrives(request.PDrivesMetadata)
 
-	// Convert the RAID level to SSA CLI format
-	raidLevel := string(request.RAIDLevel)
-	if request.RAIDLevel == logicalvolume.RAIDLevel10 {
-		raidLevel = "1+0"
+	raidLevel, ok := ssacliRAIDLevelToken(request.RAIDLevel)
+	if !ok {
+		return nil, errors.Errorf("ssacli cannot express RAID level %s", request.RAIDLevel)
 	}
 
 	// Create the logical volume
@@ -256,6 +255,22 @@ func (s *SSACLI) migrateArray(
 	}
 
 	return nil
+}
+
+// ssacliRAIDLevelToken maps a RAID level to its ssacli "raid=" token, which
+// spells RAID 10 as 1+0. A level ssacli cannot express yields ok=false so the
+// caller fails closed rather than passing a token ssacli cannot parse.
+func ssacliRAIDLevelToken(level logicalvolume.RAIDLevel) (string, bool) {
+	switch level { //nolint:exhaustive // unmappable levels handled by the default
+	case logicalvolume.RAIDLevel0:
+		return "0", true
+	case logicalvolume.RAIDLevel1:
+		return "1", true
+	case logicalvolume.RAIDLevel10:
+		return "1+0", true
+	default:
+		return "", false
+	}
 }
 
 // formatDrives formats the physical drives to a string.
