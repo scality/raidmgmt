@@ -14,6 +14,11 @@ import (
 	"github.com/scality/raidmgmt/pkg/utils"
 )
 
+// ssacliStatusOK is the only ssacli "Status:" value that says a drive is
+// healthy. Every other label means degraded, failing, or a state this parser
+// does not model.
+const ssacliStatusOK = "OK"
+
 const (
 	ssacliSlotRegexpPattern          = `Slot (\d+)`
 	ssacliPhysicalDriveRegexpPattern = `physicaldrive\s+(.+)`
@@ -22,6 +27,16 @@ const (
 type SSACLI struct {
 	SSACLI commandrunner.CommandRunner
 	LSBLK  commandrunner.CommandRunner
+}
+
+// ssacliDriveFacts holds the three raw facts that decide a drive status. They
+// are collected while parsing and turned into a PDStatus once the whole block
+// has been read, because the order of the ssacli fields is not a contract:
+// deciding line by line let whichever field came last win.
+type ssacliDriveFacts struct {
+	status          string // raw "Status:" label
+	driveType       string // raw "Drive Type:" label
+	blockDeviceUsed bool   // the device carries a filesystem, a partition or a mount
 }
 
 var (
@@ -38,7 +53,7 @@ var (
 	// is mapped to PDStatusUsed and the install is allowed to continue.
 	//nolint:gochecknoglobals // small lookup table.
 	ssacliStatusMap = map[string]physicaldrive.PDStatus{
-		"OK":                 physicaldrive.PDStatusUsed,
+		ssacliStatusOK:       physicaldrive.PDStatusUsed,
 		"Failed":             physicaldrive.PDStatusFailed,
 		"Offline":            physicaldrive.PDStatusFailed,
 		"Predictive Failure": physicaldrive.PDStatusUsed,
@@ -159,6 +174,28 @@ func parseControllerID(output []byte) (int, error) {
 	return controllerID, nil
 }
 
+// pdStatus turns the collected facts into a PDStatus, in the storcli2 getter's
+// spirit: decide from the raw values rather than from a partially filled entity.
+func (f ssacliDriveFacts) pdStatus() physicaldrive.PDStatus {
+	// A device carrying data is in use whatever ssacli says about its array
+	// membership.
+	if f.blockDeviceUsed {
+		return physicaldrive.PDStatusUsed
+	}
+
+	// ssacli answers "Status: OK" for a healthy drive whether or not it belongs
+	// to an array, and that maps to PDStatusUsed, so "Drive Type: Unassigned
+	// Drive" is the only field saying the drive is free. Without this no drive
+	// is ever reported as available and CreateLV rejects every request. Only a
+	// plain OK is promoted: "Failed", "Offline", "Predictive Failure" or a label
+	// this parser does not model keep the status they map to.
+	if f.status == ssacliStatusOK && strings.Contains(f.driveType, "Unassigned") {
+		return physicaldrive.PDStatusUnassignedGood
+	}
+
+	return parseSSACLIStatus(f.status)
+}
+
 // parsePhysicalDrive parses a physical drive block and returns a PhysicalDrive entity.
 func (s *SSACLI) parsePhysicalDrive(block []byte) (*physicaldrive.PhysicalDrive, error) {
 	// Create the PhysicalDrive entity
@@ -169,16 +206,22 @@ func (s *SSACLI) parsePhysicalDrive(block []byte) (*physicaldrive.PhysicalDrive,
 		Slot: &physicaldrive.Slot{},
 	}
 
+	facts := &ssacliDriveFacts{}
+
 	// Split the block into lines and parse each line
 	for line := range strings.SplitSeq(string(block), "\n") {
-		if err := s.parsePDLine(physicalDrive, line); err != nil {
+		if err := s.parsePDLine(physicalDrive, facts, line); err != nil {
 			return nil, errors.Wrapf(err, "failed to parse line of physical drive: %s",
 				strings.TrimSpace(line),
 			)
 		}
 	}
 
-	physicalDrive.ID = physicalDrive.Slot.Format()
+	physicalDrive.Status = facts.pdStatus()
+	// Reason keeps the raw ssacli label so a caller can react to a status this
+	// parser maps to something coarser, "Predictive Failure" in particular.
+	physicalDrive.Reason = facts.status
+	physicalDrive.ID = physicalDrive.Slot.String()
 
 	return physicalDrive, nil
 }
@@ -189,6 +232,7 @@ func (s *SSACLI) parsePhysicalDrive(block []byte) (*physicaldrive.PhysicalDrive,
 // to parse the different key-value pairs.
 func (s *SSACLI) parsePDLine( //nolint:funlen // This function is long and not compressible
 	physicalDrive *physicaldrive.PhysicalDrive,
+	facts *ssacliDriveFacts,
 	line string,
 ) error {
 	key, value := utils.ParseLineDetail(line)
@@ -215,16 +259,14 @@ func (s *SSACLI) parsePDLine( //nolint:funlen // This function is long and not c
 		physicalDrive.Size = size
 
 	case "Status":
-		if physicalDrive.Status == physicaldrive.PDStatusUnknown {
-			physicalDrive.Status = parseSSACLIStatus(value)
-			physicalDrive.Reason = value
+		// First one wins: a block repeats the key for other purposes further
+		// down, e.g. "Drive Authentication Status".
+		if facts.status == "" {
+			facts.status = value
 		}
 
 	case "Drive Type":
-		if physicalDrive.Status != physicaldrive.PDStatusUsed &&
-			strings.Contains(value, "Unassigned") {
-			physicalDrive.Status = physicaldrive.PDStatusUnassignedGood
-		}
+		facts.driveType = value
 
 	case "Interface Type":
 		mapInterfaceType := map[string]physicaldrive.DiskType{
@@ -248,9 +290,7 @@ func (s *SSACLI) parsePDLine( //nolint:funlen // This function is long and not c
 			return errors.Wrapf(err, "failed to get block device for %s", value)
 		}
 
-		if isBlockDeviceUsed(blockDevice) {
-			physicalDrive.Status = physicaldrive.PDStatusUsed
-		}
+		facts.blockDeviceUsed = isBlockDeviceUsed(blockDevice)
 		// TODO miss permanent path
 	}
 
