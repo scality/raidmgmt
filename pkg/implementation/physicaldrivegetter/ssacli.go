@@ -178,7 +178,7 @@ func (s *SSACLI) parsePhysicalDrive(block []byte) (*physicaldrive.PhysicalDrive,
 		}
 	}
 
-	physicalDrive.ID = physicalDrive.Slot.Format()
+	physicalDrive.ID = physicalDrive.Slot.String()
 
 	return physicalDrive, nil
 }
