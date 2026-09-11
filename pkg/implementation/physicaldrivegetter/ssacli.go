@@ -184,12 +184,16 @@ func (f ssacliDriveFacts) pdStatus() physicaldrive.PDStatus {
 	}
 
 	// ssacli answers "Status: OK" for a healthy drive whether or not it belongs
-	// to an array, and that maps to PDStatusUsed, so "Drive Type: Unassigned
-	// Drive" is the only field saying the drive is free. Without this no drive
-	// is ever reported as available and CreateLV rejects every request. Only a
-	// plain OK is promoted: "Failed", "Offline", "Predictive Failure" or a label
-	// this parser does not model keep the status they map to.
-	if f.status == ssacliStatusOK && strings.Contains(f.driveType, "Unassigned") {
+	// to an array, and reports a degrading one as "Predictive Failure" without
+	// taking it out of service. Both map to PDStatusUsed, so "Drive Type:
+	// Unassigned Drive" is the only field telling the drive is free, and a drive
+	// ssacli still serves is available once it is free. The SMART warning
+	// travels in Reason: whether to build on such a drive is the caller's
+	// policy, not this library's, and the wrapper gates it behind
+	// --tolerate-predictive-failure. "Failed", "Offline" and a label this parser
+	// does not model keep the status they map to.
+	if parseSSACLIStatus(f.status) == physicaldrive.PDStatusUsed &&
+		strings.Contains(f.driveType, "Unassigned") {
 		return physicaldrive.PDStatusUnassignedGood
 	}
 
