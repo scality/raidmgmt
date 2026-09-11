@@ -242,9 +242,11 @@ func TestSSACLIPhysicalDriveStatus(t *testing.T) {
 			expectedError:     false,
 		},
 		{
-			// ssacli reports a predictive (SMART) failure on a free drive too,
-			// and such a drive must not be offered for a new volume.
-			name:    "predictive failure on an unassigned drive stays used",
+			// ssacli keeps serving a drive it reports as degrading, so a free one
+			// is available and the raw label travels in Reason. Refusing to
+			// build on it belongs to the caller, which gates it behind
+			// --tolerate-predictive-failure.
+			name:    "a degrading drive that is free stays available",
 			mocking: mockOutput("physicaldrives/predictive_failure_unassigned_detail"),
 			metadata: &physicaldrive.Metadata{
 				CtrlMetadata: &raidcontroller.Metadata{
@@ -253,10 +255,10 @@ func TestSSACLIPhysicalDriveStatus(t *testing.T) {
 				ID: "1I:1:1",
 			},
 			expected: &physicaldrive.PhysicalDrive{
-				Status: physicaldrive.PDStatusUsed,
+				Status: physicaldrive.PDStatusUnassignedGood,
 				Reason: "Predictive Failure",
 			},
-			expectedAvailable: false,
+			expectedAvailable: true,
 			expectedError:     false,
 		},
 		{
