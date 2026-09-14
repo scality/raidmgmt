@@ -1,0 +1,17 @@
+
+HPE Smart Array P816i-a SR Gen10 in Slot 0 (Embedded)  (sn: PWXLA0CRHF10FM)
+
+   Internal Drive Cage at Port 1I, Box 1, OK
+
+   Array A (SAS, Unused Space: 0  MB)
+
+      logicaldrive 1 (2.72 TB, RAID 0, OK)
+      logicaldrive 2 (2.72 TB, RAID 0, OK)
+
+      physicaldrive 1I:1:1 (port 1I:box 1:bay 1, SAS HDD, 6 TB, OK)
+
+   Unassigned
+
+      physicaldrive 1I:1:2 (port 1I:box 1:bay 2, SAS HDD, 2 TB, OK)
+
+   SEP (Vendor ID HPE, Model Smart Adapter) 379  (WWID: 51402EC0167C85F0)
