@@ -514,6 +514,39 @@ func (s *UnitTestSuite) TestLogicalVolume() {
 	}
 }
 
+// TestLogicalVolumeDegradedKeepsDevicePath is the end-to-end guard for the
+// legacy megaraid v1 read path: a degraded multi-drive volume whose
+// /dev/disk/by-id/wwn link is absent (FileExists == false) must
+// still resolve through logicalVolume() -> fillPhysicalDrives() -> getPaths()
+// and return the volume with its OS device path intact, rather than erroring
+// and blanking the whole controller.
+func (s *UnitTestSuite) TestLogicalVolumeDegradedKeepsDevicePath() {
+	s.setupMockCalls()
+	// The by-id/wwn link is missing while the array is degraded: the exact
+	// original-bug trigger for a multi-drive volume.
+	s.mockPathResolver.On("FileExists", "/dev/disk/by-id/wwn-0x600062b212da5d402bd3b493e1699377").
+		Return(false)
+
+	s.setupCustomFileExists()
+	defer s.restoreCustomFileExists()
+
+	s.setupCustomEvalSymlinks()
+	defer s.restoreCustomEvalSymlinks()
+
+	lv, err := s.a.LogicalVolume(&logicalvolume.Metadata{
+		CtrlMetadata: &raidcontroller.Metadata{ID: 0},
+		ID:           "300",
+	})
+
+	s.NoError(err)
+	s.Require().NotNil(lv)
+	s.Equal("300", lv.ID)
+	s.Equal(logicalvolume.LVStatusDegraded, lv.Status)
+	s.Equal("/dev/sdb", lv.DevicePath)
+	s.Empty(lv.PermanentPath)
+	s.Len(lv.PDrivesMetadata, 2)
+}
+
 func (s *UnitTestSuite) TestEnableJBOD() {
 	s.mockRunner.On("Run", []string{"/c0/e251/s6", "set", "jbod"}).
 		Return(mockReturn("physicaldrives/jbod/enable/fail"))

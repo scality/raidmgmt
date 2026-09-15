@@ -689,38 +689,63 @@ var (
 	CustomFileExists   = utils.FileExists
 )
 
-// getPaths returns the device path and a permanent paths for the logical volumes.
+// getPaths returns the device path and permanent path for a logical volume.
+//
+// A resolvable /dev/disk/by-id/wwn-* link is the preferred permanent path, but
+// its absence is not fatal: a degraded-but-online RAID volume (e.g. one whose
+// data drive has failed) still exposes a valid OS device path and still serves
+// I/O, and its udev by-id link may be missing while the array is not optimal.
+// In that case the OS device path is returned with a best-effort empty
+// permanent path rather than failing, so a single failed drive can no longer
+// abort discovery for the whole controller.
 func getPaths(vdp *VDProperties, pdrives []*physicaldrive.PhysicalDrive) (
 	devicePath, permanentPath string, err error,
 ) {
-	devicePath = vdp.OSDriveName
+	devicePath, permanentPath, ok, err := resolveWWNPath(vdp)
+	if ok {
+		return devicePath, permanentPath, err
+	}
 
-	permanentPath = fmt.Sprintf("/dev/disk/by-id/wwn-0x%s", vdp.SCSINAAID)
-	if !CustomFileExists(permanentPath) {
-		// If the permanent path is not found and there is only one physical drive,
-		// we will try to get the path from the physical drive information
-		// otherwise let's error here
-		if len(pdrives) != 1 {
-			return devicePath, "", errors.New("failed to get permanent path")
-		}
-
+	// No resolvable by-id/wwn permanent path. For a single-drive volume both
+	// paths can still be derived from the backing physical drive.
+	if len(pdrives) == 1 {
 		pd := pdrives[0]
 
-		err = pd.ComputePaths()
-		if err != nil {
-			return devicePath, "", errors.Wrap(err, "failed to compute paths from physical drive")
+		if err = pd.ComputePaths(); err != nil {
+			return vdp.OSDriveName, "", errors.Wrap(err, "failed to compute paths from physical drive")
 		}
 
 		return pd.DevicePath, pd.PermanentPath, nil
 	}
 
-	// If the devicePath is empty let's retrieve it from the permanent path
+	// Multi-drive volume without a resolvable permanent path. The OS device
+	// path (when reported) is still valid, so return it with an empty permanent
+	// path instead of failing the whole controller's discovery.
+	return vdp.OSDriveName, "", nil
+}
+
+// resolveWWNPath resolves a volume's paths from its /dev/disk/by-id/wwn-* link.
+// It reports ok=true when that link exists (whether or not the device path then
+// resolves); ok=false means the caller should fall back to another strategy.
+func resolveWWNPath(vdp *VDProperties) (devicePath, permanentPath string, ok bool, err error) {
+	if vdp.SCSINAAID == "" {
+		return "", "", false, nil
+	}
+
+	permanentPath = fmt.Sprintf("/dev/disk/by-id/wwn-0x%s", vdp.SCSINAAID)
+	if !CustomFileExists(permanentPath) {
+		return "", "", false, nil
+	}
+
+	// Fill the device path from the permanent path when the controller did not
+	// report an OS drive name.
+	devicePath = vdp.OSDriveName
 	if devicePath == "" {
 		devicePath, err = CustomEvalSymlinks(permanentPath)
 		if err != nil {
-			return "", "", errors.Wrap(err, "failed to evaluate symlink")
+			return "", "", true, errors.Wrap(err, "failed to evaluate symlink")
 		}
 	}
 
-	return devicePath, permanentPath, nil
+	return devicePath, permanentPath, true, nil
 }
