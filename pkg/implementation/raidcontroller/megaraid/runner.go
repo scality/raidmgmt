@@ -71,6 +71,12 @@ func validatePath(path string) error {
 	return nil
 }
 
+// CommandPath returns the path of the storcli/perccli binary this runner
+// invokes.
+func (mrr *MegaRAIDRunner) CommandPath() string {
+	return mrr.cli
+}
+
 // Run runs a command with the given arguments.
 func (mrr *MegaRAIDRunner) Run(args []string) (*CmdOutput, error) {
 	// Add JSON output format
