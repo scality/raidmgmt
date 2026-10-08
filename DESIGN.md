@@ -78,7 +78,7 @@ type LVStatus  uint8   // Unknown, Optimal, Degraded, Failed
 type CacheOptions struct {
     ReadPolicy  ReadPolicy  // ReadAhead, NoReadAhead
     WritePolicy WritePolicy // WriteBack, WriteThrough, AlwaysWriteBack
-    IOPolicy    IOPolicy    // Direct, Cached
+    IOPolicy    IOPolicy    // Direct, Cached, NoPolicy
 }
 
 type LogicalVolume struct {
@@ -185,7 +185,8 @@ Design notes, verified against the StorCLI2 User Guide and a live MegaRAID
   the member count unchanged, is a separate command family that storcli2 still
   exposes, and is out of scope for raidmgmt regardless of controller. There is
   also no IO policy (`Cached`/`Direct`) cache option -- the IO policy of parsed
-  volumes is always `Unknown`.
+  volumes is always `NoPolicy`, so consumers can tell it from an `Unknown`
+  (unparsed) IO policy.
 
 The read path (controller, physical drive and logical volume getters), the
 cache and JBOD setters (`lvcachesetter`, `jbodsetter`), the shared
@@ -203,7 +204,7 @@ storcli in several places).
 | `DeleteLV` | `/cx/vx delete [discardcache] [force]` | A nonexistent VD yields a failure payload surfaced by `Decode`. |
 | `AddPDsToLV` | `/cx/vx expand drives=e:s,...` | Online capacity expansion. Documented and present in the binary help, but not exercised on hardware yet; progress is visible through `/cx/vx show expansion` and `show ocedriveinfo`. |
 | `DeletePDsFromLV` | -- | Not supported: removing a member (shrinking a volume) used storcli's `start migrate option=remove`, which the storcli2 command map drops with no replacement. This is array *reshaping*, not failed-drive replacement (rebuild / hot-spare / copyback), which keeps the member count and is a separate, still-supported command family out of scope here. Returns `ErrFunctionNotSupportedByImplementation`. |
-| `SetLVCacheOptions` | `/cx/vx set rdcache=RA\|NoRA` and `/cx/vx set wrcache=WT\|WB\|AWB` | Two separate commands: storcli's combined syntax is rejected. The IO policy cannot be set (see above); beware that `CacheOptions.Validate()` rejects an unknown IO policy, so a request cannot be round-tripped from getter output as-is. |
+| `SetLVCacheOptions` | `/cx/vx set rdcache=RA\|NoRA` and `/cx/vx set wrcache=WT\|WB\|AWB` | Two separate commands: storcli's combined syntax is rejected. The IO policy cannot be set (see above); `CacheOptions.Validate()` accepts the `NoPolicy` IO policy, so a request can be round-tripped from getter output. |
 | `EnableJBOD` | `/cx/ex/sx set jbod [force]` | Converts the drive **state**; the drive status is unchanged. |
 | `DisableJBOD` | `/cx/ex/sx set uconf [force]` | storcli's `delete jbod` no longer parses; `set good` would only change the status. |
 | `StartBlink` / `StopBlink` | `/cx/ex/sx start locate` / `stop locate` | Same grammar as storcli. |

@@ -28,10 +28,11 @@ func (co *CacheOptions) Validate() error {
 		return errors.Errorf("invalid write policy: %q", co.WritePolicy)
 	}
 
-	// The IO policy is optional (not every controller uses one), so an unset or
-	// Unknown value is accepted and left to the controller; only a set-but-
-	// unrecognized value is rejected.
-	if co.IOPolicy != "" && co.IOPolicy != IOPolicyUnknown && !co.IOPolicy.IsValid() {
+	// The IO policy is optional (not every controller uses one), so an unset,
+	// Unknown or NoPolicy value is accepted and left to the controller; only
+	// a set-but-unrecognized value is rejected.
+	if co.IOPolicy != "" && co.IOPolicy != IOPolicyUnknown &&
+		co.IOPolicy != IOPolicyNoPolicy && !co.IOPolicy.IsValid() {
 		return errors.Errorf("invalid io policy: %q", co.IOPolicy)
 	}
 

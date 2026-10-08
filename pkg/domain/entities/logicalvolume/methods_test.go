@@ -70,6 +70,15 @@ func TestCacheOptionsValidate(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "io policy no policy is allowed",
+			opts: &logicalvolume.CacheOptions{
+				ReadPolicy:  logicalvolume.ReadPolicyReadAhead,
+				WritePolicy: logicalvolume.WritePolicyWriteBack,
+				IOPolicy:    logicalvolume.IOPolicyNoPolicy,
+			},
+			wantErr: false,
+		},
+		{
 			name: "io policy garbage is rejected",
 			opts: &logicalvolume.CacheOptions{
 				ReadPolicy:  logicalvolume.ReadPolicyReadAhead,

@@ -29,9 +29,10 @@ const (
 	WritePolicyWriteThrough    WritePolicy = "wt"
 	WritePolicyAlwaysWriteBack WritePolicy = "awb"
 
-	IOPolicyUnknown IOPolicy = "unknown"
-	IOPolicyDirect  IOPolicy = "direct"
-	IOPolicyCached  IOPolicy = "cached"
+	IOPolicyUnknown  IOPolicy = "unknown"
+	IOPolicyDirect   IOPolicy = "direct"
+	IOPolicyCached   IOPolicy = "cached"
+	IOPolicyNoPolicy IOPolicy = "no_policy"
 )
 
 const (
@@ -127,6 +128,8 @@ func (i IOPolicy) String() string {
 		return "Direct"
 	case IOPolicyCached:
 		return "Cached"
+	case IOPolicyNoPolicy:
+		return "NoPolicy"
 	default:
 		return string(IOPolicyUnknown)
 	}
