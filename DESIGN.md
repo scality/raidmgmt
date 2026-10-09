@@ -133,10 +133,13 @@ host (an offline or failed volume, such as the RAID0 volume of a failed drive,
 whatever storcli reports for "Exposed to OS", or a volume reported "Exposed to
 OS: No"), a failed or pulled drive whose device node is gone, or a JBOD
 drive whose `by-id` link cannot be resolved is returned with its status and
-empty `DevicePath`/`PermanentPath` rather than failing the listing. (The
-megaraid create/settle path is deliberately stricter: a just-created volume
-whose device node has not yet appeared is treated as not-ready and retried after
-a bus rescan, so there a failed path resolution is still an error.)
+empty `DevicePath`/`PermanentPath` rather than failing the listing. Only these
+cases degrade: any other failure, such as `lsblk` missing or failing on a device
+that exists, is still an error, so that it cannot silently blank every drive.
+(The create paths are deliberately stricter: a just-created volume that is not
+exposed to the OS yet has no paths, so megaraid and storcli2 treat it as
+not-ready and retry, megaraid after a bus rescan, until it is exposed or the
+settle timeout elapses.)
 
 ### Adapters
 

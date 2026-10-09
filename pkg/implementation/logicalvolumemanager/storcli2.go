@@ -1,8 +1,10 @@
 package logicalvolumemanager
 
 import (
+	"cmp"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/pkg/errors"
 
@@ -33,6 +35,10 @@ const (
 	// storcli2RAIDLevelFormat builds the bare RAID-level token of "add vd"
 	// (e.g. "r0"); storcli's "type=raidN" form is gone in storcli2.
 	storcli2RAIDLevelFormat = "r%d"
+	// storcli2NewVolumeSettleTimeout bounds the wait for a new volume to be
+	// exposed to the OS, and storcli2NewVolumeSettleInterval spaces its checks.
+	storcli2NewVolumeSettleTimeout  = 60 * time.Second
+	storcli2NewVolumeSettleInterval = 1 * time.Second
 )
 
 // StorCLI2 manages logical volumes through a storcli2/perccli2 command runner.
@@ -43,6 +49,12 @@ const (
 type StorCLI2 struct {
 	ports.PhysicalDrivesGetter
 	ports.LogicalVolumesGetter
+
+	// NewVolumeSettleTimeout and NewVolumeSettleInterval bound and space the
+	// wait for a new volume to be exposed to the OS. Zero means the default
+	// (60s and 1s).
+	NewVolumeSettleTimeout  time.Duration
+	NewVolumeSettleInterval time.Duration
 
 	runner commandrunner.CommandRunner
 }
@@ -112,7 +124,7 @@ func (s *StorCLI2) CreateLV(request *logicalvolume.Request) (*logicalvolume.Logi
 		return nil, errors.Wrap(err, "add vd command failed")
 	}
 
-	newLV, err := s.findNewLogicalVolume(request)
+	newLV, err := s.findNewVolumeUntilExposed(request)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to find new logical volume")
 	}
@@ -174,9 +186,39 @@ func (*StorCLI2) DeletePDsFromLV(
 	return ports.ErrFunctionNotSupportedByImplementation
 }
 
+// errNewVolumeNotExposed is returned while the new volume is listed but not
+// exposed to the OS yet, without paths.
+var errNewVolumeNotExposed = errors.New("new logical volume not exposed to the OS yet")
+
+// findNewVolumeUntilExposed retries findNewLogicalVolume while the new volume
+// is listed but not exposed to the OS yet, until NewVolumeSettleTimeout
+// elapses: a volume without paths cannot be used by the caller.
+func (s *StorCLI2) findNewVolumeUntilExposed(request *logicalvolume.Request) (
+	*logicalvolume.LogicalVolume,
+	error,
+) {
+	timeout := cmp.Or(s.NewVolumeSettleTimeout, storcli2NewVolumeSettleTimeout)
+	interval := cmp.Or(s.NewVolumeSettleInterval, storcli2NewVolumeSettleInterval)
+	deadline := time.Now().Add(timeout)
+
+	for {
+		lv, err := s.findNewLogicalVolume(request)
+		if !errors.Is(err, errNewVolumeNotExposed) {
+			return lv, err
+		}
+
+		if time.Now().After(deadline) {
+			return nil, errors.Wrapf(err, "not exposed after %s", timeout)
+		}
+
+		time.Sleep(interval)
+	}
+}
+
 // findNewLogicalVolume returns the volume whose physical-drive set is exactly
 // the request's. A physical drive belongs to a single virtual drive, so the
-// freshly created volume is the only match.
+// freshly created volume is the only exposed match. It returns
+// errNewVolumeNotExposed while no matching volume has a path.
 func (s *StorCLI2) findNewLogicalVolume(request *logicalvolume.Request) (
 	*logicalvolume.LogicalVolume,
 	error,
@@ -191,10 +233,28 @@ func (s *StorCLI2) findNewLogicalVolume(request *logicalvolume.Request) (
 		wanted[pdMetadata.ID] = struct{}{}
 	}
 
+	// A volume not exposed to the OS, such as the offline volume of a failed
+	// drive still listing a requested slot, must not hide the new, exposed one.
+	var unexposed *logicalvolume.LogicalVolume
+
 	for _, lv := range logicalVolumes {
-		if storcli2MatchesPDSet(lv.PDrivesMetadata, wanted) {
-			return lv, nil
+		if !storcli2MatchesPDSet(lv.PDrivesMetadata, wanted) {
+			continue
 		}
+
+		// A volume not exposed has no paths at all; an exposed one may lack
+		// only its permanent path, when storcli2 reports no NAA Id.
+		if lv.PermanentPath == "" && lv.DevicePath == "" {
+			unexposed = lv
+
+			continue
+		}
+
+		return lv, nil
+	}
+
+	if unexposed != nil {
+		return nil, errors.Wrapf(errNewVolumeNotExposed, "volume %s", unexposed.ID)
 	}
 
 	return nil, errors.New("no logical volume matches the requested physical drives")
