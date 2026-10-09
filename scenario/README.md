@@ -45,6 +45,8 @@ table, the disks expected:
   repository.
 - `storcli2sim/adapter_test.go` plays every storcli2 scenario (`controller:
   storcli2`) through the raidmgmt storcli2 adapter.
+- `ssaclisim/adapter_test.go` plays every ssacli scenario (`controller:
+  ssacli`, HPE Smart Array) through the raidmgmt ssacli getters.
 - Consumers import this module to play the same scenarios through their own
   code. scality/disk-management-agent checks its DiscoveredPhysicalDisk
   status, which the Storage Service UI reads.
@@ -80,3 +82,9 @@ Write a YAML file in `scenarios/` on an existing capture and run
   008.0005). Captured with `storcli2 <selector> show all J` on 24 drives,
   kept to the first 4 (306:0-3, volumes 1-4), with the same fake identifiers
   (drive serials, WWNs and SAS addresses, volume NAA Ids and serials).
+- `ssaclisim/captures/ssacli-4hdd`: HPE Smart Array P816i-a, SAS HDDs each
+  in its own RAID0 array. Captured with `ssacli controller slot=0 ... show
+  detail` and `show config`, kept to 4 drives (1I:1:3, 1I:1:4, 2I:2:1,
+  2I:2:2, logical drives 2-5), with the same fake identifiers (serials,
+  WWIDs, unique identifiers, controller and host serials). ssacli prints
+  text: the backend edits the lines of the captured sections.

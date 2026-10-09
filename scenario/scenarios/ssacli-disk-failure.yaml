@@ -1,0 +1,72 @@
+name: ssacli disk failure and replacement
+description: |
+  The ssacli counterpart of megaraid-disk-failure: an HPE Smart Array
+  P816i-a with HDDs, each in its own RAID0 array, as ARTESCA deploys them.
+  Drive 1I:1:4 (array C, logical drive 3) fails, is replaced, then gets a new
+  array (ARTESCA-17960).
+
+  The capture is real ssacli output of a lab node while all its drives were
+  healthy, kept to 4 drives, with serials, WWIDs and identifiers replaced by
+  fake ones. The failure follows what MegaRAID showed on RD-2154 (the logical
+  drive of the failed drive is no longer exposed to the OS); capture ssacli
+  output the next time a drive fails on such a lab to confirm it. ssacli
+  getters report no permanent path.
+
+controller: ssacli
+capture: ssacli-4hdd
+
+phases:
+  - name: healthy
+    description: All drives online, each RAID0 logical drive OK.
+    expect: |
+      slot    status  serial    devicePath  permanentPath
+      1I:1:3  Used    SIMH0001  /dev/sdd    -
+      1I:1:4  Used    SIMH0002  /dev/sde    -
+      2I:2:1  Used    SIMH0003  /dev/sdf    -
+      2I:2:2  Used    SIMH0004  /dev/sdg    -
+
+  - name: failed
+    description: |
+      1I:1:4 fails. Its RAID0 logical drive fails and is no longer a block
+      device. The other drives must keep their paths.
+    changes:
+      drives:
+        "1I:1:4": {state: Failed}
+      volumes:
+        "3": {state: Failed, exposed: false}
+    expect: |
+      slot    status  serial    devicePath  permanentPath
+      1I:1:3  Used    SIMH0001  /dev/sdd    -
+      1I:1:4  Failed  SIMH0002  -           -
+      2I:2:1  Used    SIMH0003  /dev/sdf    -
+      2I:2:2  Used    SIMH0004  /dev/sdg    -
+
+  - name: replaced
+    description: |
+      The failed logical drive is deleted and a new drive is inserted in
+      1I:1:4, unassigned. It must be reported as a new, available drive.
+    changes:
+      drives:
+        "1I:1:4": {state: OK, serial: SIMH0013, wwn: 5000C50030000013, group: "-"}
+      volumes:
+        "3": {deleted: true}
+    expect: |
+      slot    status          serial    devicePath  permanentPath
+      1I:1:3  Used            SIMH0001  /dev/sdd    -
+      1I:1:4  UnassignedGood  SIMH0013  -           -
+      2I:2:1  Used            SIMH0003  /dev/sdf    -
+      2I:2:2  Used            SIMH0004  /dev/sdg    -
+
+  - name: restored
+    description: A new RAID0 array is created on the new drive.
+    changes:
+      drives:
+        "1I:1:4": {group: C}
+      volumes:
+        "3": {deleted: false, state: OK, exposed: true, device: /dev/sdh, wwn: 600508B1000000000000000000001003}
+    expect: |
+      slot    status  serial    devicePath  permanentPath
+      1I:1:3  Used    SIMH0001  /dev/sdd    -
+      1I:1:4  Used    SIMH0013  /dev/sdh    -
+      2I:2:1  Used    SIMH0003  /dev/sdf    -
+      2I:2:2  Used    SIMH0004  /dev/sdg    -

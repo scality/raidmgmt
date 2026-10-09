@@ -1,0 +1,89 @@
+
+HPE Smart Array P816i-a SR Gen10 in Slot 0 (Embedded)
+
+   Array B
+
+      Logical Drive: 2
+         Size: 5.46 TB
+         Fault Tolerance: 0
+         Heads: 255
+         Sectors Per Track: 32
+         Cylinders: 65535
+         Strip Size: 256 KB
+         Full Stripe Size: 256 KB
+         Status: OK
+         MultiDomain Status: OK
+         Caching:  Enabled
+         Last Surface Scan Completed: False
+         Unique Identifier: 600508B1000000000000000000000002
+         Disk Name: /dev/sdd 
+         Mount Points: None
+         Logical Drive Label: Data 01
+         Drive Type: Data
+         LD Acceleration Method: Controller Cache
+
+
+   Array C
+
+      Logical Drive: 3
+         Size: 5.46 TB
+         Fault Tolerance: 0
+         Heads: 255
+         Sectors Per Track: 32
+         Cylinders: 65535
+         Strip Size: 256 KB
+         Full Stripe Size: 256 KB
+         Status: OK
+         MultiDomain Status: OK
+         Caching:  Enabled
+         Last Surface Scan Completed: False
+         Unique Identifier: 600508B1000000000000000000000003
+         Disk Name: /dev/sde 
+         Mount Points: None
+         Logical Drive Label: Data 02
+         Drive Type: Data
+         LD Acceleration Method: Controller Cache
+
+
+   Array D
+
+      Logical Drive: 4
+         Size: 5.46 TB
+         Fault Tolerance: 0
+         Heads: 255
+         Sectors Per Track: 32
+         Cylinders: 65535
+         Strip Size: 256 KB
+         Full Stripe Size: 256 KB
+         Status: OK
+         MultiDomain Status: OK
+         Caching:  Enabled
+         Last Surface Scan Completed: False
+         Unique Identifier: 600508B1000000000000000000000004
+         Disk Name: /dev/sdf 
+         Mount Points: None
+         Logical Drive Label: Data 03
+         Drive Type: Data
+         LD Acceleration Method: Controller Cache
+
+
+   Array E
+
+      Logical Drive: 5
+         Size: 5.46 TB
+         Fault Tolerance: 0
+         Heads: 255
+         Sectors Per Track: 32
+         Cylinders: 65535
+         Strip Size: 256 KB
+         Full Stripe Size: 256 KB
+         Status: OK
+         MultiDomain Status: OK
+         Caching:  Enabled
+         Last Surface Scan Completed: False
+         Unique Identifier: 600508B1000000000000000000000005
+         Disk Name: /dev/sdg 
+         Mount Points: None
+         Logical Drive Label: Data 04
+         Drive Type: Data
+         LD Acceleration Method: Controller Cache
