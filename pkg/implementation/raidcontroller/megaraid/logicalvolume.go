@@ -174,6 +174,8 @@ func (vd *VD) LVStatus() logicalvolume.LVStatus {
 		"Dgrd": logicalvolume.LVStatusDegraded,
 		"Pdgd": logicalvolume.LVStatusDegraded,
 		"Fail": logicalvolume.LVStatusFailed,
+		// Offline: a RAID0 volume whose drive failed, no longer readable.
+		"OfLn": logicalvolume.LVStatusFailed,
 	}
 
 	if status, ok := lvStatusMap[vd.State]; ok {
@@ -663,9 +665,17 @@ func (a *Adapter) findNewLogicalVolume(pds []*physicaldrive.Metadata) (
 
 	// Find the new logical volume
 	for _, lv := range lvs {
-		if hasMatchingPDs(lv.PDrivesMetadata, pdSlots) {
-			return lv, nil
+		if !hasMatchingPDs(lv.PDrivesMetadata, pdSlots) {
+			continue
 		}
+
+		// A volume not exposed to the OS yet is listed without paths: it is
+		// not settled, the caller rescans and retries.
+		if lv.PermanentPath == "" {
+			return nil, errors.Errorf("new logical volume %s has no device yet", lv.ID)
+		}
+
+		return lv, nil
 	}
 
 	return nil, errors.New("new logical volume not found")
@@ -682,6 +692,11 @@ func hasMatchingPDs(lvPDs []*physicaldrive.Metadata, pdSlots map[string]struct{}
 	return false
 }
 
+// notExposedToOS is the "Exposed to OS" value of a volume that is not a block
+// device of the host. Older storcli versions may not report the field at all,
+// so only this explicit value skips path resolution.
+const notExposedToOS = "No"
+
 // It is used to mock the functions in tests.
 // nolint: gochecknoglobals // This is a variable that is used to mock a function in tests.
 var (
@@ -693,6 +708,13 @@ var (
 func getPaths(vdp *VDProperties, pdrives []*physicaldrive.PhysicalDrive) (
 	devicePath, permanentPath string, err error,
 ) {
+	// A volume not exposed to the OS, such as the offline RAID0 volume of a
+	// failed drive, has no block device: it has no path to resolve, and
+	// failing here would fail the listing of every volume of the controller.
+	if vdp.ExposedToOS == notExposedToOS {
+		return "", "", nil
+	}
+
 	devicePath = vdp.OSDriveName
 
 	permanentPath = fmt.Sprintf("/dev/disk/by-id/wwn-0x%s", vdp.SCSINAAID)

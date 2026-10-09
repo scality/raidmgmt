@@ -1,6 +1,7 @@
 package physicaldrivegetter
 
 import (
+	"errors"
 	"os"
 	"strconv"
 	"testing"
@@ -379,6 +380,73 @@ func TestSSACLIPhysicalDriveStatus(t *testing.T) {
 				assert.Equal(t, tt.expected.Reason, physicalDrive.Reason)
 				assert.Equal(t, tt.expectedAvailable, physicalDrive.IsAvailable())
 			}
+		})
+	}
+}
+
+// TestSSACLIParsePDLineDiskNameLsblkFailureIsNotFatal checks that a failed or
+// pulled drive whose device node has disappeared makes the lsblk lookup fail.
+// That lookup only refines the status, so it must not abort discovery for the
+// whole controller. The drive keeps the status ssacli already reported, and
+// loses its device path, which the kernel can reuse for another disk.
+func TestSSACLIParsePDLineDiskNameLsblkFailureIsNotFatal(t *testing.T) {
+	mockRunner := new(MockCommandRunner)
+	mockRunner.On("Run", mock.AnythingOfType("[]string")).
+		Return([]byte(nil), errors.New("lsblk: device not found"))
+
+	s := &SSACLI{LSBLK: mockRunner}
+
+	pd := &physicaldrive.PhysicalDrive{
+		Metadata: &physicaldrive.Metadata{CtrlMetadata: &raidcontroller.Metadata{}},
+		Slot:     &physicaldrive.Slot{},
+	}
+	facts := &ssacliDriveFacts{status: "Failed"}
+
+	err := s.parsePDLine(pd, facts, "   Disk Name: /dev/sdz")
+
+	assert.NoError(t, err)
+	assert.Empty(t, pd.DevicePath)
+	assert.True(t, facts.blockDeviceUnknown)
+	assert.Equal(t, physicaldrive.PDStatusFailed, facts.pdStatus())
+}
+
+// TestSSACLIPDStatusBlockDeviceUnknown checks that a drive whose device could
+// not be inspected is never offered as free: it may carry data.
+func TestSSACLIPDStatusBlockDeviceUnknown(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name  string
+		facts ssacliDriveFacts
+		want  physicaldrive.PDStatus
+	}{
+		{
+			name:  "free drive, device inspected and empty",
+			facts: ssacliDriveFacts{status: "OK", driveType: "Unassigned Drive"},
+			want:  physicaldrive.PDStatusUnassignedGood,
+		},
+		{
+			name:  "free drive, device not inspected",
+			facts: ssacliDriveFacts{status: "OK", driveType: "Unassigned Drive", blockDeviceUnknown: true},
+			want:  physicaldrive.PDStatusUnknown,
+		},
+		{
+			name:  "array member, device not inspected",
+			facts: ssacliDriveFacts{status: "OK", driveType: "Data Drive", blockDeviceUnknown: true},
+			want:  physicaldrive.PDStatusUsed,
+		},
+		{
+			name:  "failed drive, device not inspected",
+			facts: ssacliDriveFacts{status: "Failed", driveType: "Unassigned Drive", blockDeviceUnknown: true},
+			want:  physicaldrive.PDStatusFailed,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			assert.Equal(t, tt.want, tt.facts.pdStatus())
 		})
 	}
 }
