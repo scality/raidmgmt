@@ -263,12 +263,13 @@ func lvStatus(state string) logicalvolume.LVStatus {
 // parseCacheOptions maps a storcli2 cache string to CacheOptions. storcli2
 // reports the active policy as comma-separated tokens (e.g. "NR,WB"), unlike
 // storcli1's concatenated form. Each token is matched independently; unknown or
-// missing tokens leave the corresponding policy unknown.
+// missing tokens leave the corresponding policy unknown, except the IO policy
+// which storcli2 has no setting for and is therefore NoPolicy.
 func parseCacheOptions(cache string) *logicalvolume.CacheOptions {
 	options := &logicalvolume.CacheOptions{
 		ReadPolicy:  logicalvolume.ReadPolicyUnknown,
 		WritePolicy: logicalvolume.WritePolicyUnknown,
-		IOPolicy:    logicalvolume.IOPolicyUnknown,
+		IOPolicy:    logicalvolume.IOPolicyNoPolicy,
 	}
 
 	for token := range strings.SplitSeq(cache, ",") {

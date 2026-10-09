@@ -244,7 +244,7 @@ func TestStorCLI2ParseCacheOptions(t *testing.T) {
 			cache:       "NR,WB",
 			expectedRP:  logicalvolume.ReadPolicyNoReadAhead,
 			expectedWP:  logicalvolume.WritePolicyWriteBack,
-			expectedIOP: logicalvolume.IOPolicyUnknown,
+			expectedIOP: logicalvolume.IOPolicyNoPolicy,
 		},
 		{
 			name:        "read-ahead write-through direct",
@@ -261,11 +261,11 @@ func TestStorCLI2ParseCacheOptions(t *testing.T) {
 			expectedIOP: logicalvolume.IOPolicyCached,
 		},
 		{
-			name:        "empty leaves everything unknown",
+			name:        "empty leaves read and write unknown",
 			cache:       "",
 			expectedRP:  logicalvolume.ReadPolicyUnknown,
 			expectedWP:  logicalvolume.WritePolicyUnknown,
-			expectedIOP: logicalvolume.IOPolicyUnknown,
+			expectedIOP: logicalvolume.IOPolicyNoPolicy,
 		},
 	}
 

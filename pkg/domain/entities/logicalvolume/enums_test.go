@@ -1,3 +1,4 @@
+//nolint:dupl // Table-driven enum tests share the same shape.
 package logicalvolume_test
 
 import (
@@ -68,6 +69,7 @@ func TestIOPolicyIsValid(t *testing.T) {
 		{name: "direct", policy: logicalvolume.IOPolicyDirect, want: true},
 		{name: "cached", policy: logicalvolume.IOPolicyCached, want: true},
 		{name: "unknown", policy: logicalvolume.IOPolicyUnknown, want: false},
+		{name: "no policy", policy: logicalvolume.IOPolicyNoPolicy, want: false},
 		{name: "empty", policy: logicalvolume.IOPolicy(""), want: false},
 		{name: "garbage", policy: logicalvolume.IOPolicy("garbage"), want: false},
 	}
