@@ -68,7 +68,10 @@ type (
 
 	// DriveChange changes a drive; unset fields keep their value.
 	DriveChange struct {
-		State  *string `yaml:"state"`
+		State *string `yaml:"state"`
+		// Status is the drive status, for controllers reporting it apart from
+		// the state (storcli2: state Conf, status Online or Failed).
+		Status *string `yaml:"status"`
 		Serial *string `yaml:"serial"`
 		WWN    *string `yaml:"wwn"`
 		// DeviceID is the ID the controller gives the drive, which changes

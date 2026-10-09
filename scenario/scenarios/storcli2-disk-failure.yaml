@@ -1,0 +1,83 @@
+name: storcli2 disk failure and replacement
+description: |
+  The storcli2 counterpart of megaraid-disk-failure: a controller driven by
+  storcli2 with HDDs in enclosure 306, each in its own RAID0 volume, as
+  ARTESCA deploys them. Drive 306:2 fails, is replaced, then gets a new
+  volume (ARTESCA-17960).
+
+  The capture is real storcli2 output of a lab node while all its drives
+  were healthy, kept to its first 4 drives, with serials, WWNs and volume
+  identifiers replaced by fake ones. The failure follows what MegaRAID showed
+  on RD-2154 (the volume of the failed drive goes offline and is no longer
+  exposed to the OS); capture storcli2 output the next time a drive fails on
+  such a lab to confirm it.
+
+controller: storcli2
+capture: storcli2-4hdd
+
+phases:
+  - name: healthy
+    description: All drives online, each RAID0 volume optimal.
+    expect: |
+      slot   status  serial                devicePath  permanentPath
+      306:0  Used    SIMD2001000000000000  /dev/sdb    /dev/disk/by-id/wwn-0x600062b2000000000000000000000001
+      306:1  Used    SIMD2002000000000000  /dev/sdc    /dev/disk/by-id/wwn-0x600062b2000000000000000000000002
+      306:2  Used    SIMD2003000000000000  /dev/sdd    /dev/disk/by-id/wwn-0x600062b2000000000000000000000003
+      306:3  Used    SIMD2004000000000000  /dev/sde    /dev/disk/by-id/wwn-0x600062b2000000000000000000000004
+
+  - name: failed
+    description: |
+      306:2 fails. Its RAID0 volume goes offline and is no longer a block
+      device. The other drives must keep their paths.
+    knownBug:
+      ticket: ARTESCA-17960
+      # The healthy drives keep their paths, but the permanent path of the
+      # offline volume is still built from its NAA Id, although the volume
+      # has no block device and no by-id link.
+      reported: |
+        slot   status  serial                devicePath  permanentPath
+        306:0  Used    SIMD2001000000000000  /dev/sdb    /dev/disk/by-id/wwn-0x600062b2000000000000000000000001
+        306:1  Used    SIMD2002000000000000  /dev/sdc    /dev/disk/by-id/wwn-0x600062b2000000000000000000000002
+        306:2  Failed  SIMD2003000000000000  -           /dev/disk/by-id/wwn-0x600062b2000000000000000000000003
+        306:3  Used    SIMD2004000000000000  /dev/sde    /dev/disk/by-id/wwn-0x600062b2000000000000000000000004
+    changes:
+      drives:
+        "306:2": {status: Failed}
+      volumes:
+        "3": {state: OfLn, exposed: false}
+    expect: |
+      slot   status  serial                devicePath  permanentPath
+      306:0  Used    SIMD2001000000000000  /dev/sdb    /dev/disk/by-id/wwn-0x600062b2000000000000000000000001
+      306:1  Used    SIMD2002000000000000  /dev/sdc    /dev/disk/by-id/wwn-0x600062b2000000000000000000000002
+      306:2  Failed  SIMD2003000000000000  -           -
+      306:3  Used    SIMD2004000000000000  /dev/sde    /dev/disk/by-id/wwn-0x600062b2000000000000000000000004
+
+  - name: replaced
+    description: |
+      The offline volume is deleted and a new drive is inserted in 306:2,
+      unconfigured. It must be reported as a new, available drive.
+    changes:
+      drives:
+        "306:2": {state: UConf, status: Good, serial: SIMD2013000000000000, wwn: 5000C50020000013, group: "-"}
+      volumes:
+        "3": {deleted: true}
+    expect: |
+      slot   status          serial                devicePath  permanentPath
+      306:0  Used            SIMD2001000000000000  /dev/sdb    /dev/disk/by-id/wwn-0x600062b2000000000000000000000001
+      306:1  Used            SIMD2002000000000000  /dev/sdc    /dev/disk/by-id/wwn-0x600062b2000000000000000000000002
+      306:2  UnassignedGood  SIMD2013000000000000  -           -
+      306:3  Used            SIMD2004000000000000  /dev/sde    /dev/disk/by-id/wwn-0x600062b2000000000000000000000004
+
+  - name: restored
+    description: A new RAID0 volume is created on the new drive.
+    changes:
+      drives:
+        "306:2": {state: Conf, status: Online, group: "2"}
+      volumes:
+        "3": {deleted: false, state: Optl, exposed: true, device: /dev/sdf, wwn: 600062b2000000000000000000001003}
+    expect: |
+      slot   status  serial                devicePath  permanentPath
+      306:0  Used    SIMD2001000000000000  /dev/sdb    /dev/disk/by-id/wwn-0x600062b2000000000000000000000001
+      306:1  Used    SIMD2002000000000000  /dev/sdc    /dev/disk/by-id/wwn-0x600062b2000000000000000000000002
+      306:2  Used    SIMD2013000000000000  /dev/sdf    /dev/disk/by-id/wwn-0x600062b2000000000000000000001003
+      306:3  Used    SIMD2004000000000000  /dev/sde    /dev/disk/by-id/wwn-0x600062b2000000000000000000000004

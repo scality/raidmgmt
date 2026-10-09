@@ -40,8 +40,11 @@ table, the disks expected:
 
 ## Where scenarios are played
 
-- `megaraidsim/adapter_test.go` plays every MegaRAID scenario through the
-  raidmgmt megaraid adapter of this repository.
+- `megaraidsim/adapter_test.go` plays every MegaRAID scenario (`controller:
+  megaraid`, storcli64) through the raidmgmt megaraid adapter of this
+  repository.
+- `storcli2sim/adapter_test.go` plays every storcli2 scenario (`controller:
+  storcli2`) through the raidmgmt storcli2 adapter.
 - Consumers import this module to play the same scenarios through their own
   code. scality/disk-management-agent checks its DiscoveredPhysicalDisk
   status, which the Storage Service UI reads.
@@ -61,7 +64,8 @@ Write a YAML file in `scenarios/` on an existing capture and run
 2. Write a backend that answers those commands from the capture with the
    changes of a phase applied, as [`megaraidsim`](megaraidsim) does for
    storcli64, and gives the host files the adapter checks.
-3. Add a test playing the scenarios of that controller through its adapter.
+3. Add a test playing the scenarios of that controller through its adapter;
+   `scenario.Report` turns what an adapter reports into the disks of a table.
 
 ## Captures
 
@@ -71,3 +75,8 @@ Write a YAML file in `scenarios/` on an existing capture and run
   kept to the first 4 (251:1-4, volumes 239-236) to keep scenarios short.
   Serials, WWNs and controller identifiers are replaced by fake ones, also in
   the hex inquiry data; keep it so when adding a capture.
+- `storcli2sim/captures/storcli2-4hdd`: storcli2 controller, SEAGATE
+  ST10000NM018B drives in enclosure 306, one RAID0 volume each (storcli2
+  008.0005). Captured with `storcli2 <selector> show all J` on 24 drives,
+  kept to the first 4 (306:0-3, volumes 1-4), with the same fake identifiers
+  (drive serials, WWNs and SAS addresses, volume NAA Ids and serials).

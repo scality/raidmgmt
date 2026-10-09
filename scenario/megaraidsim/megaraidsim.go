@@ -207,6 +207,11 @@ func (c *Controller) apply(changes scenario.Changes) error {
 			return errors.Errorf("unknown drive %s", slot)
 		}
 
+		// MegaRAID reports a single drive state.
+		if change.Status != nil {
+			return errors.Errorf("drive %s: status is not replayed for megaraid, use state", slot)
+		}
+
 		set(&d.state, change.State)
 		set(&d.serial, change.Serial)
 		set(&d.wwn, change.WWN)
