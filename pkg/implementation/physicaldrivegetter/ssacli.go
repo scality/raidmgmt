@@ -307,6 +307,7 @@ func (s *SSACLI) getBlockDevice(devicePath string) (*BlockDevice, error) {
 		"--paths",
 		"--bytes",
 		"--nodeps",
+		"--json",
 		"--output",
 		"name,rota,size,type,tran,mountpoint,fstype,parttype,pkname",
 	})

@@ -32,9 +32,16 @@ func NewLSBLK(path *string) *LSBLK {
 func (l *LSBLK) Run(args []string) ([]byte, error) {
 	cmd := LSBLKExecCommand(l.cliPath, args...)
 
-	output, err := cmd.CombinedOutput()
+	// Only stdout is returned: lsblk can print warnings on stderr and still exit
+	// 0, which would corrupt its JSON output.
+	output, err := cmd.Output()
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to run lsblk command: %s", string(output))
+		var exitErr *exec.ExitError
+		if errors.As(err, &exitErr) {
+			return nil, errors.Wrapf(err, "failed to run lsblk command: %s", string(exitErr.Stderr))
+		}
+
+		return nil, errors.Wrap(err, "failed to run lsblk command")
 	}
 
 	return output, nil

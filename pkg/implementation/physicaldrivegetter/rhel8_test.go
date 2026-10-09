@@ -13,13 +13,16 @@ import (
 )
 
 const (
-	lsblkTestOutput = `NAME         ROTA        SIZE TYPE
-/dev/nvme5n1    0  8589934592 disk
-/dev/nvme2n1    0  8589934592 disk
-/dev/nvme4n1    0  8589934592 disk
-/dev/nvme1n1    0  8589934592 disk
-/dev/nvme0n1    0 16106127360 disk
-/dev/nvme3n1    0  8589934592 disk`
+	// lsblkTestOutput is `lsblk --json` from util-linux 2.32 (RHEL 8): every
+	// value is a string.
+	lsblkTestOutput = `{"blockdevices": [
+  {"name": "/dev/nvme5n1", "rota": "0", "size": "8589934592", "type": "disk", "tran": null, "mountpoint": null, "fstype": null, "parttype": null, "pkname": null},
+  {"name": "/dev/nvme2n1", "rota": "0", "size": "8589934592", "type": "disk", "tran": null, "mountpoint": null, "fstype": null, "parttype": null, "pkname": null},
+  {"name": "/dev/nvme4n1", "rota": "0", "size": "8589934592", "type": "disk", "tran": null, "mountpoint": null, "fstype": null, "parttype": null, "pkname": null},
+  {"name": "/dev/nvme1n1", "rota": "0", "size": "8589934592", "type": "disk", "tran": null, "mountpoint": null, "fstype": null, "parttype": null, "pkname": null},
+  {"name": "/dev/nvme0n1", "rota": "0", "size": "16106127360", "type": "disk", "tran": null, "mountpoint": null, "fstype": null, "parttype": null, "pkname": null},
+  {"name": "/dev/nvme3n1", "rota": "0", "size": "8589934592", "type": "disk", "tran": null, "mountpoint": null, "fstype": null, "parttype": null, "pkname": null}
+]}`
 
 	uDevADMTestOutput = `P: /devices/pci0000:00/0000:00:1b.0/nvme/nvme1/nvme1n1
 N: nvme1n1
@@ -61,6 +64,83 @@ func TestParseLSBLKOutput(t *testing.T) {
 	assert.Equal(t, expected, devices)
 }
 
+// TestParseLSBLKOutput_EmptyColumns checks that an empty column does not shift
+// the following ones (ARTESCA-18303): virtio disks have no transport, so TRAN
+// is empty on every row.
+func TestParseLSBLKOutput_EmptyColumns(t *testing.T) {
+	expected := []physicaldrivegetter.BlockDevice{
+		{DevicePath: "/dev/vda", Size: 10737418240, Rotational: "1", Type: "disk"},
+		{
+			DevicePath:       "/dev/vda1",
+			Size:             10736352768,
+			Rotational:       "1",
+			Type:             "part",
+			Tran:             "",
+			MountPoint:       "/",
+			FileSystemType:   "ext4",
+			PartitionType:    "0x83",
+			ParentKernelName: "/dev/vda",
+		},
+	}
+
+	tests := []struct {
+		name   string
+		output string
+	}{
+		{
+			// util-linux 2.32 (RHEL 8) prints every value as a string.
+			name: "util-linux 2.32",
+			output: `{"blockdevices": [
+  {"name": "/dev/vda", "rota": "1", "size": "10737418240", "type": "disk", "tran": null, "mountpoint": null, "fstype": null, "parttype": null, "pkname": null},
+  {"name": "/dev/vda1", "rota": "1", "size": "10736352768", "type": "part", "tran": null, "mountpoint": "/", "fstype": "ext4", "parttype": "0x83", "pkname": "/dev/vda"}
+]}`,
+		},
+		{
+			// util-linux 2.37 (RHEL 9) prints booleans and numbers.
+			name: "util-linux 2.37",
+			output: `{"blockdevices": [
+  {"name": "/dev/vda", "rota": true, "size": 10737418240, "type": "disk", "tran": null, "mountpoint": null, "fstype": null, "parttype": null, "pkname": null},
+  {"name": "/dev/vda1", "rota": true, "size": 10736352768, "type": "part", "tran": null, "mountpoint": "/", "fstype": "ext4", "parttype": "0x83", "pkname": "/dev/vda"},
+  {"name": "/dev/loop0", "rota": false, "size": 4096, "type": "loop", "tran": null, "mountpoint": null, "fstype": null, "parttype": null, "pkname": null}
+]}`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			devices, err := physicaldrivegetter.ParseLSBLKOutput([]byte(tt.output))
+			assert.NoError(t, err)
+			assert.Equal(t, expected, devices)
+		})
+	}
+}
+
+func TestParseLSBLKOutput_Errors(t *testing.T) {
+	tests := []struct {
+		name   string
+		output string
+	}{
+		{name: "not json", output: "NAME ROTA SIZE TYPE\n/dev/sda 0 1000 disk"},
+		{
+			name:   "invalid size",
+			output: `{"blockdevices": [{"name": "/dev/sda", "rota": "0", "size": "1G", "type": "disk"}]}`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := physicaldrivegetter.ParseLSBLKOutput([]byte(tt.output))
+			assert.Error(t, err)
+		})
+	}
+}
+
+func TestParseLSBLKOutput_Empty(t *testing.T) {
+	devices, err := physicaldrivegetter.ParseLSBLKOutput([]byte(" \n"))
+	assert.NoError(t, err)
+	assert.Empty(t, devices)
+}
+
 func TestParseUDevADMOutput(t *testing.T) {
 	output := []byte(uDevADMTestOutput)
 
@@ -99,8 +179,9 @@ func TestRHEL8_PhysicalDrive_Success_NVMe(t *testing.T) {
 	// Setup mocks
 	mockLSBLK.On("Run", mock.MatchedBy(func(args []string) bool {
 		return args[0] == "/dev/nvme1n1"
-	})).Return([]byte(`NAME         ROTA       SIZE TYPE TRAN   MOUNTPOINT FSTYPE PARTTYPE
-/dev/nvme1n1    0 8589934592 disk nvme`), nil)
+	})).Return([]byte(`{"blockdevices": [
+  {"name": "/dev/nvme1n1", "rota": "0", "size": "8589934592", "type": "disk", "tran": "nvme", "mountpoint": null, "fstype": null, "parttype": null, "pkname": null}
+]}`), nil)
 
 	mockUDevADM.On("Run", mock.MatchedBy(func(args []string) bool {
 		return args[2] == "--name=/dev/nvme1n1"
@@ -145,8 +226,9 @@ func TestRHEL8_PhysicalDrive_Success_SSD(t *testing.T) {
 		SmartCTL: mockSmartCTL,
 	}
 
-	mockLSBLK.On("Run", mock.AnythingOfType("[]string")).Return([]byte(`NAME        ROTA       SIZE TYPE TRAN MOUNTPOINT FSTYPE PARTTYPE
-/dev/sda       0 1000000000 disk sata`), nil)
+	mockLSBLK.On("Run", mock.AnythingOfType("[]string")).Return([]byte(`{"blockdevices": [
+  {"name": "/dev/sda", "rota": "0", "size": "1000000000", "type": "disk", "tran": "sata", "mountpoint": null, "fstype": null, "parttype": null, "pkname": null}
+]}`), nil)
 
 	mockUDevADM.On("Run", mock.AnythingOfType("[]string")).Return([]byte(`E: ID_MODEL=Samsung SSD
 E: ID_SERIAL_SHORT=S12345
@@ -175,8 +257,9 @@ func TestRHEL8_PhysicalDrive_Success_HDD(t *testing.T) {
 		SmartCTL: mockSmartCTL,
 	}
 
-	mockLSBLK.On("Run", mock.AnythingOfType("[]string")).Return([]byte(`NAME        ROTA       SIZE TYPE TRAN MOUNTPOINT FSTYPE PARTTYPE
-/dev/sdb       1 2000000000 disk sata`), nil)
+	mockLSBLK.On("Run", mock.AnythingOfType("[]string")).Return([]byte(`{"blockdevices": [
+  {"name": "/dev/sdb", "rota": "1", "size": "2000000000", "type": "disk", "tran": "sata", "mountpoint": null, "fstype": null, "parttype": null, "pkname": null}
+]}`), nil)
 
 	mockUDevADM.On("Run", mock.AnythingOfType("[]string")).Return([]byte(`E: ID_MODEL=Seagate HDD
 E: ID_SERIAL_SHORT=HD12345
@@ -226,8 +309,9 @@ func TestRHEL8_PhysicalDrive_UDevADMError(t *testing.T) {
 		SmartCTL: mockSmartCTL,
 	}
 
-	mockLSBLK.On("Run", mock.AnythingOfType("[]string")).Return([]byte(`NAME         ROTA       SIZE TYPE TRAN
-/dev/nvme1n1    0 8589934592 disk nvme`), nil)
+	mockLSBLK.On("Run", mock.AnythingOfType("[]string")).Return([]byte(`{"blockdevices": [
+  {"name": "/dev/nvme1n1", "rota": "0", "size": "8589934592", "type": "disk", "tran": "nvme", "mountpoint": null, "fstype": null, "parttype": null, "pkname": null}
+]}`), nil)
 
 	// Simulate error from udevadm
 	mockUDevADM.On("Run", mock.AnythingOfType("[]string")).Return([]byte{}, errors.New("udevadm command failed"))
@@ -250,8 +334,9 @@ func TestRHEL8_PhysicalDrive_SmartCTLError(t *testing.T) {
 		SmartCTL: mockSmartCTL,
 	}
 
-	mockLSBLK.On("Run", mock.AnythingOfType("[]string")).Return([]byte(`NAME         ROTA       SIZE TYPE TRAN
-/dev/nvme1n1    0 8589934592 disk nvme`), nil)
+	mockLSBLK.On("Run", mock.AnythingOfType("[]string")).Return([]byte(`{"blockdevices": [
+  {"name": "/dev/nvme1n1", "rota": "0", "size": "8589934592", "type": "disk", "tran": "nvme", "mountpoint": null, "fstype": null, "parttype": null, "pkname": null}
+]}`), nil)
 
 	mockUDevADM.On("Run", mock.AnythingOfType("[]string")).Return([]byte(`E: ID_MODEL=Test Model
 E: ID_SERIAL_SHORT=123456
@@ -282,8 +367,9 @@ func TestRHEL8_PhysicalDrive_SmartCTLErrorDeviceUsed(t *testing.T) {
 		SmartCTL: mockSmartCTL,
 	}
 
-	mockLSBLK.On("Run", mock.AnythingOfType("[]string")).Return([]byte(`NAME   MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT
-vda1 253:1    0  4000000  0 part /`), nil)
+	mockLSBLK.On("Run", mock.AnythingOfType("[]string")).Return([]byte(`{"blockdevices": [
+  {"name": "vda1", "rota": "0", "size": "4000000", "type": "part", "tran": null, "mountpoint": "/", "fstype": null, "parttype": null, "pkname": null}
+]}`), nil)
 
 	mockUDevADM.On("Run", mock.AnythingOfType("[]string")).Return([]byte(`E: ID_MODEL=Test Model
 E: ID_SERIAL_SHORT=123456
@@ -312,8 +398,9 @@ func TestRHEL8_PhysicalDrive_UnknownDiskType(t *testing.T) {
 		SmartCTL: mockSmartCTL,
 	}
 
-	mockLSBLK.On("Run", mock.AnythingOfType("[]string")).Return([]byte(`NAME        ROTA       SIZE TYPE TRAN
-/dev/xda       2 1000000000 disk other`), nil)
+	mockLSBLK.On("Run", mock.AnythingOfType("[]string")).Return([]byte(`{"blockdevices": [
+  {"name": "/dev/xda", "rota": "2", "size": "1000000000", "type": "disk", "tran": "other", "mountpoint": null, "fstype": null, "parttype": null, "pkname": null}
+]}`), nil)
 
 	mockUDevADM.On("Run", mock.AnythingOfType("[]string")).Return([]byte(`E: ID_MODEL=Unknown Disk
 E: ID_SERIAL_SHORT=X12345
@@ -342,8 +429,9 @@ func TestRHEL8_PhysicalDrive_UsedStatus(t *testing.T) {
 		SmartCTL: mockSmartCTL,
 	}
 
-	mockLSBLK.On("Run", mock.AnythingOfType("[]string")).Return([]byte(`NAME        ROTA       SIZE TYPE TRAN MOUNTPOINT  FSTYPE    PARTTYPE
-/dev/sda       0 1000000000 disk sata /mnt/data ext4      linux`), nil)
+	mockLSBLK.On("Run", mock.AnythingOfType("[]string")).Return([]byte(`{"blockdevices": [
+  {"name": "/dev/sda", "rota": "0", "size": "1000000000", "type": "disk", "tran": "sata", "mountpoint": "/mnt/data", "fstype": "ext4", "parttype": "linux", "pkname": null}
+]}`), nil)
 
 	mockUDevADM.On("Run", mock.AnythingOfType("[]string")).Return([]byte(`E: ID_MODEL=Test SSD
 E: ID_SERIAL_SHORT=123456
@@ -370,8 +458,9 @@ func TestRHEL8_PhysicalDrive_FailedStatus(t *testing.T) {
 		SmartCTL: mockSmartCTL,
 	}
 
-	mockLSBLK.On("Run", mock.AnythingOfType("[]string")).Return([]byte(`NAME        ROTA       SIZE TYPE TRAN
-/dev/sda       0 1000000000 disk sata`), nil)
+	mockLSBLK.On("Run", mock.AnythingOfType("[]string")).Return([]byte(`{"blockdevices": [
+  {"name": "/dev/sda", "rota": "0", "size": "1000000000", "type": "disk", "tran": "sata", "mountpoint": null, "fstype": null, "parttype": null, "pkname": null}
+]}`), nil)
 
 	mockUDevADM.On("Run", mock.AnythingOfType("[]string")).Return([]byte(`E: ID_MODEL=Test SSD
 E: ID_SERIAL_SHORT=123456
@@ -402,16 +491,18 @@ func TestRHEL8_PhysicalDrives_Success(t *testing.T) {
 	// Setup mock for listing block devices
 	mockLSBLK.On("Run", mock.MatchedBy(func(args []string) bool {
 		return len(args) > 0 && args[0] == "--list"
-	})).Return([]byte(`NAME           ROTA         SIZE TYPE  TRAN   MOUNTPOINT FSTYPE            PARTTYPE                             PKNAME
-/dev/nvme1n1      0  8589934592 disk nvme
-/dev/nvme1n1p1    0   103809024 part nvme   /boot/efi  vfat              c12a7328-f81f-11d2-ba4b-00a0c93ec93b /dev/nvme1n1
-/dev/nvme2n1      0  8589934592 disk nvme`), nil)
+	})).Return([]byte(`{"blockdevices": [
+  {"name": "/dev/nvme1n1", "rota": "0", "size": "8589934592", "type": "disk", "tran": "nvme", "mountpoint": null, "fstype": null, "parttype": null, "pkname": null},
+  {"name": "/dev/nvme1n1p1", "rota": "0", "size": "103809024", "type": "part", "tran": "nvme", "mountpoint": "/boot/efi", "fstype": "vfat", "parttype": "c12a7328-f81f-11d2-ba4b-00a0c93ec93b", "pkname": "/dev/nvme1n1"},
+  {"name": "/dev/nvme2n1", "rota": "0", "size": "8589934592", "type": "disk", "tran": "nvme", "mountpoint": null, "fstype": null, "parttype": null, "pkname": null}
+]}`), nil)
 
 	// Setup mocks for first device
 	mockLSBLK.On("Run", mock.MatchedBy(func(args []string) bool {
 		return len(args) > 0 && args[0] == "/dev/nvme1n1"
-	})).Return([]byte(`NAME           ROTA         SIZE TYPE  TRAN   MOUNTPOINT FSTYPE            PARTTYPE                             PKNAME
-/dev/nvme1n1    0 8589934592 disk nvme`), nil)
+	})).Return([]byte(`{"blockdevices": [
+  {"name": "/dev/nvme1n1", "rota": "0", "size": "8589934592", "type": "disk", "tran": "nvme", "mountpoint": null, "fstype": null, "parttype": null, "pkname": null}
+]}`), nil)
 
 	mockUDevADM.On("Run", mock.MatchedBy(func(args []string) bool {
 		return len(args) > 1 && args[2] == "--name=/dev/nvme1n1"
@@ -429,9 +520,9 @@ E: DEVLINKS=/dev/disk/by-id/nvme-123`), nil)
 	// Setup mock for partition of the first device
 	mockLSBLK.On("Run", mock.MatchedBy(func(args []string) bool {
 		return len(args) > 0 && args[0] == "/dev/nvme1n1p1"
-	})).Return([]byte(`NAME           ROTA         SIZE TYPE  TRAN   MOUNTPOINT FSTYPE            PARTTYPE                             PKNAME
-	/dev/nvme1n1p1    0   103809024 part nvme   /boot/efi  vfat              c12a7328-f81f-11d2-ba4b-00a0c93ec93b /dev/nvme1n1
-	`), nil)
+	})).Return([]byte(`{"blockdevices": [
+  {"name": "/dev/nvme1n1p1", "rota": "0", "size": "103809024", "type": "part", "tran": "nvme", "mountpoint": "/boot/efi", "fstype": "vfat", "parttype": "c12a7328-f81f-11d2-ba4b-00a0c93ec93b", "pkname": "/dev/nvme1n1"}
+]}`), nil)
 
 	mockUDevADM.On("Run", mock.MatchedBy(func(args []string) bool {
 		return len(args) > 1 && args[2] == "--name=/dev/nvme1n1p1"
@@ -449,8 +540,9 @@ SMART overall-health self-assessment test result: PASSED
 	// Setup mocks for second device
 	mockLSBLK.On("Run", mock.MatchedBy(func(args []string) bool {
 		return len(args) > 0 && args[0] == "/dev/nvme2n1"
-	})).Return([]byte(`NAME         ROTA       SIZE TYPE TRAN   MOUNTPOINT FSTYPE PARTTYPE
-/dev/nvme2n1    0 8589934592 disk nvme`), nil)
+	})).Return([]byte(`{"blockdevices": [
+  {"name": "/dev/nvme2n1", "rota": "0", "size": "8589934592", "type": "disk", "tran": "nvme", "mountpoint": null, "fstype": null, "parttype": null, "pkname": null}
+]}`), nil)
 
 	mockUDevADM.On("Run", mock.MatchedBy(func(args []string) bool {
 		return len(args) > 1 && args[2] == "--name=/dev/nvme2n1"
@@ -505,6 +597,58 @@ SMART overall-health self-assessment test result: PASSED
 	mockSmartCTL.AssertExpectations(t)
 }
 
+// TestRHEL8_PhysicalDrives_VirtioPartitionedDiskIsUsed checks that a disk with
+// a partition is Used when TRAN is empty, as on virtio disks (ARTESCA-18303).
+func TestRHEL8_PhysicalDrives_VirtioPartitionedDiskIsUsed(t *testing.T) {
+	mockUDevADM := new(MockCommandRunner)
+	mockLSBLK := new(MockCommandRunner)
+	mockSmartCTL := new(MockCommandRunner)
+
+	r := physicaldrivegetter.RHEL8{
+		UDevADM:  mockUDevADM,
+		LSBLK:    mockLSBLK,
+		SmartCTL: mockSmartCTL,
+	}
+
+	vda := `{"name": "/dev/vda", "rota": "1", "size": "10737418240", "type": "disk", "tran": null, ` +
+		`"mountpoint": null, "fstype": null, "parttype": null, "pkname": null}`
+	vda1 := `{"name": "/dev/vda1", "rota": "1", "size": "10736352768", "type": "part", "tran": null, ` +
+		`"mountpoint": "/", "fstype": "ext4", "parttype": "0x83", "pkname": "/dev/vda"}`
+
+	mockLSBLK.On("Run", mock.MatchedBy(func(args []string) bool {
+		return len(args) > 0 && args[0] == "--list"
+	})).Return([]byte(`{"blockdevices": [`+vda+`, `+vda1+`]}`), nil)
+
+	for path, device := range map[string]string{"/dev/vda": vda, "/dev/vda1": vda1} {
+		mockLSBLK.On("Run", mock.MatchedBy(func(args []string) bool {
+			return len(args) > 0 && args[0] == path
+		})).Return([]byte(`{"blockdevices": [`+device+`]}`), nil)
+
+		mockUDevADM.On("Run", mock.MatchedBy(func(args []string) bool {
+			return len(args) > 2 && args[2] == "--name="+path
+		})).Return([]byte("E: ID_MODEL=QEMU HARDDISK\nE: DEVNAME="+path), nil)
+
+		mockSmartCTL.On("Run", []string{"-a", path}).Return(
+			[]byte("SMART overall-health self-assessment test result: PASSED"), nil,
+		)
+	}
+
+	physicalDrives, err := r.PhysicalDrives(&raidcontroller.Metadata{})
+
+	assert.NoError(t, err)
+	assert.Len(t, physicalDrives, 2)
+	assert.Equal(t, "/dev/vda", physicalDrives[0].ID)
+	assert.False(t, physicalDrives[0].IsPartition)
+	assert.Equal(t, physicaldrive.PDStatusUsed, physicalDrives[0].Status)
+	assert.Equal(t, "/dev/vda1", physicalDrives[1].ID)
+	assert.True(t, physicalDrives[1].IsPartition)
+	assert.Equal(t, physicaldrive.PDStatusUsed, physicalDrives[1].Status)
+
+	mockLSBLK.AssertExpectations(t)
+	mockUDevADM.AssertExpectations(t)
+	mockSmartCTL.AssertExpectations(t)
+}
+
 func TestRHEL8_PhysicalDrives_ListBlockDevicesError(t *testing.T) {
 	mockUDevADM := new(MockCommandRunner)
 	mockLSBLK := new(MockCommandRunner)
@@ -547,15 +691,17 @@ func TestRHEL8_PhysicalDrives_PhysicalDriveError(t *testing.T) {
 	// Setup mock for listing block devices
 	mockLSBLK.On("Run", mock.MatchedBy(func(args []string) bool {
 		return len(args) > 0 && args[0] == "--list"
-	})).Return([]byte(`NAME         ROTA        SIZE TYPE TRAN
-/dev/nvme1n1    0  8589934592 disk nvme
-/dev/nvme2n1    0  8589934592 disk nvme`), nil)
+	})).Return([]byte(`{"blockdevices": [
+  {"name": "/dev/nvme1n1", "rota": "0", "size": "8589934592", "type": "disk", "tran": "nvme", "mountpoint": null, "fstype": null, "parttype": null, "pkname": null},
+  {"name": "/dev/nvme2n1", "rota": "0", "size": "8589934592", "type": "disk", "tran": "nvme", "mountpoint": null, "fstype": null, "parttype": null, "pkname": null}
+]}`), nil)
 
 	// Setup mock for first device
 	mockLSBLK.On("Run", mock.MatchedBy(func(args []string) bool {
 		return len(args) > 0 && args[0] == "/dev/nvme1n1"
-	})).Return([]byte(`NAME         ROTA       SIZE TYPE TRAN
-/dev/nvme1n1    0 8589934592 disk nvme`), nil)
+	})).Return([]byte(`{"blockdevices": [
+  {"name": "/dev/nvme1n1", "rota": "0", "size": "8589934592", "type": "disk", "tran": "nvme", "mountpoint": null, "fstype": null, "parttype": null, "pkname": null}
+]}`), nil)
 
 	// Setup mock to fail on udevadm for the first device
 	mockUDevADM.On("Run", mock.MatchedBy(func(args []string) bool {

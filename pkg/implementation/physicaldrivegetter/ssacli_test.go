@@ -59,8 +59,9 @@ func TestSSACLIPhysicalDrives(t *testing.T) {
 			}).Return(tt.mocking, nil)
 
 			// Mock the lsblk call for disk device path
-			lsblkOutput := []byte(`NAME ROTA SIZE TYPE TRAN MOUNTPOINT FSTYPE PARTTYPE
-/dev/sda    0 858993459200 disk sata                    `)
+			lsblkOutput := []byte(`{"blockdevices": [
+  {"name": "/dev/sda", "rota": "0", "size": "858993459200", "type": "disk", "tran": "sata", "mountpoint": null, "fstype": null, "parttype": null, "pkname": null}
+]}`)
 			mockRunner.On("Run", mock.AnythingOfType("[]string")).Return(lsblkOutput, nil)
 
 			metadata := &raidcontroller.Metadata{
@@ -152,8 +153,9 @@ func TestSSCALIPhysicalDrive(t *testing.T) {
 			"detail",
 		}).Return(tt.mocking, nil)
 
-		lsblkOutput := []byte(`NAME ROTA SIZE TYPE TRAN MOUNTPOINT FSTYPE PARTTYPE
-/dev/sda    0 858993459200 disk sata                    `)
+		lsblkOutput := []byte(`{"blockdevices": [
+  {"name": "/dev/sda", "rota": "0", "size": "858993459200", "type": "disk", "tran": "sata", "mountpoint": null, "fstype": null, "parttype": null, "pkname": null}
+]}`)
 		mockRunner.On("Run", mock.AnythingOfType("[]string")).Return(lsblkOutput, nil)
 
 		metadata := &physicaldrive.Metadata{
@@ -192,8 +194,9 @@ func mockOutput(filename string) []byte {
 func TestSSACLIPhysicalDriveStatus(t *testing.T) {
 	// lsblk on a drive that carries nothing: no mountpoint, no filesystem, no
 	// partition type.
-	emptyDevice := []byte(`NAME ROTA SIZE TYPE TRAN MOUNTPOINT FSTYPE PARTTYPE
-/dev/sda    0 858993459200 disk sata                    `)
+	emptyDevice := []byte(`{"blockdevices": [
+  {"name": "/dev/sda", "rota": "0", "size": "858993459200", "type": "disk", "tran": "sata", "mountpoint": null, "fstype": null, "parttype": null, "pkname": null}
+]}`)
 
 	tests := []struct {
 		name              string
@@ -266,8 +269,9 @@ func TestSSACLIPhysicalDriveStatus(t *testing.T) {
 			// wins over "Unassigned Drive", whatever the order of the fields.
 			name:    "unassigned drive carrying a filesystem is used",
 			mocking: mockOutput("physicaldrives/1I.1.1_detail"),
-			lsblk: []byte(`NAME ROTA SIZE TYPE TRAN MOUNTPOINT FSTYPE PARTTYPE
-/dev/sda    0 858993459200 disk sata               xfs      `),
+			lsblk: []byte(`{"blockdevices": [
+  {"name": "/dev/sda", "rota": "0", "size": "858993459200", "type": "disk", "tran": "sata", "mountpoint": null, "fstype": "xfs", "parttype": null, "pkname": null}
+]}`),
 			metadata: &physicaldrive.Metadata{
 				CtrlMetadata: &raidcontroller.Metadata{
 					ID: 0,
