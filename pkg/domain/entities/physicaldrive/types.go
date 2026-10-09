@@ -3,6 +3,7 @@ package physicaldrive
 
 import (
 	"fmt"
+	"io/fs"
 	"path/filepath"
 	"strings"
 
@@ -16,6 +17,18 @@ const (
 	emptySlot string = "<empty>"
 	nilSlot   string = "<nil>"
 )
+
+// ErrNoPermanentPath is returned by ComputePaths when no by-id link of the
+// drive exists.
+var ErrNoPermanentPath = errors.New("failed to compute permanent path")
+
+// IsPathMissing tells whether a ComputePaths error means that the drive has
+// no by-id link, or a link to a device node that is gone, as for a failed or
+// pulled drive. Any other error, such as a permission error, is a real
+// failure.
+func IsPathMissing(err error) bool {
+	return errors.Is(err, ErrNoPermanentPath) || errors.Is(err, fs.ErrNotExist)
+}
 
 type (
 	// PhysicalDrive represents a physical drive.
@@ -130,7 +143,7 @@ func (pd *PhysicalDrive) ComputePaths() error {
 		}
 
 		if pd.PermanentPath == "" {
-			return errors.New("failed to compute permanent path")
+			return ErrNoPermanentPath
 		}
 	}
 

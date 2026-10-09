@@ -30,14 +30,6 @@ Feature: MegaRAID disk failure and replacement
       | 251:2 | Used   | SIMD0002000000000000 | /dev/sdk   | /dev/disk/by-id/wwn-0x600062b2000000000000000000000238 |
       | 251:3 | Failed | SIMD0003             |            |                                                        |
       | 251:4 | Used   | SIMD0004000000000000 | /dev/sdi   | /dev/disk/by-id/wwn-0x600062b2000000000000000000000236 |
-    # The offline volume has no by-id link: its path cannot be resolved, which
-    # fails the listing of all the volumes of the controller.
-    But known bug ARTESCA-17960 reports instead:
-      | slot  | status | serial               | devicePath | permanentPath |
-      | 251:1 | Used   | SIMD0001000000000000 |            |               |
-      | 251:2 | Used   | SIMD0002000000000000 |            |               |
-      | 251:3 | Failed | SIMD0003             |            |               |
-      | 251:4 | Used   | SIMD0004000000000000 |            |               |
 
   Scenario: A replacement drive is reported as a new, available drive
     Given drive 251:3 has failed

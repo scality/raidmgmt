@@ -174,6 +174,8 @@ func (vd *VD) LVStatus() logicalvolume.LVStatus {
 		"Dgrd": logicalvolume.LVStatusDegraded,
 		"Pdgd": logicalvolume.LVStatusDegraded,
 		"Fail": logicalvolume.LVStatusFailed,
+		// Offline: a RAID0 volume whose drive failed, no longer readable.
+		"OfLn": logicalvolume.LVStatusFailed,
 	}
 
 	if status, ok := lvStatusMap[vd.State]; ok {
@@ -260,7 +262,7 @@ func (a *Adapter) logicalVolume(
 		return nil, errors.Wrap(err, "failed to fill physical drives")
 	}
 
-	devicePath, permanentPath, err := getPaths(vdProperties, pds)
+	devicePath, permanentPath, err := volumePaths(&vd, vdProperties, pds)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get paths")
 	}
@@ -655,17 +657,44 @@ func (a *Adapter) findNewLogicalVolume(pds []*physicaldrive.Metadata) (
 		return nil, errors.Wrap(err, "failed to get logical volumes")
 	}
 
+	return selectNewLogicalVolume(lvs, pds)
+}
+
+// selectNewLogicalVolume returns, among the volumes of the controller, the new
+// volume holding the given physical drives.
+func selectNewLogicalVolume(lvs []*logicalvolume.LogicalVolume, pds []*physicaldrive.Metadata) (
+	*logicalvolume.LogicalVolume,
+	error,
+) {
 	// Create a map of physical drive slots for efficient lookup
 	pdSlots := make(map[string]struct{})
 	for _, pd := range pds {
 		pdSlots[pd.ID] = struct{}{}
 	}
 
-	// Find the new logical volume
+	// Find the new logical volume. A volume not exposed to the OS is listed
+	// without paths: the new volume before the kernel sees it, or the offline
+	// volume of a failed drive still listing a requested slot. Keep looking
+	// for an exposed one; if none is, the new volume is not settled and the
+	// caller rescans and retries.
+	var unexposed *logicalvolume.LogicalVolume
+
 	for _, lv := range lvs {
-		if hasMatchingPDs(lv.PDrivesMetadata, pdSlots) {
-			return lv, nil
+		if !hasMatchingPDs(lv.PDrivesMetadata, pdSlots) {
+			continue
 		}
+
+		if lv.PermanentPath == "" {
+			unexposed = lv
+
+			continue
+		}
+
+		return lv, nil
+	}
+
+	if unexposed != nil {
+		return nil, errors.Errorf("new logical volume %s has no device yet", unexposed.ID)
 	}
 
 	return nil, errors.New("new logical volume not found")
@@ -682,6 +711,11 @@ func hasMatchingPDs(lvPDs []*physicaldrive.Metadata, pdSlots map[string]struct{}
 	return false
 }
 
+// notExposedToOS is the "Exposed to OS" value of a volume that is not a block
+// device of the host. Older storcli versions may not report the field at all,
+// so only this explicit value skips path resolution.
+const notExposedToOS = "No"
+
 // It is used to mock the functions in tests.
 // nolint: gochecknoglobals // This is a variable that is used to mock a function in tests.
 var (
@@ -689,10 +723,30 @@ var (
 	CustomFileExists   = utils.FileExists
 )
 
+// volumePaths resolves the paths of a volume. An offline or failed volume has
+// no block device, even if storcli still reports it exposed to the OS: no
+// capture shows what storcli reports for it, so its state decides.
+func volumePaths(vd *VD, vdp *VDProperties, pdrives []*physicaldrive.PhysicalDrive) (
+	devicePath, permanentPath string, err error,
+) {
+	if vd.LVStatus() == logicalvolume.LVStatusFailed {
+		return "", "", nil
+	}
+
+	return getPaths(vdp, pdrives)
+}
+
 // getPaths returns the device path and a permanent paths for the logical volumes.
 func getPaths(vdp *VDProperties, pdrives []*physicaldrive.PhysicalDrive) (
 	devicePath, permanentPath string, err error,
 ) {
+	// A volume not exposed to the OS, such as the offline RAID0 volume of a
+	// failed drive, has no block device: it has no path to resolve, and
+	// failing here would fail the listing of every volume of the controller.
+	if strings.TrimSpace(vdp.ExposedToOS) == notExposedToOS {
+		return "", "", nil
+	}
+
 	devicePath = vdp.OSDriveName
 
 	permanentPath = fmt.Sprintf("/dev/disk/by-id/wwn-0x%s", vdp.SCSINAAID)
