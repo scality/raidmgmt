@@ -1,6 +1,7 @@
 package megaraid_test
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -783,6 +784,81 @@ func (s *UnitTestSuite) TestCreateLVForcesRescanAndSettles() {
 	s.Equal("/dev/sda", newLv.DevicePath)
 	s.Equal("/dev/disk/by-id/wwn-0x600062b212da5d402bd3b493e1699377", newLv.PermanentPath)
 	s.GreaterOrEqual(rescanCalls, 1, "createLV must force a SCSI rescan for the new volume")
+}
+
+// TestCreateLVWaitsForVolumeExposedToOS covers a new volume that storcli lists
+// before it is exposed to the OS: it has no paths yet, so createLV must keep
+// rescanning until the volume is exposed rather than return it without paths.
+func (s *UnitTestSuite) TestCreateLVWaitsForVolumeExposedToOS() {
+	s.wasCreateLVCalledOnce = false
+
+	origTimeout := megaraid2.NewVolumeSettleTimeout
+	origInterval := megaraid2.NewVolumeSettleInterval
+	megaraid2.NewVolumeSettleTimeout = 5 * time.Second
+	megaraid2.NewVolumeSettleInterval = time.Millisecond
+
+	defer func() {
+		megaraid2.NewVolumeSettleTimeout = origTimeout
+		megaraid2.NewVolumeSettleInterval = origInterval
+	}()
+
+	// The first show of the new volume reports it not exposed to the OS.
+	notExposedOnce := true
+
+	s.mockRunner.On("Run", mock.AnythingOfType("[]string")).Return(
+		func(args []string) (*megaraid2.CmdOutput, error) {
+			if args[0] == "/c0/v228" && notExposedOnce {
+				notExposedOnce = false
+				out := mockOutput("logicalvolumes/show/v228")
+				out.Controllers[0].ResponseData = bytes.Replace(out.Controllers[0].ResponseData,
+					[]byte(`"Exposed to OS":"Yes"`), []byte(`"Exposed to OS":"No"`), 1)
+
+				return out, nil
+			}
+
+			return s.createLVMockCalls(args)
+		})
+
+	rescanCalls := 0
+	origRescan := megaraid2.CustomRescanSCSIHosts
+	megaraid2.CustomRescanSCSIHosts = func() error {
+		rescanCalls++
+
+		return nil
+	}
+
+	defer func() { megaraid2.CustomRescanSCSIHosts = origRescan }()
+
+	s.mockPathResolver.On("FileExists", mock.Anything).Return(true)
+	s.mockPathResolver.On(
+		"EvalSymlinks",
+		"/dev/disk/by-id/wwn-0x600062b212da5d402bd3b493e1699377",
+	).Return("/dev/sda", nil)
+
+	s.setupCustomFileExists()
+	defer s.restoreCustomFileExists()
+
+	s.setupCustomEvalSymlinks()
+	defer s.restoreCustomEvalSymlinks()
+
+	newLv, err := s.a.CreateLV(&logicalvolume.Request{
+		CtrlMetadata: &raidcontroller.Metadata{ID: 0},
+		RAIDLevel:    logicalvolume.RAIDLevel0,
+		PDrivesMetadata: []*physicaldrive.Metadata{
+			{CtrlMetadata: &raidcontroller.Metadata{ID: 0}, ID: "251:12"},
+		},
+		CacheOptions: &logicalvolume.CacheOptions{
+			ReadPolicy:  logicalvolume.ReadPolicyReadAhead,
+			WritePolicy: logicalvolume.WritePolicyWriteThrough,
+			IOPolicy:    logicalvolume.IOPolicyDirect,
+		},
+	})
+
+	s.Require().NoError(err)
+	s.Require().False(notExposedOnce, "the volume must have been shown not exposed first")
+	s.Equal("/dev/sda", newLv.DevicePath)
+	s.Equal("/dev/disk/by-id/wwn-0x600062b212da5d402bd3b493e1699377", newLv.PermanentPath)
+	s.GreaterOrEqual(rescanCalls, 1, "createLV must rescan while the volume is not exposed")
 }
 
 func (s *UnitTestSuite) TestDeleteLV() {
