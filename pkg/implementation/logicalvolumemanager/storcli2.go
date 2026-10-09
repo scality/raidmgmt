@@ -95,14 +95,13 @@ func (s *StorCLI2) CreateLV(request *logicalvolume.Request) (*logicalvolume.Logi
 		return nil, errors.Wrap(err, "failed to resolve cache options")
 	}
 
-	args := []string{
+	args := append([]string{
 		fmt.Sprintf(storcli2ControllerSelector, request.CtrlMetadata.ID),
 		storcli2CmdAdd,
 		storcli2CmdVD,
 		fmt.Sprintf(storcli2RAIDLevelFormat, request.RAIDLevel.Level()),
 		drives,
-	}
-	args = append(args, cacheFlags...)
+	}, cacheFlags...)
 
 	output, err := s.runner.Run(args)
 	if err != nil {

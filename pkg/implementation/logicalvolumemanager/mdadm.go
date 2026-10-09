@@ -13,7 +13,12 @@ import (
 	"github.com/scality/raidmgmt/pkg/implementation/commandrunner"
 )
 
-const baseMDPath = "/dev/md"
+const (
+	baseMDPath = "/dev/md"
+
+	mdadmGrowFlag        = "--grow"
+	mdadmRAIDDevicesFlag = "--raid-devices"
+)
 
 type MDADM struct {
 	MDADM commandrunner.CommandRunner
@@ -61,7 +66,7 @@ func (m *MDADM) CreateLV(request *logicalvolume.Request) (*logicalvolume.Logical
 	createCmdArgs := []string{
 		"--create", devicePath,
 		"--level", fmt.Sprintf("%d", request.RAIDLevel.Level()),
-		"--raid-devices", fmt.Sprintf("%d", len(physicalDrivesName)),
+		mdadmRAIDDevicesFlag, fmt.Sprintf("%d", len(physicalDrivesName)),
 	}
 
 	// FIXME This might not be necessary on new disks (not used previously)
@@ -178,7 +183,7 @@ func (m *MDADM) AddPDsToLV(
 
 		// Enhance the size of the array
 		_, err = m.MDADM.Run([]string{
-			"--grow", logicalVolume.DevicePath,
+			mdadmGrowFlag, logicalVolume.DevicePath,
 			"--array-size=max",
 		})
 		if err != nil {
@@ -191,14 +196,12 @@ func (m *MDADM) AddPDsToLV(
 	arrayLength := len(logicalVolume.PDrivesMetadata) + len(pdsMetadata)
 
 	// This below is valid for raid0
-	addCmd := []string{
-		"--grow", logicalVolume.DevicePath,
+	addCmd := append([]string{
+		mdadmGrowFlag, logicalVolume.DevicePath,
 		"--level", fmt.Sprintf("%d", logicalVolume.RAIDLevel.Level()),
-		"--raid-devices", fmt.Sprintf("%d", arrayLength),
+		mdadmRAIDDevicesFlag, fmt.Sprintf("%d", arrayLength),
 		"--add",
-	}
-
-	addCmd = append(addCmd, devicesPaths...)
+	}, devicesPaths...)
 
 	// Add then grow the array
 	_, err = m.MDADM.Run(addCmd)
@@ -247,15 +250,9 @@ func (m *MDADM) DeletePDsFromLV(
 		pdsDevicePaths = append(pdsDevicePaths, pdMetadata.ID)
 	}
 
-	// Prepare the mdadm fail command
+	// Prepare the mdadm fail command for the physical drives to remove.
 	// An active device cannot be removed from an array, so it needs to be marked as failed first.
-	failCmd := []string{
-		"--fail",
-		logicalVolume.DevicePath,
-	}
-
-	// Append the list of physical drive to be set to failed
-	failCmd = append(failCmd, pdsDevicePaths...)
+	failCmd := append([]string{"--fail", logicalVolume.DevicePath}, pdsDevicePaths...)
 
 	_, err = m.MDADM.Run(failCmd)
 	if err != nil {
@@ -266,25 +263,15 @@ func (m *MDADM) DeletePDsFromLV(
 		)
 	}
 
-	// Prepare the mdadm remove command
-	removeCmd := []string{
-		"--remove",
-		logicalVolume.DevicePath,
-	}
-
-	// Append the list of physical drive to be removed
-	removeCmd = append(removeCmd, pdsDevicePaths...)
+	// Prepare the mdadm remove command for the physical drives.
+	removeCmd := append([]string{"--remove", logicalVolume.DevicePath}, pdsDevicePaths...)
 
 	_, err = m.MDADM.Run(removeCmd)
 	if err != nil {
 		return errors.Wrap(err, "failed to run mdadm remove command")
 	}
 
-	zeroCmd := []string{
-		"--zero-superblock",
-	}
-
-	zeroCmd = append(zeroCmd, pdsDevicePaths...)
+	zeroCmd := append([]string{"--zero-superblock"}, pdsDevicePaths...)
 
 	_, err = m.MDADM.Run(zeroCmd)
 	if err != nil {
@@ -298,8 +285,8 @@ func (m *MDADM) DeletePDsFromLV(
 
 	// Reduce the device count of the array
 	_, err = m.MDADM.Run([]string{
-		"--grow", logicalVolume.DevicePath,
-		"--raid-devices", fmt.Sprintf("%d", len(logicalVolume.PDrivesMetadata)-len(pdsMetadata)),
+		mdadmGrowFlag, logicalVolume.DevicePath,
+		mdadmRAIDDevicesFlag, fmt.Sprintf("%d", len(logicalVolume.PDrivesMetadata)-len(pdsMetadata)),
 	})
 	if err != nil {
 		return errors.Wrap(err, "failed to run mdadm grow command")
@@ -307,7 +294,7 @@ func (m *MDADM) DeletePDsFromLV(
 
 	// Reduce the size of the array
 	_, err = m.MDADM.Run([]string{
-		"--grow", logicalVolume.DevicePath,
+		mdadmGrowFlag, logicalVolume.DevicePath,
 		"--array-size=max",
 	})
 	if err != nil {

@@ -24,6 +24,15 @@ const (
 	partitionDeviceType = "part"
 )
 
+// lsblk flags shared by the adapters that inspect block devices.
+const (
+	lsblkJSONFlag   = "--json"
+	lsblkPathsFlag  = "--paths"
+	lsblkBytesFlag  = "--bytes"
+	lsblkOutputFlag = "--output"
+	lsblkColumns    = "name,rota,size,type,tran,mountpoint,fstype,parttype,pkname"
+)
+
 type (
 	RHEL8 struct {
 		UDevADM  commandrunner.CommandRunner
@@ -248,12 +257,12 @@ func (r *RHEL8) physicalDriveStatus(device *BlockDevice) (physicaldrive.PDStatus
 func (r *RHEL8) getBlockDevice(devicePath string) (*BlockDevice, error) {
 	output, err := r.LSBLK.Run([]string{
 		devicePath,
-		"--paths",
-		"--bytes",
+		lsblkPathsFlag,
+		lsblkBytesFlag,
 		"--nodeps",
-		"--json",
-		"--output",
-		"name,rota,size,type,tran,mountpoint,fstype,parttype,pkname",
+		lsblkJSONFlag,
+		lsblkOutputFlag,
+		lsblkColumns,
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get block device using lsblk")
@@ -274,11 +283,11 @@ func (r *RHEL8) getBlockDevice(devicePath string) (*BlockDevice, error) {
 func (r *RHEL8) listBlockDevices() ([]BlockDevice, error) {
 	output, err := r.LSBLK.Run([]string{
 		"--list",
-		"--json",
-		"--paths",
-		"--bytes",
-		"--output",
-		"name,rota,size,type,tran,mountpoint,fstype,parttype,pkname",
+		lsblkJSONFlag,
+		lsblkPathsFlag,
+		lsblkBytesFlag,
+		lsblkOutputFlag,
+		lsblkColumns,
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to run list block devices command")

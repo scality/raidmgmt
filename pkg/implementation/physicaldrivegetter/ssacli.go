@@ -304,12 +304,12 @@ func (s *SSACLI) parsePDLine( //nolint:funlen // This function is long and not c
 func (s *SSACLI) getBlockDevice(devicePath string) (*BlockDevice, error) {
 	output, err := s.LSBLK.Run([]string{
 		devicePath,
-		"--paths",
-		"--bytes",
+		lsblkPathsFlag,
+		lsblkBytesFlag,
 		"--nodeps",
-		"--json",
-		"--output",
-		"name,rota,size,type,tran,mountpoint,fstype,parttype,pkname",
+		lsblkJSONFlag,
+		lsblkOutputFlag,
+		lsblkColumns,
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get block device using lsblk")

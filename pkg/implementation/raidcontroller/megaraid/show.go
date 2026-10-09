@@ -8,9 +8,15 @@ import (
 	"github.com/scality/raidmgmt/pkg/utils"
 )
 
+// storcli keywords used to show every property of an object.
+const (
+	cmdShow = "show"
+	cmdAll  = "all"
+)
+
 // showAll returns all information for all controllers.
 func (a *Adapter) showAll() (*CmdOutput, error) {
-	output, err := a.runner.Run([]string{"show", "all"})
+	output, err := a.runner.Run([]string{cmdShow, cmdAll})
 	if err != nil {
 		return nil, errors.Wrap(err, ErrCommandFailed.Error())
 	}
@@ -20,7 +26,7 @@ func (a *Adapter) showAll() (*CmdOutput, error) {
 
 // showAllController returns all information for a given controller.
 func (a *Adapter) showAllController(selector string) (json.RawMessage, error) {
-	output, err := a.runner.Run([]string{selector, "show", "all"})
+	output, err := a.runner.Run([]string{selector, cmdShow, cmdAll})
 	if err != nil {
 		return nil, errors.Wrap(err, ErrCommandFailed.Error())
 	}
@@ -45,7 +51,7 @@ func (a *Adapter) showAllPhysicalDrives(selector string) ([]PD, error) {
 
 // showAllPhysicalDrive returns all information for a given physical drive.
 func (a *Adapter) showAllPhysicalDrive(selector string) (json.RawMessage, error) {
-	output, err := a.runner.Run([]string{selector, "show", "all"})
+	output, err := a.runner.Run([]string{selector, cmdShow, cmdAll})
 	if err != nil {
 		return nil, errors.Wrap(err, ErrCommandFailed.Error())
 	}
@@ -73,7 +79,7 @@ func (a *Adapter) showAllVirtualDrives(selector string) ([]VD, error) {
 
 // showAllVirtualDrive returns all logical drives for a given controller.
 func (a *Adapter) showAllVirtualDrive(selector string) (json.RawMessage, error) {
-	output, err := a.runner.Run([]string{selector, "show", "all"})
+	output, err := a.runner.Run([]string{selector, cmdShow, cmdAll})
 	if err != nil {
 		return nil, errors.Wrap(err, ErrCommandFailed.Error())
 	}
