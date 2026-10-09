@@ -41,7 +41,8 @@ jobs:
         with:
           go-version-file: go.mod
       - name: Run tests
-        run: go test -v ./...
+        # Every module, including the nested scenario/ one.
+        run: make tests
 
   release:
     needs: quality-gate

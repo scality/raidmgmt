@@ -1,0 +1,137 @@
+
+HPE Smart Array P816i-a SR Gen10 in Slot 0 (Embedded)
+
+   Array B
+
+      physicaldrive 1I:1:3
+         Port: 1I
+         Box: 1
+         Bay: 3
+         Status: OK
+         Drive Type: Data Drive
+         Interface Type: SAS
+         Size: 6 TB
+         Drive exposed to OS: False
+         Logical/Physical Block Size: 512/4096
+         Rotational Speed: 7200
+         Firmware Revision: HPD4
+         Serial Number: SIMH0001
+         WWID: 5000C50030000001
+         Model: HP      MB6000JVYZD
+         Current Temperature (C): 33
+         Maximum Temperature (C): 45
+         PHY Count: 2
+         PHY Transfer Rate: 12.0Gbps, Unknown
+         PHY Physical Link Rate: 12.0Gbps, Unknown
+         PHY Maximum Link Rate: 12.0Gbps, 12.0Gbps
+         Drive Authentication Status: OK
+         Carrier Application Version: 11
+         Carrier Bootloader Version: 6
+         Sanitize Erase Supported: True
+         Sanitize Estimated Max Erase Time: 11 hour(s), 40 minute(s) 
+         Unrestricted Sanitize Supported: True
+         Shingled Magnetic Recording Support: None
+         Drive Unique ID: 5000C50040000001
+         Multi-Actuator Drive: False
+
+
+   Array C
+
+      physicaldrive 1I:1:4
+         Port: 1I
+         Box: 1
+         Bay: 4
+         Status: OK
+         Drive Type: Data Drive
+         Interface Type: SAS
+         Size: 6 TB
+         Drive exposed to OS: False
+         Logical/Physical Block Size: 512/4096
+         Rotational Speed: 7200
+         Firmware Revision: HPD4
+         Serial Number: SIMH0002
+         WWID: 5000C50030000002
+         Model: HP      MB6000JVYZD
+         Current Temperature (C): 34
+         Maximum Temperature (C): 46
+         PHY Count: 2
+         PHY Transfer Rate: 12.0Gbps, Unknown
+         PHY Physical Link Rate: 12.0Gbps, Unknown
+         PHY Maximum Link Rate: 12.0Gbps, 12.0Gbps
+         Drive Authentication Status: OK
+         Carrier Application Version: 11
+         Carrier Bootloader Version: 6
+         Sanitize Erase Supported: True
+         Sanitize Estimated Max Erase Time: 11 hour(s), 40 minute(s) 
+         Unrestricted Sanitize Supported: True
+         Shingled Magnetic Recording Support: None
+         Drive Unique ID: 5000C50040000002
+         Multi-Actuator Drive: False
+
+
+   Array D
+
+      physicaldrive 2I:2:1
+         Port: 2I
+         Box: 2
+         Bay: 1
+         Status: OK
+         Drive Type: Data Drive
+         Interface Type: SAS
+         Size: 6 TB
+         Drive exposed to OS: False
+         Logical/Physical Block Size: 512/4096
+         Rotational Speed: 7200
+         Firmware Revision: HPD4
+         Serial Number: SIMH0003
+         WWID: 5000C50030000003
+         Model: HP      MB6000JVYZD
+         Current Temperature (C): 33
+         Maximum Temperature (C): 44
+         PHY Count: 2
+         PHY Transfer Rate: 12.0Gbps, Unknown
+         PHY Physical Link Rate: 12.0Gbps, Unknown
+         PHY Maximum Link Rate: 12.0Gbps, 12.0Gbps
+         Drive Authentication Status: OK
+         Carrier Application Version: 11
+         Carrier Bootloader Version: 6
+         Sanitize Erase Supported: True
+         Sanitize Estimated Max Erase Time: 11 hour(s), 40 minute(s) 
+         Unrestricted Sanitize Supported: True
+         Shingled Magnetic Recording Support: None
+         Drive Unique ID: 5000C50040000003
+         Multi-Actuator Drive: False
+
+
+   Array E
+
+      physicaldrive 2I:2:2
+         Port: 2I
+         Box: 2
+         Bay: 2
+         Status: OK
+         Drive Type: Data Drive
+         Interface Type: SAS
+         Size: 6 TB
+         Drive exposed to OS: False
+         Logical/Physical Block Size: 512/4096
+         Rotational Speed: 7200
+         Firmware Revision: HPD4
+         Serial Number: SIMH0004
+         WWID: 5000C50030000004
+         Model: HP      MB6000JVYZD
+         Current Temperature (C): 34
+         Maximum Temperature (C): 45
+         PHY Count: 2
+         PHY Transfer Rate: 12.0Gbps, Unknown
+         PHY Physical Link Rate: 12.0Gbps, Unknown
+         PHY Maximum Link Rate: 12.0Gbps, 12.0Gbps
+         Drive Authentication Status: OK
+         Carrier Application Version: 11
+         Carrier Bootloader Version: 6
+         Sanitize Erase Supported: True
+         Sanitize Estimated Max Erase Time: 11 hour(s), 40 minute(s) 
+         Unrestricted Sanitize Supported: True
+         Shingled Magnetic Recording Support: None
+         Drive Unique ID: 5000C50040000004
+         Multi-Actuator Drive: False
