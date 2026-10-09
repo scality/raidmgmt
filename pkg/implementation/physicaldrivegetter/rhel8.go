@@ -2,6 +2,8 @@
 package physicaldrivegetter
 
 import (
+	"bytes"
+	"encoding/json"
 	"regexp"
 	"strconv"
 	"strings"
@@ -249,6 +251,7 @@ func (r *RHEL8) getBlockDevice(devicePath string) (*BlockDevice, error) {
 		"--paths",
 		"--bytes",
 		"--nodeps",
+		"--json",
 		"--output",
 		"name,rota,size,type,tran,mountpoint,fstype,parttype,pkname",
 	})
@@ -271,6 +274,7 @@ func (r *RHEL8) getBlockDevice(devicePath string) (*BlockDevice, error) {
 func (r *RHEL8) listBlockDevices() ([]BlockDevice, error) {
 	output, err := r.LSBLK.Run([]string{
 		"--list",
+		"--json",
 		"--paths",
 		"--bytes",
 		"--output",
@@ -314,63 +318,104 @@ func ParseUDevADMOutput(output []byte) (*physicaldrive.PhysicalDrive, error) {
 	return physicalDrive, nil
 }
 
-//nolint:gocognit,cyclop,funlen // Parser functions are complicated by essence.
+type (
+	// lsblkOutput is the document printed by `lsblk --json`.
+	lsblkOutput struct {
+		BlockDevices []lsblkDevice `json:"blockdevices"`
+	}
+
+	// lsblkDevice is one entry of `lsblk --json --list` or `lsblk --json --nodeps`.
+	lsblkDevice struct {
+		Name       lsblkValue `json:"name"`
+		Rota       lsblkValue `json:"rota"`
+		Size       lsblkValue `json:"size"`
+		Type       lsblkValue `json:"type"`
+		Tran       lsblkValue `json:"tran"`
+		MountPoint lsblkValue `json:"mountpoint"`
+		FSType     lsblkValue `json:"fstype"`
+		PartType   lsblkValue `json:"parttype"`
+		PKName     lsblkValue `json:"pkname"`
+	}
+
+	// lsblkValue is a JSON scalar read as a string, whatever its JSON type.
+	//
+	// The JSON value types depend on the util-linux version: 2.32 (RHEL 8) prints
+	// every value as a string ("rota": "1", "size": "1000"), while 2.37 (RHEL 9)
+	// prints booleans and numbers ("rota": true, "size": 1000). Both print null
+	// for an empty cell.
+	lsblkValue string
+)
+
+// UnmarshalJSON reads a JSON string as is, null as "", and any other scalar
+// (number, boolean) as its literal text.
+func (v *lsblkValue) UnmarshalJSON(data []byte) error {
+	switch {
+	case bytes.Equal(data, []byte("null")):
+		*v = ""
+	case len(data) > 0 && data[0] == '"':
+		var s string
+		if err := json.Unmarshal(data, &s); err != nil {
+			return errors.Wrap(err, "failed to unmarshal lsblk string value")
+		}
+
+		*v = lsblkValue(s)
+	default:
+		*v = lsblkValue(data)
+	}
+
+	return nil
+}
+
+// rotational returns the ROTA column as "0" or "1", whether lsblk printed it as
+// a string or as a boolean.
+func (v lsblkValue) rotational() string {
+	switch v {
+	case "true":
+		return "1"
+	case "false":
+		return "0"
+	default:
+		return string(v)
+	}
+}
+
+// ParseLSBLKOutput parses the output of `lsblk --json` run with the
+// name,rota,size,type,tran,mountpoint,fstype,parttype,pkname columns.
+// Devices that are neither disks nor partitions are dropped.
 func ParseLSBLKOutput(output []byte) ([]BlockDevice, error) {
-	lines := strings.Split(string(output), "\n")
-	//nolint:mnd // No need for a constant here.
-	if len(lines) < 2 { // Check if there's at least a header and one device
+	if len(bytes.TrimSpace(output)) == 0 {
 		return nil, nil
 	}
 
-	header := strings.Fields(lines[0]) // Split the header line
+	var parsed lsblkOutput
+	if err := json.Unmarshal(output, &parsed); err != nil {
+		return nil, errors.Wrap(err, "failed to unmarshal lsblk json output")
+	}
+
 	devices := []BlockDevice{}
 
-	for _, line := range lines[1:] { // Skip the header line
-		line = strings.TrimSpace(line) // remove leading/trailing spaces
-		if line == "" {                // skip empty lines
-			continue
-		}
-
-		fields := strings.Fields(line)
-
-		device := BlockDevice{}
-
-		for i, field := range fields {
-			if header[i] != "" && len(header) > i {
-				switch header[i] {
-				case "NAME":
-					device.DevicePath = field
-				case "SIZE":
-					size, err := strconv.ParseUint(field, 10, 64)
-					if err != nil {
-						return nil, errors.Wrap(err, "failed to parse size")
-					}
-
-					device.Size = size
-				case "ROTA":
-					device.Rotational = field
-				case "TYPE":
-					device.Type = field
-				case "TRAN":
-					device.Tran = field
-				case "MOUNTPOINT":
-					device.MountPoint = field
-				case "FSTYPE":
-					device.FileSystemType = field
-				case "PARTTYPE":
-					device.PartitionType = field
-				case "PKNAME":
-					device.ParentKernelName = field
-				}
-			}
-		}
-
+	for _, d := range parsed.BlockDevices {
 		// Skip non-disk and non-part devices
-		if device.Type != diskDeviceType && device.Type != partitionDeviceType {
+		if d.Type != diskDeviceType && d.Type != partitionDeviceType {
 			continue
 		}
 
-		devices = append(devices, device)
+		size, err := strconv.ParseUint(string(d.Size), 10, 64)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to parse size of %s", d.Name)
+		}
+
+		devices = append(devices, BlockDevice{
+			DevicePath:       string(d.Name),
+			Size:             size,
+			Rotational:       d.Rota.rotational(),
+			Type:             string(d.Type),
+			Tran:             string(d.Tran),
+			MountPoint:       string(d.MountPoint),
+			PartitionType:    string(d.PartType),
+			FileSystemType:   string(d.FSType),
+			ParentKernelName: string(d.PKName),
+		})
 	}
 
 	return devices, nil
