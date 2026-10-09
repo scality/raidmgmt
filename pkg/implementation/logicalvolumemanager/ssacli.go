@@ -20,6 +20,10 @@ const (
 	ssacliArrayIDRegexpPattern           = `Array\s+(\w+)`
 
 	ssacliMinMatches = 2
+
+	ssacliCmdController = "controller"
+	// ssacliForcedFlag bypasses ssacli warnings and confirmation prompts.
+	ssacliForcedFlag = "forced"
 )
 
 type SSACLI struct {
@@ -79,13 +83,13 @@ func (s *SSACLI) CreateLV(request *logicalvolume.Request) (*logicalvolume.Logica
 
 	// Create the logical volume
 	args := []string{
-		"controller",
+		ssacliCmdController,
 		"slot=" + strconv.Itoa(request.CtrlMetadata.ID),
 		"create",
 		"type=ld",
 		"drives=" + drives,
 		"raid=" + raidLevel,
-		"forced", // To bypass the warning and confirmation prompt
+		ssacliForcedFlag, // To bypass the warning and confirmation prompt
 	}
 
 	_, err = s.SSACLI.Run(args)
@@ -96,7 +100,7 @@ func (s *SSACLI) CreateLV(request *logicalvolume.Request) (*logicalvolume.Logica
 	// Find the new logical drive using the controller config
 	// Get the controller config to get the physical drives metadata and RAID level
 	args = []string{
-		"controller",
+		ssacliCmdController,
 		"slot=" + strconv.Itoa(request.CtrlMetadata.ID),
 		"show",
 		"config",
@@ -118,12 +122,12 @@ func (s *SSACLI) CreateLV(request *logicalvolume.Request) (*logicalvolume.Logica
 // DeleteLV deletes a logical volume.
 func (s *SSACLI) DeleteLV(metadata *logicalvolume.Metadata) error {
 	args := []string{
-		"controller",
+		ssacliCmdController,
 		"slot=" + strconv.Itoa(metadata.CtrlMetadata.ID),
 		"logicaldrive",
 		metadata.ID,
 		"delete",
-		"forced", // To bypass the warning message
+		ssacliForcedFlag, // To bypass the warning message
 	}
 
 	_, err := s.SSACLI.Run(args)
@@ -209,7 +213,7 @@ func (s *SSACLI) findNewLogicalDrive(
 // getArrayID gets the array ID of the logical volume.
 func (s *SSACLI) getArrayID(metadata *logicalvolume.Metadata) (string, error) {
 	args := []string{
-		"controller",
+		ssacliCmdController,
 		"slot=" + strconv.Itoa(metadata.CtrlMetadata.ID),
 		"logicaldrive",
 		metadata.ID,
@@ -240,13 +244,13 @@ func (s *SSACLI) migrateArray(
 	action string,
 ) error {
 	args := []string{
-		"controller",
+		ssacliCmdController,
 		"slot=" + strconv.Itoa(lvMetadata.CtrlMetadata.ID),
 		"array",
 		arrayID,
 		action,
 		"drives=" + formatDrives(pdsMetadata),
-		"forced", // To bypass the warning
+		ssacliForcedFlag, // To bypass the warning
 	}
 
 	_, err := s.SSACLI.Run(args)

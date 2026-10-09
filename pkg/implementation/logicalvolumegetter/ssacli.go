@@ -26,6 +26,9 @@ const (
 	ssacliPhysicalDriveConfigRegexpPattern = `physicaldrive\s+.+?\s+\(port\s+(.+?):box\s+(.+?):bay\s+(.+?),.*\)` // nolint: lll // This is a regexp
 
 	ssacliMinStringMatches = 2
+
+	ssacliCmdController = "controller"
+	ssacliCmdShow       = "show"
 )
 
 type SSACLI struct {
@@ -59,11 +62,11 @@ func (s *SSACLI) LogicalVolumes(metadata *raidcontroller.Metadata) (
 	error,
 ) {
 	args := []string{
-		"controller",
+		ssacliCmdController,
 		"slot=" + strconv.Itoa(metadata.ID),
 		"logicaldrive",
 		"all",
-		"show",
+		ssacliCmdShow,
 		"detail",
 	}
 
@@ -84,9 +87,9 @@ func (s *SSACLI) LogicalVolumes(metadata *raidcontroller.Metadata) (
 
 	// Get the controller config to get the physical drives metadata and RAID level
 	args = []string{
-		"controller",
+		ssacliCmdController,
 		"slot=" + strconv.Itoa(metadata.ID),
-		"show",
+		ssacliCmdShow,
 		"config",
 	}
 
@@ -114,11 +117,11 @@ func (s *SSACLI) LogicalVolume(metadata *logicalvolume.Metadata) (
 	error,
 ) {
 	args := []string{
-		"controller",
+		ssacliCmdController,
 		"slot=" + strconv.Itoa(metadata.CtrlMetadata.ID),
 		"logicaldrive",
 		metadata.ID,
-		"show",
+		ssacliCmdShow,
 		"detail",
 	}
 
@@ -136,9 +139,9 @@ func (s *SSACLI) LogicalVolume(metadata *logicalvolume.Metadata) (
 
 	// Get the controller config to get the physical drives metadata and RAID level
 	args = []string{
-		"controller",
+		ssacliCmdController,
 		"slot=" + strconv.Itoa(metadata.CtrlMetadata.ID),
-		"show",
+		ssacliCmdShow,
 		"config",
 	}
 

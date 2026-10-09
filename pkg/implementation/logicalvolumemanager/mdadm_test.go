@@ -422,7 +422,8 @@ func TestMDADM_DeleteLV_GetLVError(t *testing.T) {
 
 	// Mock logical volume retrieval with error
 	mockLogicalVolumeGetter.On("LogicalVolume", &logicalvolume.Metadata{ID: "/dev/md/testlv"}).Return(
-		(*logicalvolume.LogicalVolume)(nil), errors.New("logical volume not found"))
+		(*logicalvolume.LogicalVolume)(nil), errors.New("logical volume not found"),
+	)
 
 	err := mdadm.DeleteLV(&logicalvolume.Metadata{ID: "/dev/md/testlv"})
 	assert.NotNil(t, err)

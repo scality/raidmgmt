@@ -19,6 +19,8 @@ import (
 const (
 	mdadmDeviceNameRegexPattern = "(.*_[0-9])"
 
+	mdadmDetailFlag = "--detail"
+
 	mdadmMatchDeviceRegexpPattern  = `MD_DEVICE_(.*)_(ROLE|DEV)=(.*)`
 	mdadmMatchDeviceRegexpPattern2 = `MD_LEVEL`
 )
@@ -81,7 +83,7 @@ func (m *MDADM) LogicalVolumes(
 ) ([]*logicalvolume.LogicalVolume, error) {
 	// List existing logical volumes
 	output, err := m.MDADM.Run([]string{
-		"--detail",
+		mdadmDetailFlag,
 		"--scan",
 		"--export", // Export to get a key=value format output
 	})
@@ -149,7 +151,7 @@ func (m *MDADM) LogicalVolume(
 
 	// Get the details of the logical volume
 	output, err := m.MDADM.Run([]string{
-		"--detail",
+		mdadmDetailFlag,
 		devicePath,
 		"--export", // Export to get a key=value format output
 	})
@@ -193,7 +195,7 @@ func (m *MDADM) getLogicalVolumeStatusAndSize(devicePath string) (
 	error,
 ) {
 	output, err := m.MDADM.Run([]string{
-		"--detail",
+		mdadmDetailFlag,
 		devicePath,
 	})
 	if err != nil {
