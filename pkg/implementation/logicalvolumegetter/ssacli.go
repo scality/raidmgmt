@@ -69,6 +69,11 @@ func (s *SSACLI) LogicalVolumes(metadata *raidcontroller.Metadata) (
 
 	output, err := s.SSACLI.Run(args)
 	if err != nil {
+		// A controller with no logical drive is an empty inventory, not a failure.
+		if errors.Is(err, commandrunner.ErrNoLogicalDrives) {
+			return []*logicalvolume.LogicalVolume{}, nil
+		}
+
 		return nil, errors.Wrap(err, "failed to show all logical drives details")
 	}
 

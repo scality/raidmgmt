@@ -51,35 +51,11 @@ type (
 	}
 )
 
-// String returns the string representation of the Slot instance.
+// String renders the slot as the address its controller CLI uses, missing parts
+// left out: port:enclosure:bay for ssacli, enclosure:bay for storcli2 and
+// megaraid. ParseSlot reads both forms back, so a rendered slot serves as a
+// drive ID. Software RAID has no slot, it addresses a drive by its device path.
 func (s *Slot) String() string {
-	if s == nil {
-		return nilSlot
-	}
-
-	var parts []string
-
-	if s.Enclosure != "" {
-		parts = append(parts, s.Enclosure)
-	}
-
-	if s.Bay != "" {
-		parts = append(parts, s.Bay)
-	}
-
-	if s.Port != "" {
-		parts = append(parts, s.Port)
-	}
-
-	str := strings.Join(parts, ":")
-	if str == "" {
-		return emptySlot
-	}
-
-	return str
-}
-
-func (s *Slot) Format() string {
 	if s == nil {
 		return nilSlot
 	}

@@ -174,7 +174,11 @@ func unavailableDrives(pds []*physicaldrive.PhysicalDrive) []string {
 	for _, pd := range pds {
 		// Check if the physical drive is available
 		if !pd.IsAvailable() {
-			unavailableDrives = append(unavailableDrives, pd.Slot.String())
+			// The ID rather than the slot: every adapter fills it with the
+			// address its own CLI takes back, EID:Slt for storcli2 and
+			// megaraid, port:box:bay for ssacli, and the device path for
+			// software RAID, which has no slot at all.
+			unavailableDrives = append(unavailableDrives, pd.ID)
 		}
 	}
 
