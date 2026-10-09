@@ -51,7 +51,7 @@ linters:
     - usestdlibvars
     - whitespace
     - wrapcheck
-    - wsl
+    - wsl_v5
   settings:
     cyclop:
       max-complexity: 10
@@ -388,7 +388,6 @@ linters:
 issues:
   max-issues-per-linter: 0
   max-same-issues: 0
-  fix: true
 severity:
   default: warning
 formatters:
@@ -397,7 +396,8 @@ formatters:
     - goimports
   settings:
     gofumpt:
-      extra-rules: true
+      extra:
+        group-params: true
   exclusions:
     generated: lax
     paths:
