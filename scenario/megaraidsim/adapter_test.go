@@ -1,6 +1,7 @@
 package megaraidsim_test
 
 import (
+	"encoding/json"
 	"strings"
 	"testing"
 
@@ -83,5 +84,44 @@ func TestNewRejectsUnreplayedChange(t *testing.T) {
 
 	if _, err := megaraidsim.New(s, 0); err == nil || !strings.Contains(err.Error(), "not replayed") {
 		t.Fatalf("want a not replayed error, got %v", err)
+	}
+}
+
+// TestDriveGroupIsNumeric checks that a drive group is written as storcli
+// prints it: a number, or "-" for an unconfigured drive.
+func TestDriveGroupIsNumeric(t *testing.T) {
+	s, err := scenario.Load("megaraid-disk-failure")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for phase, want := range map[int]any{2: "-", 3: float64(2)} {
+		ctrl, err := megaraidsim.New(s, phase)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		out, err := ctrl.Run([]string{"/c0/e251/s3", "show", "all"})
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		var data struct {
+			Drive []map[string]any `json:"Drive /c0/e251/s3"`
+		}
+		if err := json.Unmarshal(out.Controllers[0].ResponseData, &data); err != nil {
+			t.Fatal(err)
+		}
+
+		if got := data.Drive[0]["DG"]; got != want {
+			t.Errorf("%s: DG is %#v, want %#v", s.Phases[phase].Name, got, want)
+		}
+	}
+
+	group := "two"
+	s.Phases[0].Changes.Drives = map[string]scenario.DriveChange{"251:3": {Group: &group}}
+
+	if _, err := megaraidsim.New(s, 0); err == nil {
+		t.Fatal("want an error for a group that is not a number")
 	}
 }

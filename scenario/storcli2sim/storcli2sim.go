@@ -142,22 +142,8 @@ func (c *Controller) loadCapture() error {
 
 func (c *Controller) apply(changes scenario.Changes) error {
 	for slot, change := range changes.Drives {
-		d, ok := c.drives[slot]
-		if !ok {
-			return errors.Errorf("unknown drive %s", slot)
-		}
-
-		if change.DeviceID != nil {
-			return errors.Errorf("drive %s: deviceID is not replayed for storcli2", slot)
-		}
-
-		set(&d.state, change.State)
-		set(&d.status, change.Status)
-		set(&d.serial, change.Serial)
-		set(&d.wwn, change.WWN)
-
-		if change.Group != nil {
-			d.group = *change.Group
+		if err := c.applyDrive(slot, change); err != nil {
+			return err
 		}
 	}
 
@@ -172,6 +158,33 @@ func (c *Controller) apply(changes scenario.Changes) error {
 		set(&v.deleted, change.Deleted)
 		set(&v.device, change.Device)
 		set(&v.wwn, change.WWN)
+	}
+
+	return nil
+}
+
+func (c *Controller) applyDrive(slot string, change scenario.DriveChange) error {
+	d, ok := c.drives[slot]
+	if !ok {
+		return errors.Errorf("unknown drive %s", slot)
+	}
+
+	if change.DeviceID != nil {
+		return errors.Errorf("drive %s: deviceID is not replayed for storcli2", slot)
+	}
+
+	set(&d.state, change.State)
+	set(&d.status, change.Status)
+	set(&d.serial, change.Serial)
+	set(&d.wwn, change.WWN)
+
+	if change.Group != nil {
+		group, err := scenario.NumericGroup(*change.Group)
+		if err != nil {
+			return errors.Wrapf(err, "drive %s", slot)
+		}
+
+		d.group = group
 	}
 
 	return nil

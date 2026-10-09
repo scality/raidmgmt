@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"path"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -155,6 +156,24 @@ func (s *Scenario) validate() error {
 	}
 
 	return nil
+}
+
+// NoGroup is the group of a drive that belongs to no drive group.
+const NoGroup = "-"
+
+// NumericGroup returns a drive group as storcli prints it: a number, or the
+// string "-" for a drive in no group.
+func NumericGroup(group string) (any, error) {
+	if group == NoGroup {
+		return group, nil
+	}
+
+	n, err := strconv.Atoi(group)
+	if err != nil {
+		return nil, errors.Errorf("group %q is neither a number nor %q", group, NoGroup)
+	}
+
+	return n, nil
 }
 
 // List returns the names of the scenarios played on the given controller.

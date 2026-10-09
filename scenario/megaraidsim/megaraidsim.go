@@ -202,23 +202,8 @@ func (c *Controller) loadCapture() error {
 
 func (c *Controller) apply(changes scenario.Changes) error {
 	for slot, change := range changes.Drives {
-		d, ok := c.drives[slot]
-		if !ok {
-			return errors.Errorf("unknown drive %s", slot)
-		}
-
-		// MegaRAID reports a single drive state.
-		if change.Status != nil {
-			return errors.Errorf("drive %s: status is not replayed for megaraid, use state", slot)
-		}
-
-		set(&d.state, change.State)
-		set(&d.serial, change.Serial)
-		set(&d.wwn, change.WWN)
-		set(&d.deviceID, change.DeviceID)
-
-		if change.Group != nil {
-			d.group = *change.Group
+		if err := c.applyDrive(slot, change); err != nil {
+			return err
 		}
 	}
 
@@ -233,6 +218,34 @@ func (c *Controller) apply(changes scenario.Changes) error {
 		set(&v.deleted, change.Deleted)
 		set(&v.device, change.Device)
 		set(&v.wwn, change.WWN)
+	}
+
+	return nil
+}
+
+func (c *Controller) applyDrive(slot string, change scenario.DriveChange) error {
+	d, ok := c.drives[slot]
+	if !ok {
+		return errors.Errorf("unknown drive %s", slot)
+	}
+
+	// MegaRAID reports a single drive state.
+	if change.Status != nil {
+		return errors.Errorf("drive %s: status is not replayed for megaraid, use state", slot)
+	}
+
+	set(&d.state, change.State)
+	set(&d.serial, change.Serial)
+	set(&d.wwn, change.WWN)
+	set(&d.deviceID, change.DeviceID)
+
+	if change.Group != nil {
+		group, err := scenario.NumericGroup(*change.Group)
+		if err != nil {
+			return errors.Wrapf(err, "drive %s", slot)
+		}
+
+		d.group = group
 	}
 
 	return nil

@@ -1,6 +1,7 @@
 package storcli2sim_test
 
 import (
+	"encoding/json"
 	"strings"
 	"testing"
 
@@ -81,5 +82,52 @@ func TestNewRejectsUnreplayedChange(t *testing.T) {
 
 	if _, err := storcli2sim.New(s, 0); err == nil || !strings.Contains(err.Error(), "not replayed") {
 		t.Fatalf("want a not replayed error, got %v", err)
+	}
+}
+
+// TestDriveGroupIsNumeric checks that a drive group is written as storcli2
+// prints it: a number, or "-" for an unconfigured drive.
+func TestDriveGroupIsNumeric(t *testing.T) {
+	s, err := scenario.Load("storcli2-disk-failure")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for phase, want := range map[int]any{2: "-", 3: float64(2)} {
+		ctrl, err := storcli2sim.New(s, phase)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		out, err := ctrl.Run([]string{"/c0/eall/sall", "show", "all"})
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		var doc struct {
+			Controllers []struct {
+				ResponseData struct {
+					Drives []struct {
+						Information map[string]any `json:"Drive Information"`
+					} `json:"Drives List"`
+				} `json:"Response Data"`
+			}
+		}
+		if err := json.Unmarshal(out, &doc); err != nil {
+			t.Fatal(err)
+		}
+
+		for _, d := range doc.Controllers[0].ResponseData.Drives {
+			if d.Information["EID:Slt"] == "306:2" && d.Information["DG"] != want {
+				t.Errorf("%s: DG is %#v, want %#v", s.Phases[phase].Name, d.Information["DG"], want)
+			}
+		}
+	}
+
+	group := "two"
+	s.Phases[0].Changes.Drives = map[string]scenario.DriveChange{"306:2": {Group: &group}}
+
+	if _, err := storcli2sim.New(s, 0); err == nil {
+		t.Fatal("want an error for a group that is not a number")
 	}
 }
