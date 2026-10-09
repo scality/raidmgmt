@@ -32,16 +32,6 @@ phases:
     description: |
       251:3 fails. Its RAID0 volume goes offline and is no longer a block
       device. The other drives must keep their paths.
-    knownBug:
-      ticket: ARTESCA-17960
-      # One volume whose path cannot be resolved fails the listing of all the
-      # volumes of the controller, so no drive gets a path.
-      reported: |
-        slot    status  serial                devicePath  permanentPath
-        251:1   Used    SIMD0001000000000000  -           -
-        251:2   Used    SIMD0002000000000000  -           -
-        251:3   Failed  SIMD0003              -           -
-        251:4   Used    SIMD0004000000000000  -           -
     changes:
       drives:
         "251:3": {state: Failed, serial: SIMD0003}
