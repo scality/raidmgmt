@@ -23,6 +23,7 @@ lint:
 tests:
 	@echo "Running tests..."
 	go test -v ./...
+	cd scenario && go test -v ./...
 	@echo "Tests done"
 
 # Build the on-hardware integration harnesses as static linux/amd64 binaries
