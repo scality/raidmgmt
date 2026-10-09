@@ -32,7 +32,8 @@ Key characteristics:
 - Error handling uses `github.com/pkg/errors` (`errors.Wrap`/`Wrapf`/`New`) and
   package-level sentinel errors (e.g. `core.ErrInvalidRAIDControllerMetadata`,
   `ports.ErrFunctionNotSupportedByImplementation`).
-- Tests use `testify` with `mockery`-generated mocks; expect table-driven tests
+- Tests use `testify` with `mockery` v3-generated mocks (configured in
+  `.mockery.yml`, regenerate with `go generate ./...`); expect table-driven tests
   and `testdata/` fixtures.
 - Linting is enforced via `.golangci.yaml`; CI is in `.github/workflows/`.
 - No Scality internal git dependencies — all modules are public.

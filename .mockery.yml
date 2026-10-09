@@ -1,0 +1,10 @@
+template: testify
+dir: "{{.InterfaceDir}}/mocks"
+pkgname: mocks
+structname: "{{.InterfaceName}}"
+filename: "{{.InterfaceName}}.go"
+packages:
+  github.com/scality/raidmgmt/pkg/implementation/raidcontroller/megaraid:
+    interfaces:
+      PathResolver: {}
+      Runner: {}
