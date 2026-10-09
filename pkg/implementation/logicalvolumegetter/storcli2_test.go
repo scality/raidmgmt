@@ -103,6 +103,33 @@ func TestStorCLI2LogicalVolumesDegraded(t *testing.T) {
 	assert.Len(t, vol.PDrivesMetadata, 2)
 }
 
+// TestStorCLI2LogicalVolumesOffline covers the offline RAID0 volume of a failed
+// drive: storcli2 may still report its NAA Id and a stale OS drive name, but it
+// is not exposed to the OS, so it has no block device and no by-id link, and is
+// returned without paths.
+func TestStorCLI2LogicalVolumesOffline(t *testing.T) {
+	t.Parallel()
+
+	const payload = `{"Controllers":[{"Command Status":{"Status":"Success"},` +
+		`"Response Data":{"Virtual Drives":[{` +
+		`"VD Info":{"DG/VD":"2/3","TYPE":"RAID0","State":"OfLn","CurrentCache":"NR,WB",` +
+		`"Size":"9.094 TiB"},` +
+		`"PDs":[{"EID:Slt":"306:2"}],` +
+		`"VD Properties":{"Exposed to OS":"No","OS Drive Name":"/dev/sdd",` +
+		`"SCSI NAA Id":"600062b22066d54069faf46bb0b9be3a"}}]}}]}`
+
+	mockRunner := new(MockCommandRunner)
+	mockRunner.On("Run", []string{"/c0/vall", "show", "all"}).Return([]byte(payload), nil)
+
+	volumes, err := NewStorCLI2(mockRunner).LogicalVolumes(&raidcontroller.Metadata{ID: 0})
+	require.NoError(t, err)
+	require.Len(t, volumes, 1)
+
+	assert.Equal(t, logicalvolume.LVStatusFailed, volumes[0].Status)
+	assert.Empty(t, volumes[0].DevicePath)
+	assert.Empty(t, volumes[0].PermanentPath)
+}
+
 func TestStorCLI2LogicalVolume(t *testing.T) {
 	t.Parallel()
 
@@ -351,22 +378,27 @@ func TestStorCLI2PermanentPath(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name     string
-		naaID    string
-		expected string
+		name        string
+		naaID       string
+		exposedToOS string
+		expected    string
 	}{
-		{"empty", "", ""},
-		{"whitespace only", "   ", ""},
-		{"plain", "600062b22066d54069faf124ced57e62", "/dev/disk/by-id/wwn-0x600062b22066d54069faf124ced57e62"},
-		{"trimmed", " abc ", "/dev/disk/by-id/wwn-0xabc"},
+		{"empty", "", "Yes", ""},
+		{"whitespace only", "   ", "Yes", ""},
+		{"plain", "600062b22066d54069faf124ced57e62", "Yes", "/dev/disk/by-id/wwn-0x600062b22066d54069faf124ced57e62"},
+		{"trimmed", " abc ", "Yes", "/dev/disk/by-id/wwn-0xabc"},
 		// udev wwn- links are lowercase; the firmware is case-inconsistent.
-		{"uppercase id is lowercased", "600062B22066D540", "/dev/disk/by-id/wwn-0x600062b22066d540"},
+		{"uppercase id is lowercased", "600062B22066D540", "Yes", "/dev/disk/by-id/wwn-0x600062b22066d540"},
+		// A volume not exposed to the OS has no by-id link.
+		{"not exposed to the OS", "600062b22066d54069faf124ced57e62", "No", ""},
+		// Older storcli2 versions may not report the field.
+		{"exposure not reported", "600062b22066d54069faf124ced57e62", "", "/dev/disk/by-id/wwn-0x600062b22066d54069faf124ced57e62"},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			assert.Equal(t, tt.expected, permanentPath(tt.naaID))
+			assert.Equal(t, tt.expected, permanentPath(storcli2VDProperties{SCSINAAID: tt.naaID, ExposedToOS: tt.exposedToOS}))
 		})
 	}
 }
