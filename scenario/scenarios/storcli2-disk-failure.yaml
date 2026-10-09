@@ -29,17 +29,6 @@ phases:
     description: |
       306:2 fails. Its RAID0 volume goes offline and is no longer a block
       device. The other drives must keep their paths.
-    knownBug:
-      ticket: ARTESCA-17960
-      # The healthy drives keep their paths, but the permanent path of the
-      # offline volume is still built from its NAA Id, although the volume
-      # has no block device and no by-id link.
-      reported: |
-        slot   status  serial                devicePath  permanentPath
-        306:0  Used    SIMD2001000000000000  /dev/sdb    /dev/disk/by-id/wwn-0x600062b2000000000000000000000001
-        306:1  Used    SIMD2002000000000000  /dev/sdc    /dev/disk/by-id/wwn-0x600062b2000000000000000000000002
-        306:2  Failed  SIMD2003000000000000  -           /dev/disk/by-id/wwn-0x600062b2000000000000000000000003
-        306:3  Used    SIMD2004000000000000  /dev/sde    /dev/disk/by-id/wwn-0x600062b2000000000000000000000004
     changes:
       drives:
         "306:2": {status: Failed}
