@@ -17,6 +17,10 @@ const (
 	nilSlot   string = "<nil>"
 )
 
+// ErrNoPermanentPath is returned by ComputePaths when no by-id link of the
+// drive exists.
+var ErrNoPermanentPath = errors.New("failed to compute permanent path")
+
 type (
 	// PhysicalDrive represents a physical drive.
 	PhysicalDrive struct {
@@ -130,7 +134,7 @@ func (pd *PhysicalDrive) ComputePaths() error {
 		}
 
 		if pd.PermanentPath == "" {
-			return errors.New("failed to compute permanent path")
+			return ErrNoPermanentPath
 		}
 	}
 

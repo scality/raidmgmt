@@ -2,6 +2,7 @@ package physicaldrivegetter
 
 import (
 	"fmt"
+	"io/fs"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -238,13 +239,30 @@ func parseDrive(entry storcli2DrivesListEntry, ctrl *raidcontroller.Metadata) (
 	// missing) may have lost its device node and must not fail the whole
 	// inventory. ComputePaths reads the real filesystem (utils.FileExists), so
 	// the healthy-JBOD path is exercised on hardware rather than in unit tests.
+	//
+	// A drive whose udev by-id link or device node is missing (e.g. not
+	// settled yet) must not drop the drive and abort discovery for the whole
+	// controller: keep it with empty paths instead. Any other failure, such
+	// as a permission error, is still an error: ignoring it would silently
+	// blank the paths of every JBOD drive.
 	if physicalDrive.JBOD && physicalDrive.Status == physicaldrive.PDStatusUsed {
 		if err := physicalDrive.ComputePaths(); err != nil {
-			return nil, errors.Wrap(err, "failed to compute paths")
+			if !isPathMissing(err) {
+				return nil, errors.Wrapf(err, "failed to resolve the paths of drive %s", info.EIDSlot)
+			}
+
+			physicalDrive.DevicePath = ""
+			physicalDrive.PermanentPath = ""
 		}
 	}
 
 	return physicalDrive, nil
+}
+
+// isPathMissing tells whether a ComputePaths error means that the drive has
+// no by-id link, or a link to a device node that is gone.
+func isPathMissing(err error) bool {
+	return errors.Is(err, physicaldrive.ErrNoPermanentPath) || errors.Is(err, fs.ErrNotExist)
 }
 
 // storcli2SelectorPD builds the storcli2 selector for a drive, choosing the
