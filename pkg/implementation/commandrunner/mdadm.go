@@ -29,6 +29,11 @@ func NewMDADM(path *string) *MDADM {
 	}
 }
 
+// CommandPath returns the path of the mdadm binary this runner invokes.
+func (m *MDADM) CommandPath() string {
+	return m.cliPath
+}
+
 func (m *MDADM) Run(args []string) ([]byte, error) {
 	cmd := MDADMExecCommand(m.cliPath, args...)
 

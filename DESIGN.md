@@ -253,3 +253,37 @@ This adapter has the following limitations compared to hardware RAID:
 The `core.RAIDController` wraps any adapter and adds input validation before
 delegating to the underlying implementation. This is the recommended entry
 point for consumers of the library.
+
+## Command Logging
+
+Every host mutation and every inventory read this library performs is a vendor
+CLI invocation behind a `commandrunner.CommandRunner`, which makes that
+interface the one place where all executed commands can be observed.
+
+Logging is therefore a **decorator** on that port rather than a concern spread
+across the adapters: `commandrunner.Logging` wraps any `CommandRunner`, records
+the invocation on an `slog.Logger` (`log/slog`, no new dependency), and returns
+the wrapped runner's output and error unchanged. It is opt-in -- a consumer
+that wants a command log injects the decorated runner where it would have
+injected the concrete one -- and it covers new runners and new adapters for
+free, since they all sit behind the same port.
+
+Design notes:
+
+- One record per invocation, at `slog.LevelInfo` by default
+  (`commandrunner.WithLevel` lowers it) and at `slog.LevelError` on failure.
+  `commandrunner.ErrNoLogicalDrives` reports an empty inventory rather than a
+  failure, so it stays at the success level.
+- The record carries the binary, the arguments, the duration and, on failure,
+  the error. The **output is never logged**: vendor payloads carry drive
+  serials and other identifying data, so only its size is recorded.
+- The arguments are the ones the adapter asked for. A runner that appends flags
+  of its own (the storcli2/perccli2 JSON output flag) does so after the
+  decorator has seen them, so they are absent from the record.
+- Runners report the binary they invoke through `CommandPath()`, so a record
+  names the tool that ran; the decorator forwards its wrapped runner's path,
+  and falls back to the runner's type for a runner without one (a test mock).
+- The legacy `megaraid.Runner` returns parsed output instead of bytes, so it
+  cannot share the decorator. `megaraid.LoggingRunner` decorates it in the same
+  way and emits through the same `commandrunner.LogCommand`, keeping one log
+  shape across the library.

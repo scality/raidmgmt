@@ -42,6 +42,11 @@ func NewSSACLI(path *string) *SSACLI {
 	}
 }
 
+// CommandPath returns the path of the ssacli binary this runner invokes.
+func (s *SSACLI) CommandPath() string {
+	return s.cliPath
+}
+
 func (s *SSACLI) Run(args []string) ([]byte, error) {
 	cmd := SSACLIExecCommand(s.cliPath, args...)
 
