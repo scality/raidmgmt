@@ -16,6 +16,7 @@ E2E_BUILD_ENV := CGO_ENABLED=0 GOOS=$(E2E_GOOS) GOARCH=$(E2E_GOARCH)
 lint:
 	@echo "Linting..."
 	golangci-lint run -c .golangci.yaml ./...
+	cd scenario && golangci-lint run -c ../.golangci.yaml ./...
 	@echo "Lint done"
 
 # TODO
@@ -23,6 +24,7 @@ lint:
 tests:
 	@echo "Running tests..."
 	go test -v ./...
+	cd scenario && go test -v ./...
 	@echo "Tests done"
 
 # Build the on-hardware integration harnesses as static linux/amd64 binaries
