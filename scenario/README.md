@@ -6,9 +6,9 @@ without the hardware.
 
 Scenarios are Gherkin features in [`features/`](features), one per
 controller family and story, tagged with the family (`@megaraid`,
-`@storcli2`). The `Background` names the capture of a real controller;
-each `Scenario` plays events on its drives and gives, as a table, the disks
-expected:
+`@storcli2`, `@ssacli`). The `Background` names the capture of a real
+controller; each `Scenario` plays events on its drives and gives, as a
+table, the disks expected:
 
 ```gherkin
 @megaraid
@@ -63,6 +63,8 @@ Feature: MegaRAID disk failure and replacement
   `scenario.Run`.
 - `storcli2sim/adapter_test.go` plays every `@storcli2` scenario through the
   raidmgmt storcli2 adapter.
+- `ssaclisim/adapter_test.go` plays every `@ssacli` scenario (HPE Smart
+  Array) through the raidmgmt ssacli getters.
 - `steps_internal_test.go` checks the steps themselves on the features of
   [`testdata/`](testdata), in particular that they fail when they should.
 
@@ -101,3 +103,9 @@ handling in every backend.
   008.0005). Captured with `storcli2 <selector> show all J` on 24 drives,
   kept to the first 4 (306:0-3, volumes 1-4), with the same fake identifiers
   (drive serials, WWNs and SAS addresses, volume NAA Ids and serials).
+- `ssaclisim/captures/ssacli-4hdd`: HPE Smart Array P816i-a, SAS HDDs each
+  in its own RAID0 array. Captured with `ssacli controller slot=0 ... show
+  detail` and `show config`, kept to 4 drives (1I:1:3, 1I:1:4, 2I:2:1,
+  2I:2:2, logical drives 2-5), with the same fake identifiers (serials,
+  WWIDs, unique identifiers, controller and host serials). ssacli prints
+  text: the backend edits the lines of the captured sections.
