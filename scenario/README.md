@@ -5,9 +5,10 @@ replaced, from real controller output, and check what raidmgmt reports,
 without the hardware.
 
 Scenarios are Gherkin features in [`features/`](features), one per
-controller family and story, tagged with the family (`@megaraid`). The
-`Background` names the capture of a real controller; each `Scenario` plays
-events on its drives and gives, as a table, the disks expected:
+controller family and story, tagged with the family (`@megaraid`,
+`@storcli2`). The `Background` names the capture of a real controller;
+each `Scenario` plays events on its drives and gives, as a table, the disks
+expected:
 
 ```gherkin
 @megaraid
@@ -60,6 +61,8 @@ Feature: MegaRAID disk failure and replacement
 - `megaraidsim/adapter_test.go` plays every `@megaraid` scenario (storcli64)
   through the raidmgmt megaraid adapter of this repository, with
   `scenario.Run`.
+- `storcli2sim/adapter_test.go` plays every `@storcli2` scenario through the
+  raidmgmt storcli2 adapter.
 - `steps_internal_test.go` checks the steps themselves on the features of
   [`testdata/`](testdata), in particular that they fail when they should.
 
@@ -93,3 +96,8 @@ handling in every backend.
   kept to the first 4 (251:1-4, volumes 239-236) to keep scenarios short.
   Serials, WWNs and controller identifiers are replaced by fake ones, also in
   the hex inquiry data; keep it so when adding a capture.
+- `storcli2sim/captures/storcli2-4hdd`: storcli2 controller, SEAGATE
+  ST10000NM018B drives in enclosure 306, one RAID0 volume each (storcli2
+  008.0005). Captured with `storcli2 <selector> show all J` on 24 drives,
+  kept to the first 4 (306:0-3, volumes 1-4), with the same fake identifiers
+  (drive serials, WWNs and SAS addresses, volume NAA Ids and serials).
