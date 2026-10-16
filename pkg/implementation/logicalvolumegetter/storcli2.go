@@ -45,6 +45,10 @@ const (
 	// storcli2PermanentPathPrefix is the /dev/disk/by-id prefix combined with a
 	// virtual drive's SCSI NAA Id to form its permanent path.
 	storcli2PermanentPathPrefix = "/dev/disk/by-id/wwn-0x"
+
+	// storcli2NotExposedToOS is the "Exposed to OS" value of a volume that is
+	// not a block device of the host.
+	storcli2NotExposedToOS = "No"
 )
 
 type (
@@ -84,6 +88,7 @@ type (
 	storcli2VDProperties struct {
 		OSDriveName string `json:"OS Drive Name"`
 		SCSINAAID   string `json:"SCSI NAA Id"`
+		ExposedToOS string `json:"Exposed to OS"`
 	}
 )
 
@@ -221,8 +226,8 @@ func parseVirtualDrive(vd storcli2VirtualDrive, ctrl *raidcontroller.Metadata) (
 		CacheOptions:    parseCacheOptions(vd.Info.CurrentCache),
 		Status:          lvStatus(vd.Info.State),
 		Size:            size,
-		DevicePath:      strings.TrimSpace(vd.Properties.OSDriveName),
-		PermanentPath:   permanentPath(vd.Properties.SCSINAAID),
+		DevicePath:      devicePath(vd.Properties),
+		PermanentPath:   permanentPath(vd.Properties),
 	}, nil
 }
 
@@ -294,12 +299,34 @@ func parseCacheOptions(cache string) *logicalvolume.CacheOptions {
 	return options
 }
 
+// exposedToOS reports whether a volume may be a block device of the host. A
+// volume not exposed to the OS, such as the offline RAID0 volume of a failed
+// drive, has no block device: its OS drive name may be stale and its NAA Id
+// names no by-id link. Older storcli2 versions may not report the field, so
+// only an explicit "No" hides the paths.
+func exposedToOS(props storcli2VDProperties) bool {
+	return strings.TrimSpace(props.ExposedToOS) != storcli2NotExposedToOS
+}
+
+// devicePath is the OS drive name of a virtual drive exposed to the OS.
+func devicePath(props storcli2VDProperties) string {
+	if !exposedToOS(props) {
+		return ""
+	}
+
+	return strings.TrimSpace(props.OSDriveName)
+}
+
 // permanentPath builds the /dev/disk/by-id path of a virtual drive from its
 // SCSI NAA Id. udev "wwn-" links are lowercase hex while the firmware is
-// case-inconsistent across sections, so the id is lowercased. An empty id
-// yields an empty path.
-func permanentPath(naaID string) string {
-	trimmed := strings.TrimSpace(naaID)
+// case-inconsistent across sections, so the id is lowercased. An empty id,
+// or a volume not exposed to the OS, yields an empty path.
+func permanentPath(props storcli2VDProperties) string {
+	if !exposedToOS(props) {
+		return ""
+	}
+
+	trimmed := strings.TrimSpace(props.SCSINAAID)
 	if trimmed == "" {
 		return ""
 	}

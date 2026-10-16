@@ -1,9 +1,11 @@
 package physicaldrivegetter
 
 import (
+	"io/fs"
 	"os"
 	"testing"
 
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -177,6 +179,63 @@ func TestStorCLI2PhysicalDrivesEmptyInventory(t *testing.T) {
 			drives, err := s.PhysicalDrives(&raidcontroller.Metadata{ID: 0})
 			require.NoError(t, err)
 			assert.Empty(t, drives)
+		})
+	}
+}
+
+// TestStorCLI2PhysicalDrivesComputePathsFailureIsNotFatal checks that a healthy
+// JBOD "Used" drive whose identifiers do not resolve to any /dev/disk/by-id
+// link (e.g. the udev link is missing or has not settled yet) makes
+// ComputePaths fail. That must not abort discovery for the whole
+// controller; the drive is kept with empty paths. The fake vendor/serial/WWN
+// below cannot match a real by-id link on the build host, so ComputePaths fails
+// deterministically.
+func TestStorCLI2PhysicalDrivesComputePathsFailureIsNotFatal(t *testing.T) {
+	t.Parallel()
+
+	const payload = `{"Controllers":[{"Command Status":{"Status":"Success"},` +
+		`"Response Data":{"Drives List":[{` +
+		`"Drive Information":{"EID:Slt":"306:4","Model":"ST10000NM018B","Med":"HDD",` +
+		`"Size":"9.094 TiB","State":"JBOD","Status":"Online"},` +
+		`"Drive Detailed Information":{"Vendor":"RMTEST","Serial Number":"RMTEST0000000000",` +
+		`"WWN":"5000C500DEADBEEF"}}]}}]}`
+
+	mockRunner := new(MockCommandRunner)
+	mockRunner.On("Run", []string{"/c0/eall/sall", "show", "all"}).Return([]byte(payload), nil)
+
+	s := NewStorCLI2(mockRunner)
+
+	drives, err := s.PhysicalDrives(&raidcontroller.Metadata{ID: 0})
+	require.NoError(t, err)
+	require.Len(t, drives, 1)
+	assert.True(t, drives[0].JBOD)
+	assert.Equal(t, physicaldrive.PDStatusUsed, drives[0].Status)
+	assert.Empty(t, drives[0].DevicePath)
+	assert.Empty(t, drives[0].PermanentPath)
+}
+
+// TestStorCLI2IsPathMissing checks which ComputePaths failures leave a JBOD
+// drive with empty paths: a missing by-id link or device node only. Any other
+// failure is still an error.
+func TestStorCLI2IsPathMissing(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name string
+		err  error
+		want bool
+	}{
+		{name: "no by-id link", err: physicaldrive.ErrNoPermanentPath, want: true},
+		{name: "device node gone", err: errors.Wrap(&fs.PathError{Op: "lstat", Path: "/dev/sdz", Err: fs.ErrNotExist}, "resolve"), want: true},
+		{name: "permission denied", err: errors.Wrap(&fs.PathError{Op: "lstat", Path: "/dev/sdz", Err: fs.ErrPermission}, "resolve")},
+		{name: "path mismatch", err: errors.New("device path does not match")},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			assert.Equal(t, tt.want, isPathMissing(tt.err))
 		})
 	}
 }

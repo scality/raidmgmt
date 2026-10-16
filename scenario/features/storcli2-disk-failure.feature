@@ -28,14 +28,6 @@ Feature: storcli2 disk failure and replacement
       | 306:1 | Used   | SIMD2002000000000000 | /dev/sdc   | /dev/disk/by-id/wwn-0x600062b2000000000000000000000002 |
       | 306:2 | Failed | SIMD2003000000000000 |            |                                                        |
       | 306:3 | Used   | SIMD2004000000000000 | /dev/sde   | /dev/disk/by-id/wwn-0x600062b2000000000000000000000004 |
-    # The permanent path of the offline volume is still built from its NAA
-    # Id, although the volume has no block device and no by-id link.
-    But known bug ARTESCA-17960 reports instead:
-      | slot  | status | serial               | devicePath | permanentPath                                          |
-      | 306:0 | Used   | SIMD2001000000000000 | /dev/sdb   | /dev/disk/by-id/wwn-0x600062b2000000000000000000000001 |
-      | 306:1 | Used   | SIMD2002000000000000 | /dev/sdc   | /dev/disk/by-id/wwn-0x600062b2000000000000000000000002 |
-      | 306:2 | Failed | SIMD2003000000000000 |            | /dev/disk/by-id/wwn-0x600062b2000000000000000000000003 |
-      | 306:3 | Used   | SIMD2004000000000000 | /dev/sde   | /dev/disk/by-id/wwn-0x600062b2000000000000000000000004 |
 
   Scenario: A replacement drive is reported as a new, available drive
     Given drive 306:2 has failed
