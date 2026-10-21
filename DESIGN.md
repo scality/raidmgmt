@@ -136,10 +136,11 @@ drive whose `by-id` link cannot be resolved is returned with its status and
 empty `DevicePath`/`PermanentPath` rather than failing the listing. Only these
 cases degrade: any other failure, such as `lsblk` missing or failing on a device
 that exists, is still an error, so that it cannot silently blank every drive.
-(The create paths are deliberately stricter: a just-created volume that is not
-exposed to the OS yet has no paths, so megaraid and storcli2 treat it as
-not-ready and retry, megaraid after a bus rescan, until it is exposed or the
-settle timeout elapses.)
+(The create paths are deliberately stricter: a just-created volume is ready
+only once its path exists on the host, even if the controller already reports
+it exposed to the OS, so megaraid and storcli2 retry after a rescan of the
+controller's SCSI hosts (`megaraid_sas` or `mpi3mr`), until it is on the host
+or the settle timeout elapses.)
 
 ### Adapters
 

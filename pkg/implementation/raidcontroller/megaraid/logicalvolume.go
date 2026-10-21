@@ -2,7 +2,6 @@ package megaraid
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 	"sort"
 	"strconv"
@@ -20,9 +19,6 @@ import (
 const (
 	// patternLV is the pattern for the logical volume selector.
 	patternLV string = "/c%d/v%s"
-
-	// scsiHostRoot holds one sysfs directory per SCSI host adapter.
-	scsiHostRoot = "/sys/class/scsi_host"
 
 	// megaraidSASDriver is the proc_name of the MegaRAID kernel driver, used to
 	// select which SCSI hosts to rescan for newly created virtual drives.
@@ -404,34 +400,9 @@ func (a *Adapter) findNewVolumeUntilSettled(pds []*physicaldrive.Metadata) (
 // virtual drives on the MegaRAID controller. Only megaraid_sas hosts are
 // scanned, to avoid the multi-second link-down timeouts of empty SATA ports.
 func rescanMegaraidHosts() error {
-	entries, err := os.ReadDir(scsiHostRoot)
-	if err != nil {
-		return errors.Wrap(err, "failed to list scsi hosts")
-	}
+	err := utils.RescanSCSIHosts(utils.SCSIHostRoot, megaraidSASDriver)
 
-	scanned := 0
-
-	for _, entry := range entries {
-		hostDir := filepath.Join(scsiHostRoot, entry.Name())
-
-		procName, err := os.ReadFile(filepath.Join(hostDir, "proc_name"))
-		if err != nil || strings.TrimSpace(string(procName)) != megaraidSASDriver {
-			continue
-		}
-
-		// "- - -" means "scan every channel, target and LUN" on this host.
-		if err := os.WriteFile(filepath.Join(hostDir, "scan"), []byte("- - -"), 0); err != nil {
-			return errors.Wrapf(err, "failed to rescan scsi host %s", entry.Name())
-		}
-
-		scanned++
-	}
-
-	if scanned == 0 {
-		return errors.New("no megaraid_sas scsi host found to rescan")
-	}
-
-	return nil
+	return errors.Wrap(err, "failed to rescan")
 }
 
 // megaraidCreateCacheFlags returns the "add vd" cache flags. Each policy is

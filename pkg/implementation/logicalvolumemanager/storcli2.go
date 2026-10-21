@@ -13,6 +13,7 @@ import (
 	"github.com/scality/raidmgmt/pkg/domain/ports"
 	"github.com/scality/raidmgmt/pkg/implementation/commandrunner"
 	"github.com/scality/raidmgmt/pkg/implementation/storcli2"
+	"github.com/scality/raidmgmt/pkg/utils"
 )
 
 const (
@@ -39,6 +40,10 @@ const (
 	// exposed to the OS, and storcli2NewVolumeSettleInterval spaces its checks.
 	storcli2NewVolumeSettleTimeout  = 60 * time.Second
 	storcli2NewVolumeSettleInterval = 1 * time.Second
+	// storcli2Driver is the kernel driver of the controllers storcli2 drives
+	// (MegaRAID 9600 tri-mode, Dell PERC 12), the proc_name of their SCSI
+	// hosts.
+	storcli2Driver = "mpi3mr"
 )
 
 // StorCLI2 manages logical volumes through a storcli2/perccli2 command runner.
@@ -55,6 +60,12 @@ type StorCLI2 struct {
 	// (60s and 1s).
 	NewVolumeSettleTimeout  time.Duration
 	NewVolumeSettleInterval time.Duration
+	// RescanSCSIHosts asks the kernel to probe the controller's SCSI hosts
+	// for the new volume between checks. Nil rescans the mpi3mr hosts.
+	RescanSCSIHosts func() error
+	// FileExists tells whether a path exists on the host, to check that the
+	// new volume is a block device of the host. Nil reads the filesystem.
+	FileExists func(path string) bool
 
 	runner commandrunner.CommandRunner
 }
@@ -186,13 +197,16 @@ func (*StorCLI2) DeletePDsFromLV(
 	return ports.ErrFunctionNotSupportedByImplementation
 }
 
-// errNewVolumeNotExposed is returned while the new volume is listed but not
-// exposed to the OS yet, without paths.
+// errNewVolumeNotExposed is returned while the new volume is listed but is not
+// a block device of the host yet.
 var errNewVolumeNotExposed = errors.New("new logical volume not exposed to the OS yet")
 
 // findNewVolumeUntilExposed retries findNewLogicalVolume while the new volume
 // is listed but not exposed to the OS yet, until NewVolumeSettleTimeout
-// elapses: a volume without paths cannot be used by the caller.
+// elapses: a volume without paths cannot be used by the caller. Between checks
+// it forces a SCSI bus rescan, as megaraid does: the kernel may not announce a
+// new volume on its own. A rescan failure is not fatal on its own, but it is
+// reported on timeout.
 func (s *StorCLI2) findNewVolumeUntilExposed(request *logicalvolume.Request) (
 	*logicalvolume.LogicalVolume,
 	error,
@@ -201,6 +215,8 @@ func (s *StorCLI2) findNewVolumeUntilExposed(request *logicalvolume.Request) (
 	interval := cmp.Or(s.NewVolumeSettleInterval, storcli2NewVolumeSettleInterval)
 	deadline := time.Now().Add(timeout)
 
+	var lastRescanErr error
+
 	for {
 		lv, err := s.findNewLogicalVolume(request)
 		if !errors.Is(err, errNewVolumeNotExposed) {
@@ -208,17 +224,42 @@ func (s *StorCLI2) findNewVolumeUntilExposed(request *logicalvolume.Request) (
 		}
 
 		if time.Now().After(deadline) {
-			return nil, errors.Wrapf(err, "not exposed after %s", timeout)
+			return nil, notExposedError(err, timeout, lastRescanErr)
+		}
+
+		if rescanErr := s.rescanSCSIHosts(); rescanErr != nil {
+			lastRescanErr = rescanErr
 		}
 
 		time.Sleep(interval)
 	}
 }
 
+// rescanSCSIHosts asks the kernel to probe the mpi3mr SCSI hosts, or runs
+// RescanSCSIHosts when set.
+func (s *StorCLI2) rescanSCSIHosts() error {
+	if s.RescanSCSIHosts != nil {
+		return s.RescanSCSIHosts()
+	}
+
+	return errors.Wrap(utils.RescanSCSIHosts(utils.SCSIHostRoot, storcli2Driver), "failed to rescan")
+}
+
+// notExposedError is the error of a new volume still not exposed after the
+// settle timeout, with the last rescan failure if any.
+func notExposedError(err error, timeout time.Duration, lastRescanErr error) error {
+	if lastRescanErr != nil {
+		return errors.Wrapf(err, "not exposed after %s (scsi rescan failing: %v)", timeout, lastRescanErr)
+	}
+
+	return errors.Wrapf(err, "not exposed after %s", timeout)
+}
+
 // findNewLogicalVolume returns the volume whose physical-drive set is exactly
 // the request's. A physical drive belongs to a single virtual drive, so the
-// freshly created volume is the only exposed match. It returns
-// errNewVolumeNotExposed while no matching volume has a path.
+// freshly created volume is the only match on the host. It returns
+// errNewVolumeNotExposed while no matching volume is a block device of the
+// host yet.
 func (s *StorCLI2) findNewLogicalVolume(request *logicalvolume.Request) (
 	*logicalvolume.LogicalVolume,
 	error,
@@ -242,9 +283,10 @@ func (s *StorCLI2) findNewLogicalVolume(request *logicalvolume.Request) (
 			continue
 		}
 
-		// A volume not exposed has no paths at all; an exposed one may lack
-		// only its permanent path, when storcli2 reports no NAA Id.
-		if lv.PermanentPath == "" && lv.DevicePath == "" {
+		// storcli2 may report a new volume exposed, with its paths, before
+		// the kernel has discovered it: it is settled only once its path
+		// exists on the host.
+		if !s.onHost(lv) {
 			unexposed = lv
 
 			continue
@@ -258,6 +300,22 @@ func (s *StorCLI2) findNewLogicalVolume(request *logicalvolume.Request) (
 	}
 
 	return nil, errors.New("no logical volume matches the requested physical drives")
+}
+
+// onHost tells whether the host has the block device of a volume: its by-id
+// link, or its device node when storcli2 reports no NAA Id. A volume not
+// exposed to the OS has neither.
+func (s *StorCLI2) onHost(lv *logicalvolume.LogicalVolume) bool {
+	path := cmp.Or(lv.PermanentPath, lv.DevicePath)
+	if path == "" {
+		return false
+	}
+
+	if s.FileExists != nil {
+		return s.FileExists(path)
+	}
+
+	return utils.FileExists(path)
 }
 
 // storcli2MatchesPDSet reports whether the physical drives of a volume are
