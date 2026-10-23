@@ -499,3 +499,55 @@ func TestSSACLIPDStatusBlockDeviceUnknown(t *testing.T) {
 		})
 	}
 }
+
+// TestSSACLIDiskType checks the type of a drive from its "Interface Type",
+// with "Rotational Speed" deciding when the interface type is unknown, as for
+// a failed drive, whatever the order of the two lines.
+func TestSSACLIDiskType(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name  string
+		lines []string
+		want  physicaldrive.DiskType
+	}{
+		{name: "SAS HDD", lines: []string{"Interface Type: SAS", "Rotational Speed: 7200"}, want: physicaldrive.DiskTypeHDD},
+		{name: "SAS SSD", lines: []string{"Interface Type: Solid State SAS"}, want: physicaldrive.DiskTypeSSD},
+		{name: "failed HDD", lines: []string{"Interface Type: Unknown", "Rotational Speed: 7200"}, want: physicaldrive.DiskTypeHDD},
+		{name: "failed HDD, speed first", lines: []string{"Rotational Speed: 7200", "Interface Type: Unknown"}, want: physicaldrive.DiskTypeHDD},
+		{name: "unknown interface, no speed", lines: []string{"Interface Type: Unknown"}, want: physicaldrive.DiskTypeUnknown},
+		{name: "unknown interface, speed not a number", lines: []string{"Interface Type: Unknown", "Rotational Speed: Unknown"}, want: physicaldrive.DiskTypeUnknown},
+		{name: "SSD with a speed of 0", lines: []string{"Interface Type: Solid State SAS", "Rotational Speed: 0"}, want: physicaldrive.DiskTypeSSD},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			pd := &physicaldrive.PhysicalDrive{
+				Metadata: &physicaldrive.Metadata{CtrlMetadata: &raidcontroller.Metadata{}},
+				Slot:     &physicaldrive.Slot{},
+			}
+			facts := &ssacliDriveFacts{}
+
+			for _, line := range tt.lines {
+				require.NoError(t, (&SSACLI{}).parsePDLine(pd, facts, "         "+line))
+			}
+
+			assert.Equal(t, tt.want, pd.Type)
+		})
+	}
+}
+
+// TestSSACLIFailedDriveOfARealController checks the failed drive block of a
+// real P816i-a in Mixed mode, verbatim: it is reported failed, and still an
+// HDD, so that consumers keeping HDDs only do not drop it.
+func TestSSACLIFailedDriveOfARealController(t *testing.T) {
+	t.Parallel()
+
+	pd, err := (&SSACLI{}).parsePhysicalDrive(mockOutput("physicaldrives/failed_mixed_detail"))
+	require.NoError(t, err)
+	assert.Equal(t, "1I:1:1", pd.ID)
+	assert.Equal(t, physicaldrive.PDStatusFailed, pd.Status)
+	assert.Equal(t, physicaldrive.DiskTypeHDD, pd.Type)
+}

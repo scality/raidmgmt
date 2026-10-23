@@ -294,14 +294,22 @@ func (s *SSACLI) parsePDLine( //nolint:funlen // This function is long and not c
 
 		// A failed drive is printed "Interface Type: Unknown" (seen on a
 		// P816i-a in Mixed mode), and a drive of another kind may be printed
-		// with an interface not listed here: its type is unknown, which must
-		// not fail the inventory of the whole controller.
-		interfaceType, ok := mapInterfaceType[value]
-		if !ok {
-			interfaceType = physicaldrive.DiskTypeUnknown
+		// with an interface not listed here: that must not fail the inventory
+		// of the whole controller. The type is then left to "Rotational
+		// Speed", or unknown.
+		if interfaceType, ok := mapInterfaceType[value]; ok {
+			physicalDrive.Type = interfaceType
 		}
 
-		physicalDrive.Type = interfaceType
+	case "Rotational Speed":
+		// A failed drive still prints its rotational speed: a spinning drive
+		// is an HDD, whatever its interface type says. Consumers keep HDDs
+		// only, so a failed HDD of unknown type would vanish from them
+		// instead of being reported failed.
+		if rpm, err := strconv.Atoi(value); err == nil && rpm > 0 &&
+			physicalDrive.Type == physicaldrive.DiskTypeUnknown {
+			physicalDrive.Type = physicaldrive.DiskTypeHDD
+		}
 
 	case "Disk Name":
 		physicalDrive.DevicePath = value
