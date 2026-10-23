@@ -238,9 +238,20 @@ func parseDrive(entry storcli2DrivesListEntry, ctrl *raidcontroller.Metadata) (
 	// missing) may have lost its device node and must not fail the whole
 	// inventory. ComputePaths reads the real filesystem (utils.FileExists), so
 	// the healthy-JBOD path is exercised on hardware rather than in unit tests.
+	//
+	// A drive whose udev by-id link or device node is missing (e.g. not
+	// settled yet) must not drop the drive and abort discovery for the whole
+	// controller: keep it with empty paths instead. Any other failure, such
+	// as a permission error, is still an error: ignoring it would silently
+	// blank the paths of every JBOD drive.
 	if physicalDrive.JBOD && physicalDrive.Status == physicaldrive.PDStatusUsed {
 		if err := physicalDrive.ComputePaths(); err != nil {
-			return nil, errors.Wrap(err, "failed to compute paths")
+			if !physicaldrive.IsPathMissing(err) {
+				return nil, errors.Wrapf(err, "failed to resolve the paths of drive %s", info.EIDSlot)
+			}
+
+			physicalDrive.DevicePath = ""
+			physicalDrive.PermanentPath = ""
 		}
 	}
 

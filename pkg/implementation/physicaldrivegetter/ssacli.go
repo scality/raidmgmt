@@ -27,9 +27,13 @@ const (
 type SSACLI struct {
 	SSACLI commandrunner.CommandRunner
 	LSBLK  commandrunner.CommandRunner
+
+	// deviceExists tells whether a device node exists; nil uses the
+	// filesystem. It is set by tests.
+	deviceExists func(path string) bool
 }
 
-// ssacliDriveFacts holds the three raw facts that decide a drive status. They
+// ssacliDriveFacts holds the raw facts that decide a drive status. They
 // are collected while parsing and turned into a PDStatus once the whole block
 // has been read, because the order of the ssacli fields is not a contract:
 // deciding line by line let whichever field came last win.
@@ -37,6 +41,9 @@ type ssacliDriveFacts struct {
 	status          string // raw "Status:" label
 	driveType       string // raw "Drive Type:" label
 	blockDeviceUsed bool   // the device carries a filesystem, a partition or a mount
+	// blockDeviceUnknown is set when the device could not be inspected, so
+	// whether it carries data is unknown.
+	blockDeviceUnknown bool
 }
 
 var (
@@ -194,6 +201,12 @@ func (f ssacliDriveFacts) pdStatus() physicaldrive.PDStatus {
 	// does not model keep the status they map to.
 	if parseSSACLIStatus(f.status) == physicaldrive.PDStatusUsed &&
 		strings.Contains(f.driveType, "Unassigned") {
+		// A free drive whose device could not be inspected may still carry
+		// data: never offer it for a new volume.
+		if f.blockDeviceUnknown {
+			return physicaldrive.PDStatusUnknown
+		}
+
 		return physicaldrive.PDStatusUnassignedGood
 	}
 
@@ -279,19 +292,47 @@ func (s *SSACLI) parsePDLine( //nolint:funlen // This function is long and not c
 			"Solid State SAS": physicaldrive.DiskTypeSSD,
 		}
 
-		interfaceType, ok := mapInterfaceType[value]
-		if !ok {
-			return errors.Errorf("invalid interface type: %s", value)
+		// A failed drive is printed "Interface Type: Unknown" (seen on a
+		// P816i-a in Mixed mode), and a drive of another kind may be printed
+		// with an interface not listed here: that must not fail the inventory
+		// of the whole controller. The type is then left to "Rotational
+		// Speed", or unknown.
+		if interfaceType, ok := mapInterfaceType[value]; ok {
+			physicalDrive.Type = interfaceType
 		}
 
-		physicalDrive.Type = interfaceType
+	case "Rotational Speed":
+		// A failed drive still prints its rotational speed: a spinning drive
+		// is an HDD, whatever its interface type says. Consumers keep HDDs
+		// only, so a failed HDD of unknown type would vanish from them
+		// instead of being reported failed.
+		if rpm, err := strconv.Atoi(value); err == nil && rpm > 0 &&
+			physicalDrive.Type == physicaldrive.DiskTypeUnknown {
+			physicalDrive.Type = physicaldrive.DiskTypeHDD
+		}
 
 	case "Disk Name":
 		physicalDrive.DevicePath = value
 
+		// getBlockDevice only refines the status: a mounted or formatted device
+		// is in use. A drive whose device node has disappeared (e.g. a failed or
+		// pulled drive) makes the lsblk lookup fail; that must not abort
+		// discovery for the whole controller. The usage of the device is then
+		// unknown, which keeps a free drive from being offered (see pdStatus),
+		// and its path is dropped: the kernel can reuse a vanished /dev/sdX
+		// name for another disk. Any other failure, such as lsblk missing or
+		// its output changing, is still an error: ignoring it would silently
+		// blank every drive.
 		blockDevice, err := s.getBlockDevice(value)
 		if err != nil {
-			return errors.Wrapf(err, "failed to get block device for %s", value)
+			if s.deviceNodeExists(value) {
+				return errors.Wrapf(err, "failed to inspect block device %s", value)
+			}
+
+			facts.blockDeviceUnknown = true
+			physicalDrive.DevicePath = ""
+
+			break
 		}
 
 		facts.blockDeviceUsed = isBlockDeviceUsed(blockDevice)
@@ -299,6 +340,14 @@ func (s *SSACLI) parsePDLine( //nolint:funlen // This function is long and not c
 	}
 
 	return nil
+}
+
+func (s *SSACLI) deviceNodeExists(devicePath string) bool {
+	if s.deviceExists != nil {
+		return s.deviceExists(devicePath)
+	}
+
+	return utils.FileExists(devicePath)
 }
 
 func (s *SSACLI) getBlockDevice(devicePath string) (*BlockDevice, error) {

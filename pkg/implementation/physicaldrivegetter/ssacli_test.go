@@ -1,12 +1,14 @@
 package physicaldrivegetter
 
 import (
+	"errors"
 	"os"
 	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 
 	"github.com/scality/raidmgmt/pkg/domain/entities/physicaldrive"
 	"github.com/scality/raidmgmt/pkg/domain/entities/raidcontroller"
@@ -303,6 +305,26 @@ func TestSSACLIPhysicalDriveStatus(t *testing.T) {
 			expectedError:     false,
 		},
 		{
+			// A failed drive as a real P816i-a in Mixed mode prints it, with
+			// "Interface Type: Unknown" and "Drive Type: Unsupported for
+			// RAID/Hidden from the OS Drive": it is failed, and must not abort
+			// the inventory of the whole controller.
+			name:    "failed drive printed by a real controller",
+			mocking: mockOutput("physicaldrives/failed_mixed_detail"),
+			metadata: &physicaldrive.Metadata{
+				CtrlMetadata: &raidcontroller.Metadata{
+					ID: 0,
+				},
+				ID: "1I:1:1",
+			},
+			expected: &physicaldrive.PhysicalDrive{
+				Status: physicaldrive.PDStatusFailed,
+				Reason: "Failed",
+			},
+			expectedAvailable: false,
+			expectedError:     false,
+		},
+		{
 			// "Predictive Failure" must not abort the inventory: the drive is
 			// still online and serving its array, so it is surfaced as used
 			// with the raw ssacli label kept in Reason.
@@ -381,4 +403,151 @@ func TestSSACLIPhysicalDriveStatus(t *testing.T) {
 			}
 		})
 	}
+}
+
+// TestSSACLIParsePDLineDiskNameLsblkFailure checks that a failed or pulled
+// drive whose device node has disappeared makes the lsblk lookup fail. That
+// lookup only refines the status, so it must not abort discovery for the
+// whole controller: the drive keeps the status ssacli already reported, and
+// loses its device path, which the kernel can reuse for another disk. A
+// failure on a device that exists, such as lsblk missing, is still an error.
+func TestSSACLIParsePDLineDiskNameLsblkFailure(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name         string
+		deviceExists bool
+		wantErr      string
+	}{
+		{name: "device node gone", deviceExists: false},
+		{name: "device node present", deviceExists: true, wantErr: "failed to inspect block device /dev/sdz"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			mockRunner := new(MockCommandRunner)
+			mockRunner.On("Run", mock.AnythingOfType("[]string")).
+				Return([]byte(nil), errors.New("lsblk: executable file not found"))
+
+			s := &SSACLI{LSBLK: mockRunner, deviceExists: func(path string) bool {
+				assert.Equal(t, "/dev/sdz", path)
+
+				return tt.deviceExists
+			}}
+
+			pd := &physicaldrive.PhysicalDrive{
+				Metadata: &physicaldrive.Metadata{CtrlMetadata: &raidcontroller.Metadata{}},
+				Slot:     &physicaldrive.Slot{},
+			}
+			facts := &ssacliDriveFacts{status: "Failed"}
+
+			err := s.parsePDLine(pd, facts, "   Disk Name: /dev/sdz")
+
+			if tt.wantErr != "" {
+				require.ErrorContains(t, err, tt.wantErr)
+
+				return
+			}
+
+			require.NoError(t, err)
+			assert.Empty(t, pd.DevicePath)
+			assert.True(t, facts.blockDeviceUnknown)
+			assert.Equal(t, physicaldrive.PDStatusFailed, facts.pdStatus())
+		})
+	}
+}
+
+// TestSSACLIPDStatusBlockDeviceUnknown checks that a drive whose device could
+// not be inspected is never offered as free: it may carry data.
+func TestSSACLIPDStatusBlockDeviceUnknown(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name  string
+		facts ssacliDriveFacts
+		want  physicaldrive.PDStatus
+	}{
+		{
+			name:  "free drive, device inspected and empty",
+			facts: ssacliDriveFacts{status: "OK", driveType: "Unassigned Drive"},
+			want:  physicaldrive.PDStatusUnassignedGood,
+		},
+		{
+			name:  "free drive, device not inspected",
+			facts: ssacliDriveFacts{status: "OK", driveType: "Unassigned Drive", blockDeviceUnknown: true},
+			want:  physicaldrive.PDStatusUnknown,
+		},
+		{
+			name:  "array member, device not inspected",
+			facts: ssacliDriveFacts{status: "OK", driveType: "Data Drive", blockDeviceUnknown: true},
+			want:  physicaldrive.PDStatusUsed,
+		},
+		{
+			name:  "failed drive, device not inspected",
+			facts: ssacliDriveFacts{status: "Failed", driveType: "Unassigned Drive", blockDeviceUnknown: true},
+			want:  physicaldrive.PDStatusFailed,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			assert.Equal(t, tt.want, tt.facts.pdStatus())
+		})
+	}
+}
+
+// TestSSACLIDiskType checks the type of a drive from its "Interface Type",
+// with "Rotational Speed" deciding when the interface type is unknown, as for
+// a failed drive, whatever the order of the two lines.
+func TestSSACLIDiskType(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name  string
+		lines []string
+		want  physicaldrive.DiskType
+	}{
+		{name: "SAS HDD", lines: []string{"Interface Type: SAS", "Rotational Speed: 7200"}, want: physicaldrive.DiskTypeHDD},
+		{name: "SAS SSD", lines: []string{"Interface Type: Solid State SAS"}, want: physicaldrive.DiskTypeSSD},
+		{name: "failed HDD", lines: []string{"Interface Type: Unknown", "Rotational Speed: 7200"}, want: physicaldrive.DiskTypeHDD},
+		{name: "failed HDD, speed first", lines: []string{"Rotational Speed: 7200", "Interface Type: Unknown"}, want: physicaldrive.DiskTypeHDD},
+		{name: "unknown interface, no speed", lines: []string{"Interface Type: Unknown"}, want: physicaldrive.DiskTypeUnknown},
+		{name: "unknown interface, speed not a number", lines: []string{"Interface Type: Unknown", "Rotational Speed: Unknown"}, want: physicaldrive.DiskTypeUnknown},
+		{name: "SSD with a speed of 0", lines: []string{"Interface Type: Solid State SAS", "Rotational Speed: 0"}, want: physicaldrive.DiskTypeSSD},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			pd := &physicaldrive.PhysicalDrive{
+				Metadata: &physicaldrive.Metadata{CtrlMetadata: &raidcontroller.Metadata{}},
+				Slot:     &physicaldrive.Slot{},
+			}
+			facts := &ssacliDriveFacts{}
+
+			for _, line := range tt.lines {
+				require.NoError(t, (&SSACLI{}).parsePDLine(pd, facts, "         "+line))
+			}
+
+			assert.Equal(t, tt.want, pd.Type)
+		})
+	}
+}
+
+// TestSSACLIFailedDriveOfARealController checks the failed drive block of a
+// real P816i-a in Mixed mode, verbatim: it is reported failed, and still an
+// HDD, so that consumers keeping HDDs only do not drop it.
+func TestSSACLIFailedDriveOfARealController(t *testing.T) {
+	t.Parallel()
+
+	pd, err := (&SSACLI{}).parsePhysicalDrive(mockOutput("physicaldrives/failed_mixed_detail"))
+	require.NoError(t, err)
+	assert.Equal(t, "1I:1:1", pd.ID)
+	assert.Equal(t, physicaldrive.PDStatusFailed, pd.Status)
+	assert.Equal(t, physicaldrive.DiskTypeHDD, pd.Type)
 }

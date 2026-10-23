@@ -1,7 +1,10 @@
 package physicaldrive_test
 
 import (
+	"io/fs"
 	"testing"
+
+	"github.com/pkg/errors"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -94,4 +97,35 @@ func TestSlotWithAHoleDoesNotSurviveParseSlot(t *testing.T) {
 	parsed, err := physicaldrive.ParseSlot(slot.String())
 	require.NoError(t, err)
 	assert.Equal(t, &physicaldrive.Slot{Enclosure: "1I", Bay: "3"}, parsed)
+}
+
+// TestIsPathMissing checks which ComputePaths failures mean the path of a
+// drive is missing: no by-id link, or a link to a device node that is gone.
+// Any other failure is a real error.
+func TestIsPathMissing(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name string
+		err  error
+		want bool
+	}{
+		{name: "no by-id link", err: physicaldrive.ErrNoPermanentPath, want: true},
+		{name: "no by-id link, wrapped", err: errors.Wrap(physicaldrive.ErrNoPermanentPath, "drive 251:6"), want: true},
+		{
+			name: "device node gone",
+			err:  errors.Wrap(&fs.PathError{Op: "lstat", Path: "/dev/sdz", Err: fs.ErrNotExist}, "resolve"),
+			want: true,
+		},
+		{name: "permission denied", err: errors.Wrap(&fs.PathError{Op: "lstat", Path: "/dev/sdz", Err: fs.ErrPermission}, "resolve")},
+		{name: "path mismatch", err: errors.New("device path does not match")},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			assert.Equal(t, tt.want, physicaldrive.IsPathMissing(tt.err))
+		})
+	}
 }

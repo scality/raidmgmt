@@ -25,7 +25,8 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
       - name: Set list of modules
         id: set-modules
-        run: echo "modules=$(go list -m -json | jq -s '.' | jq -c '[.[].Dir]')" >> $GITHUB_OUTPUT
+        # The root module and the nested ones, such as scenario/.
+        run: echo "modules=$(find "$PWD" -name go.mod -not -path '*/bin/*' -printf '%h\n' | sort | jq -R . | jq -sc .)" >> $GITHUB_OUTPUT
   
   golangci-lint:
     needs: detect-modules
@@ -57,7 +58,8 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
       - name: Run tests
-        run: go test -v ${{ matrix.modules }}/...
+        working-directory: ${{ matrix.modules }}
+        run: go test -v ./...
 
   build-e2e:
     # The on-hardware integration harnesses are not run in CI (they need real

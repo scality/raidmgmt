@@ -2,7 +2,6 @@ package megaraid
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 	"sort"
 	"strconv"
@@ -20,9 +19,6 @@ import (
 const (
 	// patternLV is the pattern for the logical volume selector.
 	patternLV string = "/c%d/v%s"
-
-	// scsiHostRoot holds one sysfs directory per SCSI host adapter.
-	scsiHostRoot = "/sys/class/scsi_host"
 
 	// megaraidSASDriver is the proc_name of the MegaRAID kernel driver, used to
 	// select which SCSI hosts to rescan for newly created virtual drives.
@@ -174,6 +170,8 @@ func (vd *VD) LVStatus() logicalvolume.LVStatus {
 		"Dgrd": logicalvolume.LVStatusDegraded,
 		"Pdgd": logicalvolume.LVStatusDegraded,
 		"Fail": logicalvolume.LVStatusFailed,
+		// Offline: a RAID0 volume whose drive failed, no longer readable.
+		"OfLn": logicalvolume.LVStatusFailed,
 	}
 
 	if status, ok := lvStatusMap[vd.State]; ok {
@@ -260,7 +258,7 @@ func (a *Adapter) logicalVolume(
 		return nil, errors.Wrap(err, "failed to fill physical drives")
 	}
 
-	devicePath, permanentPath, err := getPaths(vdProperties, pds)
+	devicePath, permanentPath, err := volumePaths(&vd, vdProperties, pds)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get paths")
 	}
@@ -402,34 +400,9 @@ func (a *Adapter) findNewVolumeUntilSettled(pds []*physicaldrive.Metadata) (
 // virtual drives on the MegaRAID controller. Only megaraid_sas hosts are
 // scanned, to avoid the multi-second link-down timeouts of empty SATA ports.
 func rescanMegaraidHosts() error {
-	entries, err := os.ReadDir(scsiHostRoot)
-	if err != nil {
-		return errors.Wrap(err, "failed to list scsi hosts")
-	}
+	err := utils.RescanSCSIHosts(utils.SCSIHostRoot, megaraidSASDriver)
 
-	scanned := 0
-
-	for _, entry := range entries {
-		hostDir := filepath.Join(scsiHostRoot, entry.Name())
-
-		procName, err := os.ReadFile(filepath.Join(hostDir, "proc_name"))
-		if err != nil || strings.TrimSpace(string(procName)) != megaraidSASDriver {
-			continue
-		}
-
-		// "- - -" means "scan every channel, target and LUN" on this host.
-		if err := os.WriteFile(filepath.Join(hostDir, "scan"), []byte("- - -"), 0); err != nil {
-			return errors.Wrapf(err, "failed to rescan scsi host %s", entry.Name())
-		}
-
-		scanned++
-	}
-
-	if scanned == 0 {
-		return errors.New("no megaraid_sas scsi host found to rescan")
-	}
-
-	return nil
+	return errors.Wrap(err, "failed to rescan")
 }
 
 // megaraidCreateCacheFlags returns the "add vd" cache flags. Each policy is
@@ -655,17 +628,44 @@ func (a *Adapter) findNewLogicalVolume(pds []*physicaldrive.Metadata) (
 		return nil, errors.Wrap(err, "failed to get logical volumes")
 	}
 
+	return selectNewLogicalVolume(lvs, pds)
+}
+
+// selectNewLogicalVolume returns, among the volumes of the controller, the new
+// volume holding the given physical drives.
+func selectNewLogicalVolume(lvs []*logicalvolume.LogicalVolume, pds []*physicaldrive.Metadata) (
+	*logicalvolume.LogicalVolume,
+	error,
+) {
 	// Create a map of physical drive slots for efficient lookup
 	pdSlots := make(map[string]struct{})
 	for _, pd := range pds {
 		pdSlots[pd.ID] = struct{}{}
 	}
 
-	// Find the new logical volume
+	// Find the new logical volume. A volume not exposed to the OS is listed
+	// without paths: the new volume before the kernel sees it, or the offline
+	// volume of a failed drive still listing a requested slot. Keep looking
+	// for an exposed one; if none is, the new volume is not settled and the
+	// caller rescans and retries.
+	var unexposed *logicalvolume.LogicalVolume
+
 	for _, lv := range lvs {
-		if hasMatchingPDs(lv.PDrivesMetadata, pdSlots) {
-			return lv, nil
+		if !hasMatchingPDs(lv.PDrivesMetadata, pdSlots) {
+			continue
 		}
+
+		if lv.PermanentPath == "" {
+			unexposed = lv
+
+			continue
+		}
+
+		return lv, nil
+	}
+
+	if unexposed != nil {
+		return nil, errors.Errorf("new logical volume %s has no device yet", unexposed.ID)
 	}
 
 	return nil, errors.New("new logical volume not found")
@@ -682,6 +682,11 @@ func hasMatchingPDs(lvPDs []*physicaldrive.Metadata, pdSlots map[string]struct{}
 	return false
 }
 
+// notExposedToOS is the "Exposed to OS" value of a volume that is not a block
+// device of the host. Older storcli versions may not report the field at all,
+// so only this explicit value skips path resolution.
+const notExposedToOS = "No"
+
 // It is used to mock the functions in tests.
 // nolint: gochecknoglobals // This is a variable that is used to mock a function in tests.
 var (
@@ -689,29 +694,61 @@ var (
 	CustomFileExists   = utils.FileExists
 )
 
+// volumePaths resolves the paths of a volume. An offline or failed volume has
+// no block device, even if storcli still reports it exposed to the OS: no
+// capture shows what storcli reports for it, so its state decides.
+func volumePaths(vd *VD, vdp *VDProperties, pdrives []*physicaldrive.PhysicalDrive) (
+	devicePath, permanentPath string, err error,
+) {
+	if vd.LVStatus() == logicalvolume.LVStatusFailed {
+		return "", "", nil
+	}
+
+	return getPaths(vdp, pdrives)
+}
+
+// pathsWithoutLink returns the paths of an exposed volume whose by-id link is
+// missing. It can be missing for a while: the kernel has not discovered the
+// volume yet, or udev has not settled. That must not fail the listing of every
+// volume of the controller: the volume gets no permanent path, which createLV
+// takes as not settled yet. A single-drive volume may still get the paths of
+// its drive; any other failure to compute them is still an error.
+func pathsWithoutLink(osDriveName string, pdrives []*physicaldrive.PhysicalDrive) (
+	devicePath, permanentPath string, err error,
+) {
+	if len(pdrives) != 1 {
+		return osDriveName, "", nil
+	}
+
+	pd := pdrives[0]
+
+	if err = pd.ComputePaths(); err != nil {
+		if physicaldrive.IsPathMissing(err) {
+			return osDriveName, "", nil
+		}
+
+		return osDriveName, "", errors.Wrap(err, "failed to compute paths from physical drive")
+	}
+
+	return pd.DevicePath, pd.PermanentPath, nil
+}
+
 // getPaths returns the device path and a permanent paths for the logical volumes.
 func getPaths(vdp *VDProperties, pdrives []*physicaldrive.PhysicalDrive) (
 	devicePath, permanentPath string, err error,
 ) {
+	// A volume not exposed to the OS, such as the offline RAID0 volume of a
+	// failed drive, has no block device: it has no path to resolve, and
+	// failing here would fail the listing of every volume of the controller.
+	if strings.TrimSpace(vdp.ExposedToOS) == notExposedToOS {
+		return "", "", nil
+	}
+
 	devicePath = vdp.OSDriveName
 
 	permanentPath = fmt.Sprintf("/dev/disk/by-id/wwn-0x%s", vdp.SCSINAAID)
 	if !CustomFileExists(permanentPath) {
-		// If the permanent path is not found and there is only one physical drive,
-		// we will try to get the path from the physical drive information
-		// otherwise let's error here
-		if len(pdrives) != 1 {
-			return devicePath, "", errors.New("failed to get permanent path")
-		}
-
-		pd := pdrives[0]
-
-		err = pd.ComputePaths()
-		if err != nil {
-			return devicePath, "", errors.Wrap(err, "failed to compute paths from physical drive")
-		}
-
-		return pd.DevicePath, pd.PermanentPath, nil
+		return pathsWithoutLink(devicePath, pdrives)
 	}
 
 	// If the devicePath is empty let's retrieve it from the permanent path

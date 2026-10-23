@@ -1,6 +1,7 @@
 package megaraid_test
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -392,6 +393,35 @@ func (s *UnitTestSuite) TestPhysicalDrive() {
 	}
 }
 
+// TestPhysicalDriveJBODWithoutLink covers a JBOD drive whose by-id link is
+// missing, such as a failed or pulled drive: it is reported with empty paths
+// instead of failing the listing of every drive of the controller. The WWN of
+// the capture names no by-id link on the test host.
+func (s *UnitTestSuite) TestPhysicalDriveJBODWithoutLink() {
+	for _, state := range []string{"JBOD", "Failed"} {
+		s.Run(state, func() {
+			s.SetupTest()
+
+			out := mockOutput("physicaldrives/show/e251s6")
+			out.Controllers[0].ResponseData = bytes.Replace(out.Controllers[0].ResponseData,
+				[]byte(`"State":"Onln","DG":5`), []byte(`"State":"`+state+`","DG":"-"`), 1)
+			out.Controllers[0].ResponseData = bytes.Replace(out.Controllers[0].ResponseData,
+				[]byte(`"Type":"-"`), []byte(`"Type":"JBOD"`), 1)
+			s.mockRunner.On("Run", []string{"/c0/e251/s6", "show", "all"}).Return(out, nil)
+
+			pd, err := s.a.PhysicalDrive(&physicaldrive.Metadata{
+				CtrlMetadata: &raidcontroller.Metadata{ID: 0},
+				ID:           "251:6",
+			})
+
+			s.Require().NoError(err)
+			s.True(pd.JBOD)
+			s.Empty(pd.DevicePath)
+			s.Empty(pd.PermanentPath)
+		})
+	}
+}
+
 func (s *UnitTestSuite) TestLogicalVolumes() {
 	s.setupMockCalls()
 	s.mockPathResolver.On("FileExists", mock.Anything).Return(true)
@@ -715,9 +745,9 @@ func (s *UnitTestSuite) TestCreateLV() {
 
 // TestCreateLVForcesRescanAndSettles reproduces the post-create discovery race:
 // storcli returns before the kernel has a block device for the new volume, so
-// the first path resolution fails ("failed to compute permanent path") while a
-// later one succeeds. createLV must force a SCSI bus rescan and poll until the
-// device node is discovered instead of failing on the first try.
+// its by-id link is missing at first and it is listed without a permanent path,
+// while a later listing finds it. createLV must force a SCSI bus rescan and
+// poll until the device node is discovered instead of failing on the first try.
 func (s *UnitTestSuite) TestCreateLVForcesRescanAndSettles() {
 	s.wasCreateLVCalledOnce = false
 
@@ -746,10 +776,13 @@ func (s *UnitTestSuite) TestCreateLVForcesRescanAndSettles() {
 
 	defer func() { megaraid2.CustomRescanSCSIHosts = origRescan }()
 
-	// First resolution: device not yet discovered. For the single-drive volume
-	// this falls back to ComputePaths on the real filesystem, which fails. Every
-	// subsequent resolution finds the symlink.
-	s.mockPathResolver.On("FileExists", mock.Anything).Return(false).Once()
+	// First resolution of the new volume: device not yet discovered. For the
+	// single-drive volume this falls back to ComputePaths on the real
+	// filesystem, which finds no link either. Every subsequent resolution
+	// finds the symlink, and the other volumes have theirs.
+	const newVolumeLink = "/dev/disk/by-id/wwn-0x600062b212da5d402bd3b493e1699377"
+
+	s.mockPathResolver.On("FileExists", newVolumeLink).Return(false).Once()
 	s.mockPathResolver.On("FileExists", mock.Anything).Return(true)
 	s.mockPathResolver.On(
 		"EvalSymlinks",
@@ -783,6 +816,81 @@ func (s *UnitTestSuite) TestCreateLVForcesRescanAndSettles() {
 	s.Equal("/dev/sda", newLv.DevicePath)
 	s.Equal("/dev/disk/by-id/wwn-0x600062b212da5d402bd3b493e1699377", newLv.PermanentPath)
 	s.GreaterOrEqual(rescanCalls, 1, "createLV must force a SCSI rescan for the new volume")
+}
+
+// TestCreateLVWaitsForVolumeExposedToOS covers a new volume that storcli lists
+// before it is exposed to the OS: it has no paths yet, so createLV must keep
+// rescanning until the volume is exposed rather than return it without paths.
+func (s *UnitTestSuite) TestCreateLVWaitsForVolumeExposedToOS() {
+	s.wasCreateLVCalledOnce = false
+
+	origTimeout := megaraid2.NewVolumeSettleTimeout
+	origInterval := megaraid2.NewVolumeSettleInterval
+	megaraid2.NewVolumeSettleTimeout = 5 * time.Second
+	megaraid2.NewVolumeSettleInterval = time.Millisecond
+
+	defer func() {
+		megaraid2.NewVolumeSettleTimeout = origTimeout
+		megaraid2.NewVolumeSettleInterval = origInterval
+	}()
+
+	// The first show of the new volume reports it not exposed to the OS.
+	notExposedOnce := true
+
+	s.mockRunner.On("Run", mock.AnythingOfType("[]string")).Return(
+		func(args []string) (*megaraid2.CmdOutput, error) {
+			if args[0] == "/c0/v228" && notExposedOnce {
+				notExposedOnce = false
+				out := mockOutput("logicalvolumes/show/v228")
+				out.Controllers[0].ResponseData = bytes.Replace(out.Controllers[0].ResponseData,
+					[]byte(`"Exposed to OS":"Yes"`), []byte(`"Exposed to OS":"No"`), 1)
+
+				return out, nil
+			}
+
+			return s.createLVMockCalls(args)
+		})
+
+	rescanCalls := 0
+	origRescan := megaraid2.CustomRescanSCSIHosts
+	megaraid2.CustomRescanSCSIHosts = func() error {
+		rescanCalls++
+
+		return nil
+	}
+
+	defer func() { megaraid2.CustomRescanSCSIHosts = origRescan }()
+
+	s.mockPathResolver.On("FileExists", mock.Anything).Return(true)
+	s.mockPathResolver.On(
+		"EvalSymlinks",
+		"/dev/disk/by-id/wwn-0x600062b212da5d402bd3b493e1699377",
+	).Return("/dev/sda", nil)
+
+	s.setupCustomFileExists()
+	defer s.restoreCustomFileExists()
+
+	s.setupCustomEvalSymlinks()
+	defer s.restoreCustomEvalSymlinks()
+
+	newLv, err := s.a.CreateLV(&logicalvolume.Request{
+		CtrlMetadata: &raidcontroller.Metadata{ID: 0},
+		RAIDLevel:    logicalvolume.RAIDLevel0,
+		PDrivesMetadata: []*physicaldrive.Metadata{
+			{CtrlMetadata: &raidcontroller.Metadata{ID: 0}, ID: "251:12"},
+		},
+		CacheOptions: &logicalvolume.CacheOptions{
+			ReadPolicy:  logicalvolume.ReadPolicyReadAhead,
+			WritePolicy: logicalvolume.WritePolicyWriteThrough,
+			IOPolicy:    logicalvolume.IOPolicyDirect,
+		},
+	})
+
+	s.Require().NoError(err)
+	s.Require().False(notExposedOnce, "the volume must have been shown not exposed first")
+	s.Equal("/dev/sda", newLv.DevicePath)
+	s.Equal("/dev/disk/by-id/wwn-0x600062b212da5d402bd3b493e1699377", newLv.PermanentPath)
+	s.GreaterOrEqual(rescanCalls, 1, "createLV must rescan while the volume is not exposed")
 }
 
 func (s *UnitTestSuite) TestDeleteLV() {
