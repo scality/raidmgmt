@@ -305,6 +305,26 @@ func TestSSACLIPhysicalDriveStatus(t *testing.T) {
 			expectedError:     false,
 		},
 		{
+			// A failed drive as a real P816i-a in Mixed mode prints it, with
+			// "Interface Type: Unknown" and "Drive Type: Unsupported for
+			// RAID/Hidden from the OS Drive": it is failed, and must not abort
+			// the inventory of the whole controller.
+			name:    "failed drive printed by a real controller",
+			mocking: mockOutput("physicaldrives/failed_mixed_detail"),
+			metadata: &physicaldrive.Metadata{
+				CtrlMetadata: &raidcontroller.Metadata{
+					ID: 0,
+				},
+				ID: "1I:1:1",
+			},
+			expected: &physicaldrive.PhysicalDrive{
+				Status: physicaldrive.PDStatusFailed,
+				Reason: "Failed",
+			},
+			expectedAvailable: false,
+			expectedError:     false,
+		},
+		{
 			// "Predictive Failure" must not abort the inventory: the drive is
 			// still online and serving its array, so it is surfaced as used
 			// with the raw ssacli label kept in Reason.

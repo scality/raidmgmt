@@ -292,9 +292,13 @@ func (s *SSACLI) parsePDLine( //nolint:funlen // This function is long and not c
 			"Solid State SAS": physicaldrive.DiskTypeSSD,
 		}
 
+		// A failed drive is printed "Interface Type: Unknown" (seen on a
+		// P816i-a in Mixed mode), and a drive of another kind may be printed
+		// with an interface not listed here: its type is unknown, which must
+		// not fail the inventory of the whole controller.
 		interfaceType, ok := mapInterfaceType[value]
 		if !ok {
-			return errors.Errorf("invalid interface type: %s", value)
+			interfaceType = physicaldrive.DiskTypeUnknown
 		}
 
 		physicalDrive.Type = interfaceType

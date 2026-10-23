@@ -1,0 +1,30 @@
+
+HPE Smart Array P816i-a SR Gen10 in Slot 0 (Embedded)
+
+   Array A
+
+      physicaldrive 1I:1:1
+         Port: 1I
+         Box: 1
+         Bay: 1
+         Status: Failed
+         Last Failure Reason: Unknown
+         Drive Type: Unsupported for RAID/Hidden from the OS Drive
+         Interface Type: Unknown
+         Size: 6 TB
+         Drive exposed to OS: False
+         Logical/Physical Block Size: 512/4096
+         Rotational Speed: 7200
+         Firmware Revision: HPD9
+         Serial Number: SCRUBPD14
+         WWID: 5000030000000EE2
+         Model: HPE     MB006000JWJRP
+         Maximum Temperature (C): 44
+         Drive Authentication Status: Not Applicable
+         Sanitize Erase Supported: True
+         Sanitize Estimated Max Erase Time: 
+         Unrestricted Sanitize Supported: True
+         Shingled Magnetic Recording Support: None
+         Drive Unique ID: 5000030000000EE1
+         Multi-Actuator Drive: False
+         Write Cache Status: Disabled
