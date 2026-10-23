@@ -29,6 +29,11 @@ func NewLSBLK(path *string) *LSBLK {
 	}
 }
 
+// CommandPath returns the path of the lsblk binary this runner invokes.
+func (l *LSBLK) CommandPath() string {
+	return l.cliPath
+}
+
 func (l *LSBLK) Run(args []string) ([]byte, error) {
 	cmd := LSBLKExecCommand(l.cliPath, args...)
 
