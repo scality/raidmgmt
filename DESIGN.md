@@ -131,9 +131,12 @@ Getter read paths degrade gracefully: one unhealthy drive or volume must not
 drop a controller's whole inventory. A volume that is not a block device of the
 host (an offline or failed volume, such as the RAID0 volume of a failed drive,
 whatever storcli reports for "Exposed to OS", or a volume reported "Exposed to
-OS: No"), a failed or pulled drive whose device node is gone, or a JBOD
-drive whose `by-id` link cannot be resolved is returned with its status and
-empty `DevicePath`/`PermanentPath` rather than failing the listing. Only these
+OS: No"), a failed or pulled drive whose device node is gone, or a JBOD drive
+whose `by-id` link cannot be resolved is returned with its status and empty
+`DevicePath`/`PermanentPath` rather than failing the listing. An exposed volume
+whose `by-id` link is not on the host yet (the kernel has not discovered it, or
+udev has not settled) is returned with no `PermanentPath`, keeping the OS drive
+name storcli reports. Only these
 cases degrade: any other failure, such as `lsblk` missing or failing on a device
 that exists, is still an error, so that it cannot silently blank every drive.
 (The create paths are deliberately stricter: a just-created volume is ready

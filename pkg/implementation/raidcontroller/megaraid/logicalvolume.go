@@ -707,6 +707,32 @@ func volumePaths(vd *VD, vdp *VDProperties, pdrives []*physicaldrive.PhysicalDri
 	return getPaths(vdp, pdrives)
 }
 
+// pathsWithoutLink returns the paths of an exposed volume whose by-id link is
+// missing. It can be missing for a while: the kernel has not discovered the
+// volume yet, or udev has not settled. That must not fail the listing of every
+// volume of the controller: the volume gets no permanent path, which createLV
+// takes as not settled yet. A single-drive volume may still get the paths of
+// its drive; any other failure to compute them is still an error.
+func pathsWithoutLink(osDriveName string, pdrives []*physicaldrive.PhysicalDrive) (
+	devicePath, permanentPath string, err error,
+) {
+	if len(pdrives) != 1 {
+		return osDriveName, "", nil
+	}
+
+	pd := pdrives[0]
+
+	if err = pd.ComputePaths(); err != nil {
+		if physicaldrive.IsPathMissing(err) {
+			return osDriveName, "", nil
+		}
+
+		return osDriveName, "", errors.Wrap(err, "failed to compute paths from physical drive")
+	}
+
+	return pd.DevicePath, pd.PermanentPath, nil
+}
+
 // getPaths returns the device path and a permanent paths for the logical volumes.
 func getPaths(vdp *VDProperties, pdrives []*physicaldrive.PhysicalDrive) (
 	devicePath, permanentPath string, err error,
@@ -722,21 +748,7 @@ func getPaths(vdp *VDProperties, pdrives []*physicaldrive.PhysicalDrive) (
 
 	permanentPath = fmt.Sprintf("/dev/disk/by-id/wwn-0x%s", vdp.SCSINAAID)
 	if !CustomFileExists(permanentPath) {
-		// If the permanent path is not found and there is only one physical drive,
-		// we will try to get the path from the physical drive information
-		// otherwise let's error here
-		if len(pdrives) != 1 {
-			return devicePath, "", errors.New("failed to get permanent path")
-		}
-
-		pd := pdrives[0]
-
-		err = pd.ComputePaths()
-		if err != nil {
-			return devicePath, "", errors.Wrap(err, "failed to compute paths from physical drive")
-		}
-
-		return pd.DevicePath, pd.PermanentPath, nil
+		return pathsWithoutLink(devicePath, pdrives)
 	}
 
 	// If the devicePath is empty let's retrieve it from the permanent path

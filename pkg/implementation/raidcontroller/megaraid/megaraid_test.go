@@ -745,9 +745,9 @@ func (s *UnitTestSuite) TestCreateLV() {
 
 // TestCreateLVForcesRescanAndSettles reproduces the post-create discovery race:
 // storcli returns before the kernel has a block device for the new volume, so
-// the first path resolution fails ("failed to compute permanent path") while a
-// later one succeeds. createLV must force a SCSI bus rescan and poll until the
-// device node is discovered instead of failing on the first try.
+// its by-id link is missing at first and it is listed without a permanent path,
+// while a later listing finds it. createLV must force a SCSI bus rescan and
+// poll until the device node is discovered instead of failing on the first try.
 func (s *UnitTestSuite) TestCreateLVForcesRescanAndSettles() {
 	s.wasCreateLVCalledOnce = false
 
@@ -776,10 +776,13 @@ func (s *UnitTestSuite) TestCreateLVForcesRescanAndSettles() {
 
 	defer func() { megaraid2.CustomRescanSCSIHosts = origRescan }()
 
-	// First resolution: device not yet discovered. For the single-drive volume
-	// this falls back to ComputePaths on the real filesystem, which fails. Every
-	// subsequent resolution finds the symlink.
-	s.mockPathResolver.On("FileExists", mock.Anything).Return(false).Once()
+	// First resolution of the new volume: device not yet discovered. For the
+	// single-drive volume this falls back to ComputePaths on the real
+	// filesystem, which finds no link either. Every subsequent resolution
+	// finds the symlink, and the other volumes have theirs.
+	const newVolumeLink = "/dev/disk/by-id/wwn-0x600062b212da5d402bd3b493e1699377"
+
+	s.mockPathResolver.On("FileExists", newVolumeLink).Return(false).Once()
 	s.mockPathResolver.On("FileExists", mock.Anything).Return(true)
 	s.mockPathResolver.On(
 		"EvalSymlinks",
