@@ -91,6 +91,15 @@ func TestNewRejects(t *testing.T) {
 		{name: "volume created on a failed drive", capture: capture, events: []scenario.Event{fails, created}, wantErr: "still exists"},
 		{name: "replacement fails before its volume", capture: capture, events: []scenario.Event{fails, replaced, fails}, wantErr: "cannot fail"},
 		{name: "replacement not exposed in Mixed mode", capture: capture, events: []scenario.Event{fails, unexposed}, wantErr: "Mixed mode exposes a free drive"},
+		{
+			name: "two replacements exposed as the same device", capture: capture,
+			events: []scenario.Event{
+				fails, replaced,
+				{Kind: scenario.DriveFails, Slot: "1I:1:3"},
+				{Kind: scenario.DriveReplaced, Slot: "1I:1:3", Serial: "T", WWN: "X", Device: "/dev/sdi"},
+			},
+			wantErr: "device /dev/sdi is already exposed for another drive",
+		},
 	}
 
 	for _, tt := range tests {
@@ -156,6 +165,60 @@ func TestReplacedDriveExposedUntilItGetsAnArray(t *testing.T) {
 
 			assert.Contains(t, block, "Drive exposed to OS: "+tt.wantExposed)
 			assert.Equal(t, tt.wantDisk, strings.Contains(block, "Disk Name: /dev/sdi"), block)
+		})
+	}
+}
+
+// TestFailedDrivePrintedAsARealController checks that a failed drive is
+// printed as a real P816i-a in Mixed mode prints one, and a healthy one as
+// captured.
+func TestFailedDrivePrintedAsARealController(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name     string
+		events   []scenario.Event
+		want     []string
+		wantNone []string
+	}{
+		{
+			name:   "failed",
+			events: []scenario.Event{{Kind: scenario.DriveFails, Slot: "1I:1:4"}},
+			want: []string{
+				"Status: Failed\n         Last Failure Reason: Unknown\n",
+				"Drive Type: Unsupported for RAID/Hidden from the OS Drive",
+				"Interface Type: Unknown",
+			},
+		},
+		{
+			name:     "healthy",
+			want:     []string{"Status: OK\n", "Drive Type: Data Drive", "Interface Type: SAS"},
+			wantNone: []string{"Last Failure Reason"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			ctrl, err := ssaclisim.New(capture, tt.events...)
+			require.NoError(t, err)
+
+			out, err := ctrl.SSACLI().Run(strings.Fields("controller slot=0 physicaldrive all show detail"))
+			require.NoError(t, err)
+
+			_, block, found := strings.Cut(string(out), "physicaldrive 1I:1:4")
+			require.True(t, found)
+
+			block, _, _ = strings.Cut(block, "\n\n")
+
+			for _, w := range tt.want {
+				assert.Contains(t, block, w)
+			}
+
+			for _, w := range tt.wantNone {
+				assert.NotContains(t, block, w)
+			}
 		})
 	}
 }

@@ -7,7 +7,10 @@
 // "slot0": "controller slot=0 show config" -> controller_slot0_show_config.txt.
 //
 // A failed drive has status Failed, and so has its logical drive, which loses
-// its "Disk Name" (it is no longer exposed to the OS); a replacement drive is
+// its "Disk Name" (it is no longer exposed to the OS). The failed drive is
+// printed as a real P816i-a in Mixed mode prints one: with "Last Failure
+// Reason: Unknown", "Drive Type: Unsupported for RAID/Hidden from the OS
+// Drive" and "Interface Type: Unknown". A replacement drive is
 // OK and unassigned, its array and logical drive gone; a new logical drive
 // is OK, in the array the drive had in the capture. No ssacli output was
 // captured while a drive was failed: this follows what storcli showed on
@@ -49,6 +52,8 @@ const (
 	mixedMode = "Mixed"
 	// failed is the status of a failed drive or logical drive.
 	failed = "Failed"
+	// failedDriveType is the "Drive Type" of a failed drive.
+	failedDriveType = "Unsupported for RAID/Hidden from the OS Drive"
 )
 
 //nolint:gochecknoglobals // compiled once
@@ -63,6 +68,8 @@ var (
 	serialRegexp     = regexp.MustCompile(`(?m)^(         Serial Number: ).*$`)
 	wwidRegexp       = regexp.MustCompile(`(?m)^(         WWID: ).*$`)
 	driveTypeRegexp  = regexp.MustCompile(`(?m)^(         Drive Type: ).*$`)
+	interfaceRegexp  = regexp.MustCompile(`(?m)^(         Interface Type: ).*$`)
+	lastFailureRegex = regexp.MustCompile(`(?m)^         Last Failure Reason: .*\n`)
 	uniqueIDRegexp   = regexp.MustCompile(`(?m)^(         Unique Identifier: ).*$`)
 	diskNameRegexp   = regexp.MustCompile(`(?m)^         Disk Name: .*\n`)
 	exposedRegexp    = regexp.MustCompile(`(?m)^(         Drive exposed to OS: ).*$`)
@@ -335,6 +342,8 @@ func (c *Controller) checkExposure(e scenario.Event) error {
 	case c.mode == mixedMode && e.Device == "":
 		return errors.Errorf("drive %s: a controller in Mixed mode exposes a free drive to the OS, "+
 			"give the device of the replacement drive", e.Slot)
+	case e.Device != "" && c.exposedDrive(e.Device) != nil:
+		return errors.Errorf("drive %s: device %s is already exposed for another drive", e.Slot, e.Device)
 	case c.mode != mixedMode && e.Device != "":
 		return errors.Errorf("drive %s: a controller in %s mode does not expose a free drive to the OS",
 			e.Slot, c.mode)
@@ -424,7 +433,18 @@ func renderDrive(block string, d *drive) string {
 		driveType = "Unassigned Drive"
 	}
 
-	out := statusRegexp.ReplaceAllString(block, "         Status: "+d.status)
+	out := lastFailureRegex.ReplaceAllString(block, "")
+
+	if d.status == failed {
+		// As a real P816i-a in Mixed mode prints a failed drive.
+		driveType = failedDriveType
+		out = interfaceRegexp.ReplaceAllString(out, "${1}Unknown")
+		out = statusRegexp.ReplaceAllString(out,
+			"         Status: "+d.status+"\n         Last Failure Reason: Unknown")
+	} else {
+		out = statusRegexp.ReplaceAllString(out, "         Status: "+d.status)
+	}
+
 	out = serialRegexp.ReplaceAllString(out, "${1}"+d.serial)
 	out = wwidRegexp.ReplaceAllString(out, "${1}"+d.wwid)
 	out = driveTypeRegexp.ReplaceAllString(out, "${1}"+driveType)
