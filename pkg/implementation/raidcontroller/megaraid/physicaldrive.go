@@ -127,10 +127,19 @@ func (a *Adapter) physicalDrive(
 		// Reason:   "",
 	}
 
+	// A JBOD drive whose by-id link or device node is missing, such as a
+	// failed or pulled drive, must not fail the listing of every drive of the
+	// controller: keep it with empty paths instead. Any other failure, such as
+	// a permission error, is still an error: ignoring it would silently blank
+	// the paths of every JBOD drive.
 	if physicalDrive.JBOD {
-		err := physicalDrive.ComputePaths()
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to compute paths")
+		if err := physicalDrive.ComputePaths(); err != nil {
+			if !physicaldrive.IsPathMissing(err) {
+				return nil, errors.Wrapf(err, "failed to resolve the paths of drive %s", metadata.ID)
+			}
+
+			physicalDrive.DevicePath = ""
+			physicalDrive.PermanentPath = ""
 		}
 	}
 

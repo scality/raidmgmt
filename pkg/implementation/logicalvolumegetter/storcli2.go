@@ -45,6 +45,10 @@ const (
 	// storcli2PermanentPathPrefix is the /dev/disk/by-id prefix combined with a
 	// virtual drive's SCSI NAA Id to form its permanent path.
 	storcli2PermanentPathPrefix = "/dev/disk/by-id/wwn-0x"
+
+	// storcli2NotExposedToOS is the "Exposed to OS" value of a volume that is
+	// not a block device of the host.
+	storcli2NotExposedToOS = "No"
 )
 
 type (
@@ -84,6 +88,7 @@ type (
 	storcli2VDProperties struct {
 		OSDriveName string `json:"OS Drive Name"`
 		SCSINAAID   string `json:"SCSI NAA Id"`
+		ExposedToOS string `json:"Exposed to OS"`
 	}
 )
 
@@ -211,6 +216,8 @@ func parseVirtualDrive(vd storcli2VirtualDrive, ctrl *raidcontroller.Metadata) (
 		})
 	}
 
+	devicePath, permanentPath := volumePaths(vd)
+
 	return &logicalvolume.LogicalVolume{
 		Metadata: &logicalvolume.Metadata{
 			CtrlMetadata: ctrl,
@@ -221,9 +228,21 @@ func parseVirtualDrive(vd storcli2VirtualDrive, ctrl *raidcontroller.Metadata) (
 		CacheOptions:    parseCacheOptions(vd.Info.CurrentCache),
 		Status:          lvStatus(vd.Info.State),
 		Size:            size,
-		DevicePath:      strings.TrimSpace(vd.Properties.OSDriveName),
-		PermanentPath:   permanentPath(vd.Properties.SCSINAAID),
+		DevicePath:      devicePath,
+		PermanentPath:   permanentPath,
 	}, nil
+}
+
+// volumePaths returns the device and permanent paths of a virtual drive. An
+// offline or failed volume has no block device, even if storcli2 still
+// reports it exposed to the OS: no capture shows what storcli2 reports for
+// it, so its state decides.
+func volumePaths(vd storcli2VirtualDrive) (devicePath, permanentPath string) {
+	if lvStatus(vd.Info.State) == logicalvolume.LVStatusFailed {
+		return "", ""
+	}
+
+	return osDevicePath(vd.Properties), byIDPath(vd.Properties)
 }
 
 // parseVDID extracts the virtual drive number from a "<disk group>/<virtual
@@ -294,12 +313,34 @@ func parseCacheOptions(cache string) *logicalvolume.CacheOptions {
 	return options
 }
 
-// permanentPath builds the /dev/disk/by-id path of a virtual drive from its
+// exposedToOS reports whether a volume may be a block device of the host. A
+// volume not exposed to the OS, such as the offline RAID0 volume of a failed
+// drive, has no block device: its OS drive name may be stale and its NAA Id
+// names no by-id link. Older storcli2 versions may not report the field, so
+// only an explicit "No" hides the paths.
+func exposedToOS(props storcli2VDProperties) bool {
+	return strings.TrimSpace(props.ExposedToOS) != storcli2NotExposedToOS
+}
+
+// osDevicePath is the OS drive name of a virtual drive exposed to the OS.
+func osDevicePath(props storcli2VDProperties) string {
+	if !exposedToOS(props) {
+		return ""
+	}
+
+	return strings.TrimSpace(props.OSDriveName)
+}
+
+// byIDPath builds the /dev/disk/by-id path of a virtual drive from its
 // SCSI NAA Id. udev "wwn-" links are lowercase hex while the firmware is
-// case-inconsistent across sections, so the id is lowercased. An empty id
-// yields an empty path.
-func permanentPath(naaID string) string {
-	trimmed := strings.TrimSpace(naaID)
+// case-inconsistent across sections, so the id is lowercased. An empty id,
+// or a volume not exposed to the OS, yields an empty path.
+func byIDPath(props storcli2VDProperties) string {
+	if !exposedToOS(props) {
+		return ""
+	}
+
+	trimmed := strings.TrimSpace(props.SCSINAAID)
 	if trimmed == "" {
 		return ""
 	}

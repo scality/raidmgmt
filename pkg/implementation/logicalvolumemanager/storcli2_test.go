@@ -1,8 +1,11 @@
 package logicalvolumemanager_test
 
 import (
+	"errors"
 	"os"
+	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -79,20 +82,204 @@ func TestStorCLI2CreateLV(t *testing.T) {
 	newLV := &logicalvolume.LogicalVolume{
 		Metadata:        &logicalvolume.Metadata{CtrlMetadata: ctrl, ID: "25"},
 		PDrivesMetadata: request.PDrivesMetadata,
+		PermanentPath:   "/dev/disk/by-id/wwn-0x25",
 	}
 	other := &logicalvolume.LogicalVolume{
 		Metadata:        &logicalvolume.Metadata{CtrlMetadata: ctrl, ID: "7"},
 		PDrivesMetadata: []*physicaldrive.Metadata{{CtrlMetadata: ctrl, ID: "252:9"}},
 	}
+	// The offline volume of failed drives once in the same slots, listed
+	// first: it is not exposed to the OS and must not hide the new volume.
+	offline := &logicalvolume.LogicalVolume{
+		Metadata:        &logicalvolume.Metadata{CtrlMetadata: ctrl, ID: "3"},
+		PDrivesMetadata: request.PDrivesMetadata,
+	}
 	mockLVGetter.On("LogicalVolumes", ctrl).
-		Return([]*logicalvolume.LogicalVolume{other, newLV}, nil)
+		Return([]*logicalvolume.LogicalVolume{offline, other, newLV}, nil).Once()
 
 	manager := logicalvolumemanager.NewStorCLI2(mockRunner, mockPDGetter, mockLVGetter)
+	// The new volume is a block device of the host at once.
+	manager.FileExists = func(string) bool { return true }
 
 	lv, err := manager.CreateLV(request)
 	require.NoError(t, err)
 	require.Equal(t, "25", lv.ID)
 	mockRunner.AssertExpectations(t)
+}
+
+// TestStorCLI2CreateLVDefaultSettleTimeout checks that a manager built
+// without NewStorCLI2 still waits for a new volume to be exposed, with the
+// default timeout rather than none.
+func TestStorCLI2CreateLVDefaultSettleTimeout(t *testing.T) {
+	t.Parallel()
+
+	ctrl := storcli2Ctrl()
+	request := storcli2CreateRequest(ctrl)
+
+	mockRunner := new(MockCommandRunner)
+	mockPDGetter := new(MockPhysicalDrivesGetter)
+	mockLVGetter := new(MockLogicalVolumesGetter)
+
+	for _, pdMetadata := range request.PDrivesMetadata {
+		mockPDGetter.On("PhysicalDrive", pdMetadata).Return(storcli2AvailablePD(pdMetadata), nil)
+	}
+
+	mockRunner.On("Run", []string{"/c0", "add", "vd", "r1", "drives=252:0,1", "wb", "ra"}).
+		Return(storcli2Fixture(t, "create/success.json"), nil)
+
+	volume := func(permanentPath string) []*logicalvolume.LogicalVolume {
+		return []*logicalvolume.LogicalVolume{{
+			Metadata:        &logicalvolume.Metadata{CtrlMetadata: ctrl, ID: "25"},
+			PDrivesMetadata: request.PDrivesMetadata,
+			PermanentPath:   permanentPath,
+		}}
+	}
+	mockLVGetter.On("LogicalVolumes", ctrl).Return(volume(""), nil).Once()
+	mockLVGetter.On("LogicalVolumes", ctrl).Return(volume("/dev/disk/by-id/wwn-0x25"), nil).Once()
+
+	manager := logicalvolumemanager.NewStorCLI2(mockRunner, mockPDGetter, mockLVGetter)
+	// The new volume is a block device of the host at once.
+	manager.FileExists = func(string) bool { return true }
+	require.Zero(t, manager.NewVolumeSettleTimeout)
+	// Never touch the real /sys in unit tests.
+	manager.RescanSCSIHosts = func() error { return nil }
+
+	lv, err := manager.CreateLV(request)
+	require.NoError(t, err)
+	require.Equal(t, "/dev/disk/by-id/wwn-0x25", lv.PermanentPath)
+}
+
+// TestStorCLI2CreateLVWithoutNAAId covers a new volume exposed to the OS for
+// which storcli2 reports no NAA Id: it has a device path but no permanent
+// path, and must be returned at once rather than awaited.
+func TestStorCLI2CreateLVWithoutNAAId(t *testing.T) {
+	t.Parallel()
+
+	ctrl := storcli2Ctrl()
+	request := storcli2CreateRequest(ctrl)
+
+	mockRunner := new(MockCommandRunner)
+	mockPDGetter := new(MockPhysicalDrivesGetter)
+	mockLVGetter := new(MockLogicalVolumesGetter)
+
+	for _, pdMetadata := range request.PDrivesMetadata {
+		mockPDGetter.On("PhysicalDrive", pdMetadata).Return(storcli2AvailablePD(pdMetadata), nil)
+	}
+
+	mockRunner.On("Run", []string{"/c0", "add", "vd", "r1", "drives=252:0,1", "wb", "ra"}).
+		Return(storcli2Fixture(t, "create/success.json"), nil)
+
+	newLV := &logicalvolume.LogicalVolume{
+		Metadata:        &logicalvolume.Metadata{CtrlMetadata: ctrl, ID: "25"},
+		PDrivesMetadata: request.PDrivesMetadata,
+		DevicePath:      "/dev/sdb",
+	}
+	mockLVGetter.On("LogicalVolumes", ctrl).Return([]*logicalvolume.LogicalVolume{newLV}, nil).Once()
+
+	manager := logicalvolumemanager.NewStorCLI2(mockRunner, mockPDGetter, mockLVGetter)
+	// The new volume is a block device of the host at once.
+	manager.FileExists = func(string) bool { return true }
+
+	lv, err := manager.CreateLV(request)
+	require.NoError(t, err)
+	require.Equal(t, "/dev/sdb", lv.DevicePath)
+}
+
+// TestStorCLI2CreateLVWaitsForVolumeExposedToOS covers a new volume listed
+// before it is exposed to the OS, without paths: CreateLV must wait until it
+// is exposed rather than return it without paths, rescanning the SCSI hosts
+// between checks, and give up after NewVolumeSettleTimeout, reporting a
+// failing rescan.
+func TestStorCLI2CreateLVWaitsForVolumeExposedToOS(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name        string
+		exposedFrom int // the listing from which the volume is exposed, 0 for never
+		onHostFrom  int // the check from which its path is on the host, 0 for at once
+		rescanErr   error
+		wantErr     string
+		wantChecks  int
+	}{
+		{name: "exposed on the third listing", exposedFrom: 3, wantChecks: 3},
+		// storcli2 reports the volume exposed at once, before the kernel has
+		// discovered it: CreateLV must wait for its path on the host.
+		{name: "reported exposed at once, on the host from the third check", exposedFrom: 1, onHostFrom: 3, wantChecks: 3},
+		{name: "never exposed", wantErr: "not exposed to the OS yet"},
+		{
+			name:      "never exposed, rescan failing",
+			rescanErr: errors.New("no mpi3mr scsi host found to rescan"),
+			wantErr:   "scsi rescan failing: no mpi3mr scsi host found to rescan",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			ctrl := storcli2Ctrl()
+			request := storcli2CreateRequest(ctrl)
+
+			mockRunner := new(MockCommandRunner)
+			mockPDGetter := new(MockPhysicalDrivesGetter)
+			mockLVGetter := new(MockLogicalVolumesGetter)
+
+			for _, pdMetadata := range request.PDrivesMetadata {
+				mockPDGetter.On("PhysicalDrive", pdMetadata).Return(storcli2AvailablePD(pdMetadata), nil)
+			}
+
+			mockRunner.On("Run", []string{"/c0", "add", "vd", "r1", "drives=252:0,1", "wb", "ra"}).
+				Return(storcli2Fixture(t, "create/success.json"), nil)
+
+			volume := func(permanentPath string) []*logicalvolume.LogicalVolume {
+				return []*logicalvolume.LogicalVolume{{
+					Metadata:        &logicalvolume.Metadata{CtrlMetadata: ctrl, ID: "25"},
+					PDrivesMetadata: request.PDrivesMetadata,
+					PermanentPath:   permanentPath,
+				}}
+			}
+
+			switch tt.exposedFrom {
+			case 0:
+				mockLVGetter.On("LogicalVolumes", ctrl).Return(volume(""), nil)
+			case 1:
+				mockLVGetter.On("LogicalVolumes", ctrl).Return(volume("/dev/disk/by-id/wwn-0x25"), nil)
+			default:
+				mockLVGetter.On("LogicalVolumes", ctrl).Return(volume(""), nil).Times(tt.exposedFrom - 1)
+				mockLVGetter.On("LogicalVolumes", ctrl).Return(volume("/dev/disk/by-id/wwn-0x25"), nil).Once()
+			}
+
+			var rescans, hostChecks atomic.Int32
+
+			manager := logicalvolumemanager.NewStorCLI2(mockRunner, mockPDGetter, mockLVGetter)
+			manager.NewVolumeSettleTimeout = 50 * time.Millisecond
+			manager.NewVolumeSettleInterval = time.Millisecond
+			manager.FileExists = func(path string) bool {
+				require.Equal(t, "/dev/disk/by-id/wwn-0x25", path)
+
+				return hostChecks.Add(1) >= int32(tt.onHostFrom)
+			}
+			manager.RescanSCSIHosts = func() error {
+				rescans.Add(1)
+
+				return tt.rescanErr
+			}
+
+			lv, err := manager.CreateLV(request)
+			if tt.wantErr != "" {
+				require.ErrorContains(t, err, tt.wantErr)
+				require.Positive(t, rescans.Load(), "CreateLV must rescan while the volume is not exposed")
+
+				return
+			}
+
+			require.NoError(t, err)
+			require.Equal(t, "/dev/disk/by-id/wwn-0x25", lv.PermanentPath)
+			mockLVGetter.AssertNumberOfCalls(t, "LogicalVolumes", tt.wantChecks)
+			// One rescan after each check without the volume on the host.
+			require.Equal(t, int32(tt.wantChecks-1), rescans.Load())
+		})
+	}
 }
 
 // TestStorCLI2CreateLVCommandError pins that an "add vd" failure payload aborts
