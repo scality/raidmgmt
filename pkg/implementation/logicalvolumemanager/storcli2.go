@@ -60,12 +60,13 @@ type StorCLI2 struct {
 	// (60s and 1s).
 	NewVolumeSettleTimeout  time.Duration
 	NewVolumeSettleInterval time.Duration
-	// RescanSCSIHosts asks the kernel to probe the controller's SCSI hosts
-	// for the new volume between checks. Nil rescans the mpi3mr hosts.
-	RescanSCSIHosts func() error
-	// FileExists tells whether a path exists on the host, to check that the
-	// new volume is a block device of the host. Nil reads the filesystem.
-	FileExists func(path string) bool
+	// rescan asks the kernel to probe the controller's SCSI hosts for the new
+	// volume between checks, and fileExists tells whether a path exists on
+	// the host, to check that the new volume is a block device of the host.
+	// They are set by tests only: nil rescans the mpi3mr hosts and reads the
+	// filesystem.
+	rescan     func() error
+	fileExists func(path string) bool
 
 	runner commandrunner.CommandRunner
 }
@@ -236,10 +237,10 @@ func (s *StorCLI2) findNewVolumeUntilExposed(request *logicalvolume.Request) (
 }
 
 // rescanSCSIHosts asks the kernel to probe the mpi3mr SCSI hosts, or runs
-// RescanSCSIHosts when set.
+// the test hook when set.
 func (s *StorCLI2) rescanSCSIHosts() error {
-	if s.RescanSCSIHosts != nil {
-		return s.RescanSCSIHosts()
+	if s.rescan != nil {
+		return s.rescan()
 	}
 
 	return errors.Wrap(utils.RescanSCSIHosts(utils.SCSIHostRoot, storcli2Driver), "failed to rescan")
@@ -311,8 +312,8 @@ func (s *StorCLI2) onHost(lv *logicalvolume.LogicalVolume) bool {
 		return false
 	}
 
-	if s.FileExists != nil {
-		return s.FileExists(path)
+	if s.fileExists != nil {
+		return s.fileExists(path)
 	}
 
 	return utils.FileExists(path)

@@ -99,7 +99,7 @@ func TestStorCLI2CreateLV(t *testing.T) {
 
 	manager := logicalvolumemanager.NewStorCLI2(mockRunner, mockPDGetter, mockLVGetter)
 	// The new volume is a block device of the host at once.
-	manager.FileExists = func(string) bool { return true }
+	manager.SetFileExists(func(string) bool { return true })
 
 	lv, err := manager.CreateLV(request)
 	require.NoError(t, err)
@@ -139,10 +139,10 @@ func TestStorCLI2CreateLVDefaultSettleTimeout(t *testing.T) {
 
 	manager := logicalvolumemanager.NewStorCLI2(mockRunner, mockPDGetter, mockLVGetter)
 	// The new volume is a block device of the host at once.
-	manager.FileExists = func(string) bool { return true }
+	manager.SetFileExists(func(string) bool { return true })
 	require.Zero(t, manager.NewVolumeSettleTimeout)
 	// Never touch the real /sys in unit tests.
-	manager.RescanSCSIHosts = func() error { return nil }
+	manager.SetRescanSCSIHosts(func() error { return nil })
 
 	lv, err := manager.CreateLV(request)
 	require.NoError(t, err)
@@ -178,7 +178,7 @@ func TestStorCLI2CreateLVWithoutNAAId(t *testing.T) {
 
 	manager := logicalvolumemanager.NewStorCLI2(mockRunner, mockPDGetter, mockLVGetter)
 	// The new volume is a block device of the host at once.
-	manager.FileExists = func(string) bool { return true }
+	manager.SetFileExists(func(string) bool { return true })
 
 	lv, err := manager.CreateLV(request)
 	require.NoError(t, err)
@@ -254,16 +254,16 @@ func TestStorCLI2CreateLVWaitsForVolumeExposedToOS(t *testing.T) {
 			manager := logicalvolumemanager.NewStorCLI2(mockRunner, mockPDGetter, mockLVGetter)
 			manager.NewVolumeSettleTimeout = 50 * time.Millisecond
 			manager.NewVolumeSettleInterval = time.Millisecond
-			manager.FileExists = func(path string) bool {
+			manager.SetFileExists(func(path string) bool {
 				require.Equal(t, "/dev/disk/by-id/wwn-0x25", path)
 
 				return hostChecks.Add(1) >= int32(tt.onHostFrom)
-			}
-			manager.RescanSCSIHosts = func() error {
+			})
+			manager.SetRescanSCSIHosts(func() error {
 				rescans.Add(1)
 
 				return tt.rescanErr
-			}
+			})
 
 			lv, err := manager.CreateLV(request)
 			if tt.wantErr != "" {
