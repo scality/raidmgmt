@@ -14,7 +14,7 @@ env:
 
 jobs:
   detect-modules:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     outputs:
       modules: ${{ steps.set-modules.outputs.modules }}
     steps:
@@ -30,7 +30,7 @@ jobs:
   
   golangci-lint:
     needs: detect-modules
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     strategy:
       matrix:
         modules: ${{ fromJSON(needs.detect-modules.outputs.modules) }}
@@ -46,7 +46,7 @@ jobs:
           working-directory: ${{ matrix.modules }}
 
   tests:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     needs: detect-modules
     strategy:
       matrix:
@@ -65,7 +65,7 @@ jobs:
     # The on-hardware integration harnesses are not run in CI (they need real
     # hardware), but they are built so a change to the adapters cannot silently
     # break them.
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Setup Go
