@@ -35,6 +35,11 @@ func NewStorCLI2(path *string) *StorCLI2 {
 	}
 }
 
+// CommandPath returns the path of the storcli2 binary this runner invokes.
+func (s *StorCLI2) CommandPath() string {
+	return s.cliPath
+}
+
 // Run appends the JSON output flag and returns the command's standard output.
 // stdout is captured on its own (not combined with stderr) because the payload
 // is JSON that must parse cleanly.
