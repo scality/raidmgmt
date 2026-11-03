@@ -119,6 +119,8 @@ entities, ports, and adapters.
 - Go 1.25+
 - [golangci-lint](https://golangci-lint.run/)
 
+The devcontainer in `.devcontainer/` has both.
+
 ### Commands
 
 ```bash
