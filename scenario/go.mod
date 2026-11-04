@@ -5,7 +5,7 @@ go 1.25.6
 require (
 	github.com/cucumber/godog v0.16.0
 	github.com/pkg/errors v0.9.1
-	github.com/scality/raidmgmt v0.14.0
+	github.com/scality/raidmgmt v0.20.0
 	github.com/stretchr/testify v1.12.1
 )
 
