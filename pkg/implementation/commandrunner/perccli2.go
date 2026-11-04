@@ -31,6 +31,11 @@ func NewPercCLI2(path *string) *PercCLI2 {
 	}
 }
 
+// CommandPath returns the path of the perccli2 binary this runner invokes.
+func (p *PercCLI2) CommandPath() string {
+	return p.cliPath
+}
+
 // Run appends the JSON output flag and returns the command's standard output.
 // perccli2 emits the same JSON envelope as storcli2; stdout is captured on its
 // own (not combined with stderr) so the payload parses cleanly.
