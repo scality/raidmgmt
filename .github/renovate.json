@@ -1,6 +1,7 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "github>scality/platform-renovate"
+    "github>scality/platform-renovate",
+    "github>scality/platform-renovate:library.json5"
   ]
 }
