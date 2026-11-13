@@ -31,6 +31,11 @@ func NewUDevADM(path *string) *UDevADM {
 	}
 }
 
+// CommandPath returns the path of the udevadm binary this runner invokes.
+func (u *UDevADM) CommandPath() string {
+	return u.cliPath
+}
+
 func (u *UDevADM) Run(args []string) ([]byte, error) {
 	cmd := UDevADMExecCommand(u.cliPath, args...)
 
