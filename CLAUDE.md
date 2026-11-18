@@ -34,7 +34,8 @@ Key characteristics:
   `ports.ErrFunctionNotSupportedByImplementation`).
 - Tests use `testify` with `mockery` v3-generated mocks (configured in
   `.mockery.yml`, regenerate with `go generate ./...`); expect table-driven tests
-  and `testdata/` fixtures.
+  and `testdata/` fixtures. mockery is pinned in `tools/go.mod`, not in the root
+  `go.mod`: a tool there would raise the Go floor of every consumer.
 - Linting is enforced via `.golangci.yaml`; CI is in `.github/workflows/`.
 - No Scality internal git dependencies — all modules are public.
 

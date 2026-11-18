@@ -23,8 +23,9 @@ jobs:
           go-version-file: go.mod
       - name: Set list of modules
         id: set-modules
-        # The root module and the nested ones, such as scenario/.
-        run: echo "modules=$(find "$PWD" -name go.mod -not -path '*/bin/*' -printf '%h\n' | sort | jq -R . | jq -sc .)" >> $GITHUB_OUTPUT
+        # The root module and the nested ones, such as scenario/. Not tools/: it only pins
+        # the code generators and has no code to lint or test.
+        run: echo "modules=$(find "$PWD" -name go.mod -not -path '*/bin/*' -not -path "$PWD/tools/*" -printf '%h\n' | sort | jq -R . | jq -sc .)" >> $GITHUB_OUTPUT
   
   golangci-lint:
     needs: detect-modules
@@ -73,6 +74,25 @@ jobs:
       - name: Build e2e harnesses
         run: make build-e2e
 
+  generate:
+    # tools/ is skipped above: this job is what tests a bump of the generators.
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Setup Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - name: Check that the generated code is up to date
+        run: |
+          go generate ./...
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "::error::Generated files are not up to date: run go generate ./... and commit the result."
+            git status --porcelain
+            git diff
+            exit 1
+          fi
+
   pre-merge:
     name: Pre Merge
     # Single check for rulesets to require: GitHub reports one check per job, never one per workflow
@@ -83,6 +103,7 @@ jobs:
       - golangci-lint
       - tests
       - build-e2e
+      - generate
     runs-on: ubuntu-26.04
     steps:
       - name: Fail if a pre-merge job failed or was cancelled
