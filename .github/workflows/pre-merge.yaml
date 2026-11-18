@@ -82,7 +82,8 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version-file: go.mod
+          # The Go of the generators: a mockery bump can raise tools/go.mod above the library.
+          go-version-file: tools/go.mod
       - name: Check that the generated code is up to date
         run: |
           go generate ./...
