@@ -85,10 +85,10 @@ func (_e *Runner_Expecter) Run(args any) *Runner_Run_Call {
 }
 
 func (_c *Runner_Run_Call) Run(run func(args []string)) *Runner_Run_Call {
-	_c.Call.Run(func(args mock.Arguments) {
+	_c.Call.Run(func(args1 mock.Arguments) {
 		var arg0 []string
-		if args[0] != nil {
-			arg0 = args[0].([]string)
+		if args1[0] != nil {
+			arg0 = args1[0].([]string)
 		}
 		run(
 			arg0,

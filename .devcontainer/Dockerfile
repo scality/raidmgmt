@@ -4,6 +4,6 @@ USER vscode
 
 # Same version as the CI lint job.
 # renovate: datasource=github-releases depName=golangci/golangci-lint extractVersion=^v(?<version>.+)$
-ARG GOLANGCI_VERSION=2.14.0
+ARG GOLANGCI_VERSION=2.15.0
 RUN curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh \
   | sudo sh -s -- v${GOLANGCI_VERSION}
