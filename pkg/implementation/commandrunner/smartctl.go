@@ -30,6 +30,11 @@ func NewSmartCTL(path *string) *SmartCTL {
 	}
 }
 
+// CommandPath returns the path of the smartctl binary this runner invokes.
+func (s *SmartCTL) CommandPath() string {
+	return s.cliPath
+}
+
 func (s *SmartCTL) Run(args []string) ([]byte, error) {
 	cmd := SmartCTLExecCommand(s.cliPath, args...)
 
